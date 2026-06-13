@@ -1,22 +1,36 @@
-// app/(auth)/login/page.tsx
 'use client'
 import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import Link from 'next/link'
 import PixelCard from '@/components/ui/PixelCard'
 
 export default function LoginPage() {
+  const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleLogin = async () => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
     setLoading(true)
     setError('')
-    try {
-      await signIn('campus-sso', { callbackUrl: '/dashboard' })
-    } catch {
-      setError('LOGIN FAILED. TRY AGAIN.')
+
+    const res = await signIn('credentials', {
+      email,
+      password,
+      redirect: false,
+    })
+
+    if (res?.error) {
+      setError('WRONG EMAIL OR PASSWORD.')
       setLoading(false)
+      return
     }
+
+    router.push('/dashboard')
+    router.refresh()
   }
 
   return (
@@ -52,38 +66,69 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Login Card - styled as save file select */}
+        {/* Login Card */}
         <PixelCard className="bg-gray-900/90 border-white/20">
-          <div className="text-center p-6">
+          <form onSubmit={handleLogin} className="p-6">
             {/* Save file icon */}
-            <div className="text-6xl mb-4 float inline-block">🏰</div>
+            <div className="text-6xl mb-4 float inline-block w-full text-center">🏰</div>
 
-            <h2 className="font-pixel text-sm text-white mb-2">
-              SELECT LOGIN METHOD
+            <h2 className="font-pixel text-sm text-white mb-2 text-center">
+              WELCOME BACK!
             </h2>
-            <p className="font-pixel text-xs text-gray-400 mb-8">
-              USE YOUR CAMPUS ACCOUNT
+            <p className="font-pixel text-xs text-gray-400 mb-6 text-center">
+              LOG IN TO CONTINUE YOUR ADVENTURE
             </p>
 
-            {/* SSO Button */}
+            {/* Email */}
+            <label className="font-pixel text-xs text-gray-300 block mb-2">
+              EMAIL
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+              placeholder="you@email.com"
+              className="w-full font-pixel text-xs text-white bg-gray-800
+                border-4 border-black py-3 px-3 mb-4
+                focus:outline-none focus:border-blue-500
+                placeholder:text-gray-600"
+            />
+
+            {/* Password */}
+            <label className="font-pixel text-xs text-gray-300 block mb-2">
+              PASSWORD
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+              placeholder="••••••••"
+              className="w-full font-pixel text-xs text-white bg-gray-800
+                border-4 border-black py-3 px-3 mb-6
+                focus:outline-none focus:border-blue-500
+                placeholder:text-gray-600"
+            />
+
+            {/* Submit */}
             <button
-              onClick={handleLogin}
+              type="submit"
               disabled={loading}
-              className={`
-                w-full font-pixel text-sm text-white
+              className="w-full font-pixel text-sm text-white
                 bg-blue-600 hover:bg-blue-500
-                border-4 border-black
-                py-4 px-6
+                border-4 border-black py-4 px-6
                 transition-all duration-75
                 active:translate-x-1 active:translate-y-1
-                disabled:opacity-50 disabled:cursor-not-allowed
-              `}
+                disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ boxShadow: '4px 4px 0px #000' }}
             >
               {loading ? (
                 <span className="blink">⏳ LOADING...</span>
               ) : (
-                <>🏛️ LOGIN WITH CAMPUS SSO</>
+                <>🎮 LOG IN</>
               )}
             </button>
 
@@ -92,6 +137,16 @@ export default function LoginPage() {
                 <p className="font-pixel text-xs text-red-300">❌ {error}</p>
               </div>
             )}
+
+            {/* Register link */}
+            <div className="mt-6 text-center">
+              <p className="font-pixel text-xs text-gray-400">
+                NEW PLAYER?{' '}
+                <Link href="/register" className="text-yellow-400 hover:text-yellow-300 underline">
+                  CREATE AN ACCOUNT
+                </Link>
+              </p>
+            </div>
 
             {/* Info box */}
             <div className="mt-6 p-3 bg-yellow-900/50 border-2 border-yellow-600">
@@ -102,7 +157,7 @@ export default function LoginPage() {
                 NEW STUDENTS BATCH 2026
               </p>
             </div>
-          </div>
+          </form>
         </PixelCard>
 
         {/* Footer */}
