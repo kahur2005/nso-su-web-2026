@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Student {
+  id                String               @id @default(cuid())
+  studentId         String               @unique
+  name              String
+  email             String               @unique
+  faculty           String?
+  major             String?
+  year              String?
+  points            Int                  @default(0)
+  level             Int                  @default(1)
+  xp                Int                  @default(0)
+  funFactsCollected Int                  @default(0)
+  groupId           String?
+  isAdmin           Boolean              @default(false)
+  avatarUrl         String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  instagram         String?
+  medicalNote       String?
+  password          String?
+  pastAchievements  String?
+  questProgress     QuestProgress[]
+  scanLogs          ScanLog[]
+  group             Group?               @relation(fields: [groupId], references: [id])
+  achievements      StudentAchievement[]
+}
+
+model Group {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  emblem      String
+  color       String
+  totalPoints Int       @default(0)
+  createdAt   DateTime  @default(now())
+  members     Student[]
+}
+
+model NPC {
+  id            String    @id @default(cuid())
+  committeeName String
+  role          String
+  funFact       String
+  rarity        String    @default("common")
+  points        Int       @default(10)
+  qrToken       String?   @unique
+  qrCode        String?
+  avatarUrl     String?
+  isActive      Boolean   @default(true)
+  scanCount     Int       @default(0)
+  createdAt     DateTime  @default(now())
+  scanLogs      ScanLog[]
+}
+
+model ScanLog {
+  id            String   @id @default(cuid())
+  studentId     String
+  npcId         String
+  pointsAwarded Int
+  scannedAt     DateTime @default(now())
+  npc           NPC      @relation(fields: [npcId], references: [id])
+  student       Student  @relation(fields: [studentId], references: [id])
+
+  @@unique([studentId, npcId])
+}
+
+model Quest {
+  id          String          @id @default(cuid())
+  title       String
+  description String
+  type        String
+  points      Int
+  isActive    Boolean         @default(false)
+  isHidden    Boolean         @default(false)
+  deadline    DateTime?
+  createdAt   DateTime        @default(now())
+  progress    QuestProgress[]
+}
+
+model QuestProgress {
+  id          String    @id @default(cuid())
+  studentId   String
+  questId     String
+  status      String    @default("pending")
+  completedAt DateTime?
+  quest       Quest     @relation(fields: [questId], references: [id])
+  student     Student   @relation(fields: [studentId], references: [id])
+
+  @@unique([studentId, questId])
+}
+
+model Achievement {
+  id          String               @id @default(cuid())
+  name        String
+  description String
+  icon        String
+  condition   String
+  students    StudentAchievement[]
+}
+
+model StudentAchievement {
+  id            String      @id @default(cuid())
+  studentId     String
+  achievementId String
+  unlockedAt    DateTime    @default(now())
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+  student       Student     @relation(fields: [studentId], references: [id])
+
+  @@unique([studentId, achievementId])
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Club {
+  id          String  @id @default(cuid())
+  name        String
+  category    String
+  description String
+  memberCount Int     @default(0)
+  established String?
+  iconUrl     String?
+  contactInfo String?
+}
