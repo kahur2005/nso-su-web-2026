@@ -178,6 +178,31 @@ body {
   100% { top: 100%; }
 }
 
+/* QR scanner — keep the injected scanner UI inside its container so it
+   never overflows the viewport (overflow triggers mobile zoom-out, which
+   pushes the fixed bottom nav off-screen). */
+#qr-reader {
+  width: 100% !important;
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+  border: none !important;
+}
+#qr-reader video,
+#qr-reader img,
+#qr-reader canvas {
+  width: 100% !important;
+  height: auto !important;
+  display: block;
+}
+#qr-reader__dashboard_section_csr,
+#qr-reader__dashboard_section_swaplink,
+#qr-reader__status_span,
+#qr-reader select,
+#qr-reader button {
+  max-width: 100%;
+}
+
 /* Scanline effect */
 .scanlines::after {
   content: '';

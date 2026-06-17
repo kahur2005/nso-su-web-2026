@@ -6,7 +6,7 @@ import { useSession, signOut } from 'next-auth/react'
 
 const navItems = [
   { href: '/dashboard', label: 'HOME', icon: '🏠' },
-  { href: '/map', label: 'MAP', icon: '🗺️' },
+  { href: '/map', label: 'INFO', icon: 'ℹ️' },
   { href: '/quests', label: 'QUESTS', icon: '⚔️' },
   { href: '/scan', label: 'SCAN', icon: '📱' },
   { href: '/leaderboard', label: 'BOARD', icon: '🏆' },
@@ -37,7 +37,7 @@ export default function Navbar() {
                 font-pixel text-xs px-3 py-2
                 border-2 border-transparent
                 transition-all hover:border-white/30
-                ${pathname === item.href
+                ${pathname === item.href || pathname.startsWith(item.href + '/')
                   ? 'bg-green-600 border-green-800 text-white'
                   : 'text-gray-400 hover:text-white'
                 }

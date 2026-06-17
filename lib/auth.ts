@@ -1,58 +1,46 @@
 // lib/auth.ts
 import { NextAuthOptions } from 'next-auth'
+import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from './prisma'
+import { verifyPassword } from './password'
 
 export const authOptions: NextAuthOptions = {
+  // Credentials auth requires JWT sessions (no DB session table).
+  session: { strategy: 'jwt' },
   providers: [
-    {
-      id: 'campus-sso',
-      name: 'Campus SSO',
-      type: 'oauth',
-      clientId: process.env.CAMPUS_CLIENT_ID!,
-      clientSecret: process.env.CAMPUS_CLIENT_SECRET!,
-      authorization: process.env.CAMPUS_AUTH_URL!,
-      token: process.env.CAMPUS_TOKEN_URL!,
-      userinfo: process.env.CAMPUS_USERINFO_URL!,
-      profile(profile) {
+    CredentialsProvider({
+      id: 'credentials',
+      name: 'Email & Password',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null
+
+        const student = await prisma.student.findUnique({
+          where: { email: credentials.email.toLowerCase().trim() },
+        })
+        if (!student || !student.password) return null
+
+        if (!verifyPassword(credentials.password, student.password)) return null
+
         return {
-          id: profile.student_id || profile.sub,
-          name: profile.name || profile.full_name,
-          email: profile.email,
-          studentId: profile.student_id || profile.nim,
-          faculty: profile.faculty,
-          major: profile.major,
-          year: profile.year,
+          id: student.studentId,
+          name: student.name,
+          email: student.email,
+          studentId: student.studentId,
         }
-      }
-    }
+      },
+    }),
   ],
   callbacks: {
-    async signIn({ profile }: any) {
-      if (!profile) return false
-      try {
-        await prisma.student.upsert({
-          where: { studentId: profile.studentId || profile.id },
-          update: { name: profile.name, email: profile.email },
-          create: {
-            studentId: profile.studentId || profile.id,
-            name: profile.name || 'Unknown',
-            email: profile.email || '',
-            faculty: profile.faculty || '',
-            major: profile.major || '',
-            year: profile.year || '',
-          }
-        })
-        return true
-      } catch {
-        return false
-      }
-    },
-    async jwt({ token, profile }: any) {
-      if (profile) {
-        token.studentId = profile.studentId || profile.id
-        token.faculty = profile.faculty
+    async jwt({ token, user }: any) {
+      // `user` is only present at sign-in; refresh the cached claims then.
+      if (user?.studentId) {
+        token.studentId = user.studentId
         const student = await prisma.student.findUnique({
-          where: { studentId: token.studentId as string }
+          where: { studentId: user.studentId },
         })
         token.isAdmin = student?.isAdmin || false
         token.points = student?.points || 0
@@ -64,10 +52,10 @@ export const authOptions: NextAuthOptions = {
       ;(session.user as any).isAdmin = token.isAdmin
       ;(session.user as any).points = token.points
       return session
-    }
+    },
   },
   pages: {
     signIn: '/login',
     error: '/login',
-  }
+  },
 }

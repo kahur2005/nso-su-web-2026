@@ -1,7 +1,6 @@
 // app/(game)/scan/page.tsx
 'use client'
-import { useState, useRef, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PixelCard from '@/components/ui/PixelCard'
@@ -25,21 +24,28 @@ interface ScanResult {
   alreadyCollected?: boolean
 }
 
+interface RecentScan {
+  scannedAt: string
+  pointsAwarded: number
+  npc?: { committeeName?: string; rarity?: string }
+}
+
 export default function ScanPage() {
-  const { data: session } = useSession()
   const router = useRouter()
-  const [scanning, setScanning] = useState(false)
   const [result, setResult] = useState<ScanResult | null>(null)
   const [loading, setLoading] = useState(false)
-  const [recentScans, setRecentScans] = useState<any[]>([])
-  const scannerRef = useRef<any>(null)
-  const scannerDivRef = useRef<HTMLDivElement>(null)
+  const [cameraOn, setCameraOn] = useState(false)
+  const [cameraError, setCameraError] = useState<string | null>(null)
+  const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment')
+  const [recentScans, setRecentScans] = useState<RecentScan[]>([])
 
-  useEffect(() => {
-    fetchRecentScans()
-  }, [])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const qrRef = useRef<any>(null)            // Html5Qrcode instance
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const processingRef = useRef(false)        // guard against double-decode
+  const startingRef = useRef(false)          // guard against overlapping starts
 
-  async function fetchRecentScans() {
+  const fetchRecentScans = useCallback(async () => {
     try {
       const res = await fetch('/api/qr/recent')
       const data = await res.json()
@@ -47,48 +53,18 @@ export default function ScanPage() {
     } catch (e) {
       console.error(e)
     }
-  }
+  }, [])
 
   useEffect(() => {
-    if (!scanning) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchRecentScans()
+  }, [fetchRecentScans])
 
-    let html5QrcodeScanner: any
-
-    async function startScanner() {
-      const { Html5QrcodeScanner } = await import('html5-qrcode')
-
-      html5QrcodeScanner = new Html5QrcodeScanner(
-        'qr-reader',
-        { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1 },
-        false
-      )
-
-      html5QrcodeScanner.render(
-        async (decodedText: string) => {
-          html5QrcodeScanner.clear()
-          setScanning(false)
-          await processScan(decodedText)
-        },
-        (error: any) => { /* ignore scan errors */ }
-      )
-
-      scannerRef.current = html5QrcodeScanner
-    }
-
-    startScanner()
-
-    return () => {
-      if (scannerRef.current) {
-        try { scannerRef.current.clear() } catch (e) {}
-      }
-    }
-  }, [scanning])
-
-  async function processScan(scannedText: string) {
+  const processScan = useCallback(async (scannedText: string) => {
     setLoading(true)
     try {
       let token = scannedText
-      // Extract token from URL if needed
+      // Extract token from URL if the QR encodes the full scan link
       try {
         const url = new URL(scannedText)
         token = url.searchParams.get('token') || scannedText
@@ -97,25 +73,126 @@ export default function ScanPage() {
       const response = await fetch('/api/qr/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token })
+        body: JSON.stringify({ token }),
       })
-
       const data = await response.json()
       setResult(data)
-
-      if (data.success) {
-        fetchRecentScans()
-      }
+      if (data.success) fetchRecentScans()
     } catch {
       setResult({ success: false, error: 'CONNECTION ERROR. TRY AGAIN.' })
     } finally {
       setLoading(false)
     }
-  }
+  }, [fetchRecentScans])
+
+  const getScanner = useCallback(async () => {
+    if (!qrRef.current) {
+      const { Html5Qrcode } = await import('html5-qrcode')
+      qrRef.current = new Html5Qrcode('qr-reader')
+    }
+    return qrRef.current
+  }, [])
+
+  const stopCamera = useCallback(async () => {
+    const scanner = qrRef.current
+    if (scanner) {
+      try { await scanner.stop() } catch {}
+    }
+    setCameraOn(false)
+  }, [])
+
+  const handleDecoded = useCallback(async (decodedText: string) => {
+    if (processingRef.current) return
+    processingRef.current = true
+    await stopCamera()
+    await processScan(decodedText)
+    processingRef.current = false
+  }, [stopCamera, processScan])
+
+  const startCamera = useCallback(async (mode: 'environment' | 'user') => {
+    if (startingRef.current) return
+    startingRef.current = true
+    setCameraError(null)
+    try {
+      const scanner = await getScanner()
+      try { await scanner.stop() } catch {}
+      await scanner.start(
+        { facingMode: mode },
+        {
+          fps: 10,
+          qrbox: (vw: number, vh: number) => {
+            const size = Math.floor(Math.min(vw, vh) * 0.8)
+            return { width: size, height: size }
+          },
+          aspectRatio: 1,
+        },
+        (decodedText: string) => { handleDecoded(decodedText) },
+        () => { /* ignore per-frame decode errors */ }
+      )
+      setCameraOn(true)
+    } catch {
+      setCameraError('CAMERA UNAVAILABLE — ALLOW ACCESS OR UPLOAD AN IMAGE')
+      setCameraOn(false)
+    } finally {
+      startingRef.current = false
+    }
+  }, [getScanner, handleDecoded])
+
+  // Auto-open the camera on the scanner view; stop it while a result is shown.
+  // The #qr-reader element stays mounted (just hidden) so the scanner instance
+  // keeps a valid DOM node across result toggles.
+  useEffect(() => {
+    if (result) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      stopCamera()
+    } else {
+      startCamera(facingMode)
+    }
+    // Restart only when entering/leaving the scanner view; flip is handled manually.
+    // startingRef guards against overlapping starts (incl. StrictMode double-mount).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result])
+
+  // Tear down the scanner instance once, on unmount.
+  useEffect(() => {
+    return () => {
+      const scanner = qrRef.current
+      if (scanner) {
+        scanner.stop().catch(() => {}).finally(() => {
+          try { scanner.clear() } catch {}
+          qrRef.current = null
+        })
+      }
+    }
+  }, [])
+
+  const flipCamera = useCallback(async () => {
+    const next = facingMode === 'environment' ? 'user' : 'environment'
+    setFacingMode(next)
+    await startCamera(next)
+  }, [facingMode, startCamera])
+
+  const onUploadClick = () => fileInputRef.current?.click()
+
+  const onFileSelected = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // allow re-selecting the same file later
+    if (!file) return
+    await stopCamera()
+    setLoading(true)
+    try {
+      const scanner = await getScanner()
+      const decodedText = await scanner.scanFile(file, false)
+      await handleDecoded(decodedText)
+    } catch {
+      setResult({ success: false, error: 'NO QR CODE FOUND IN THAT IMAGE.' })
+    } finally {
+      setLoading(false)
+    }
+  }, [stopCamera, getScanner, handleDecoded])
 
   function resetScanner() {
-    setResult(null)
-    setScanning(false)
+    setResult(null) // triggers the effect that re-opens the camera
   }
 
   const rarity = result?.rarity
@@ -130,76 +207,78 @@ export default function ScanPage() {
           📱 SCAN QR CODE
         </h1>
 
-        {/* Scanner Area */}
-        {!result && (
+        {/* Hidden file input for image upload */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={onFileSelected}
+        />
+
+        {/* Scanner Area — kept mounted (hidden under a result) so #qr-reader
+            always exists in the DOM for the html5-qrcode instance. */}
+        <div className={result ? 'hidden' : ''}>
           <PixelCard className="bg-gray-800 mb-6">
             <p className="font-pixel text-xs text-gray-400 text-center mb-4">
-              FIND A COMMITTEE MEMBER
+              POINT YOUR CAMERA AT A
               <br />
-              <span className="text-green-400">SCAN THEIR QR CODE</span>
+              <span className="text-green-400">COMMITTEE QR CODE</span>
               <br />
               TO COLLECT A FUN FACT!
             </p>
 
             {/* Camera viewfinder */}
-            <div className="relative mx-auto" style={{ width: 'fit-content' }}>
-              {/* Pixel corner decorations */}
-              {scanning && (
+            <div className="relative mx-auto w-full max-w-[280px]">
+              {/* Pixel corner decorations + scan line (only while camera live) */}
+              {cameraOn && (
                 <>
                   <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4
-                    border-green-400 z-10" />
+                    border-green-400 z-10 pointer-events-none" />
                   <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4
-                    border-green-400 z-10" />
+                    border-green-400 z-10 pointer-events-none" />
                   <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4
-                    border-green-400 z-10" />
+                    border-green-400 z-10 pointer-events-none" />
                   <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4
-                    border-green-400 z-10" />
-                  {/* Scan line animation */}
-                  <div className="absolute left-0 right-0 h-0.5 bg-green-400 z-10"
+                    border-green-400 z-10 pointer-events-none" />
+                  <div className="absolute left-0 right-0 h-0.5 bg-green-400 z-10 pointer-events-none"
                     style={{ animation: 'scanLine 2s linear infinite', top: '0%' }} />
                 </>
               )}
 
-              {!scanning ? (
-                <div className="w-64 h-64 bg-gray-900 border-4 border-gray-700
-                  flex flex-col items-center justify-center gap-4">
-                  <span className="text-6xl float">📷</span>
-                  <p className="font-pixel text-xs text-gray-500 text-center">
-                    CAMERA OFFLINE
+              {/* html5-qrcode renders the live camera here */}
+              <div id="qr-reader" className="w-full overflow-hidden border-4 border-green-500
+                bg-gray-900 min-h-[200px]" />
+
+              {/* Overlay shown when the camera could not start */}
+              {cameraError && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center
+                  gap-3 bg-gray-900/95 border-4 border-red-700 p-4 text-center">
+                  <span className="text-4xl">🚫</span>
+                  <p className="font-pixel text-[10px] text-red-300 leading-relaxed">
+                    {cameraError}
                   </p>
                 </div>
-              ) : (
-                <div id="qr-reader" ref={scannerDivRef}
-                  className="border-4 border-green-500"
-                  style={{ width: '300px' }} />
               )}
             </div>
 
             {/* Controls */}
-            <div className="mt-6 flex flex-col gap-3">
-              {!scanning ? (
-                <PixelButton
-                  onClick={() => setScanning(true)}
-                  color="green"
-                  fullWidth
-                >
-                  ▶ START SCANNING
-                </PixelButton>
-              ) : (
-                <PixelButton
-                  onClick={() => {
-                    if (scannerRef.current) {
-                      try { scannerRef.current.clear() } catch {}
-                    }
-                    setScanning(false)
-                  }}
-                  color="red"
-                  fullWidth
-                >
-                  ⏹ STOP SCANNING
-                </PixelButton>
-              )}
+            <div className="mt-6 flex gap-3">
+              <PixelButton onClick={flipCamera} color="blue" fullWidth>
+                🔄 FLIP
+              </PixelButton>
+              <PixelButton onClick={onUploadClick} color="yellow" fullWidth>
+                🖼️ UPLOAD
+              </PixelButton>
             </div>
+
+            {cameraError && (
+              <div className="mt-3">
+                <PixelButton onClick={() => startCamera(facingMode)} color="green" fullWidth>
+                  ▶ RETRY CAMERA
+                </PixelButton>
+              </div>
+            )}
 
             {loading && (
               <div className="text-center mt-4">
@@ -209,7 +288,7 @@ export default function ScanPage() {
               </div>
             )}
           </PixelCard>
-        )}
+        </div>
 
         {/* Scan Result - RPG Dialog Style */}
         {result && (
@@ -236,7 +315,7 @@ export default function ScanPage() {
                 <div className="p-4 bg-gray-900 border-2 border-gray-700 mb-4"
                   style={{ borderColor: rarity?.color }}>
                   <p className="font-pixel text-xs text-white leading-relaxed">
-                    "{result.funFact}"
+                    &ldquo;{result.funFact}&rdquo;
                   </p>
                 </div>
 

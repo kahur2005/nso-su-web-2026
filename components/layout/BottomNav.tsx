@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 
 const items = [
   { href: '/dashboard', icon: '🏠', label: 'HOME' },
-  { href: '/map', icon: '🗺️', label: 'MAP' },
+  { href: '/map', icon: 'ℹ️', label: 'INFO' },
   { href: '/scan', icon: '📱', label: 'SCAN' },
   { href: '/leaderboard', icon: '🏆', label: 'BOARD' },
   { href: '/profile', icon: '👤', label: 'ME' },
@@ -20,7 +20,7 @@ export default function BottomNav() {
       style={{ boxShadow: '0 -4px 0 #000' }}>
       <div className="flex">
         {items.map((item) => {
-          const isActive = pathname === item.href
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
           return (
             <Link
               key={item.href}

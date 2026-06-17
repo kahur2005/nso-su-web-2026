@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PixelCard from '@/components/ui/PixelCard'
 import ProgressBar from '@/components/ui/ProgressBar'
+import Timeline from '@/components/dashboard/Timeline'
 import Link from 'next/link'
 
 async function getDashboardData(studentId: string) {
@@ -244,6 +245,9 @@ export default async function DashboardPage() {
             />
           </PixelCard>
         </div>
+
+        {/* Event Timeline */}
+        <Timeline />
 
       </div>
     </PageWrapper>
