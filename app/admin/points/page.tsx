@@ -5,6 +5,8 @@ import { redirect } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import AdminHeader from '@/components/layout/AdminHeader'
 import PixelCard from '@/components/ui/PixelCard'
+import StudentPicker from '@/components/admin/StudentPicker'
+import GroupEmblem from '@/components/ui/GroupEmblem'
 import { adjustPoints } from '../actions'
 
 const inputClass = `w-full bg-gray-900 border-2 border-black text-white
@@ -18,11 +20,23 @@ export default async function AdminPointsPage() {
 
   const { data: topStudentsData } = await supabase
     .from('Student')
-    .select('*, group:Group(name, emblem, color)')
+    .select('*, group:Group(name, emblem, emblemUrl, color)')
     .order('points', { ascending: false })
     .limit(15)
 
   const topStudents = topStudentsData ?? []
+
+  const { data: studentsData } = await supabase
+    .from('Student')
+    .select('studentId, name, email, group:Group(name)')
+    .order('name', { ascending: true })
+
+  const students = (studentsData ?? []).map((s: any) => ({
+    studentId: s.studentId,
+    name: s.name,
+    email: s.email,
+    groupName: s.group?.name ?? null,
+  }))
 
   return (
     <div className="min-h-screen bg-gray-900 scanlines">
@@ -41,10 +55,9 @@ export default async function AdminPointsPage() {
               <form action={adjustPoints} className="space-y-3">
                 <div>
                   <label className="font-pixel text-xs text-gray-400 block mb-1">
-                    STUDENT ID
+                    STUDENT NAME
                   </label>
-                  <input name="studentId" className={inputClass}
-                    placeholder="e.g. 2026010101" required />
+                  <StudentPicker students={students} inputClass={inputClass} />
                 </div>
 
                 <div>
@@ -94,9 +107,10 @@ export default async function AdminPointsPage() {
                           {student.studentId}
                         </span>
                         {student.group && (
-                          <span className="font-pixel text-[8px]"
+                          <span className="font-pixel text-[8px] inline-flex items-center gap-1"
                             style={{ color: student.group.color }}>
-                            {student.group.emblem} {student.group.name}
+                            <GroupEmblem emblem={student.group.emblem} emblemUrl={student.group.emblemUrl} size={12} />
+                            {student.group.name}
                           </span>
                         )}
                       </div>
