@@ -5,7 +5,9 @@ import { redirect } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import AdminHeader from '@/components/layout/AdminHeader'
 import PixelCard from '@/components/ui/PixelCard'
-import { createGroup, assignStudentToGroup } from '../actions'
+import StudentPicker from '@/components/admin/StudentPicker'
+import GroupEmblem from '@/components/ui/GroupEmblem'
+import { createGroup, assignStudentToGroup, unassignStudent } from '../actions'
 
 const inputClass = `w-full bg-gray-900 border-2 border-black text-white
   font-pixel text-xs p-3 focus:outline-none focus:border-blue-500`
@@ -30,6 +32,19 @@ export default async function AdminGroupsPage() {
     .from('Student')
     .select('*', { count: 'exact', head: true })
     .is('groupId', null)
+
+  const { data: studentsData } = await supabase
+    .from('Student')
+    .select('studentId, name, email, groupId, group:Group(name)')
+    .order('name', { ascending: true })
+
+  const students = (studentsData ?? []).map((s: any) => ({
+    studentId: s.studentId,
+    name: s.name,
+    email: s.email,
+    groupId: s.groupId ?? null,
+    groupName: s.group?.name ?? null,
+  }))
 
   return (
     <div className="min-h-screen bg-gray-900 scanlines">
@@ -79,6 +94,17 @@ export default async function AdminGroupsPage() {
                       className="w-full h-10 bg-gray-900 border-2 border-black cursor-pointer" />
                   </div>
                 </div>
+                <div>
+                  <label className="font-pixel text-xs text-gray-400 block mb-1">
+                    EMBLEM IMAGE (LOGO) — OPTIONAL
+                  </label>
+                  <input name="emblemImage" type="file" accept="image/*"
+                    className={`${inputClass} file:mr-3 file:border-0 file:bg-blue-600
+                      file:text-white file:font-pixel file:text-[8px] file:px-2 file:py-1`} />
+                  <p className="font-pixel text-[8px] text-gray-500 mt-1">
+                    IF SET, THE IMAGE IS USED AS THE LOGO (EMOJI IS THE FALLBACK).
+                  </p>
+                </div>
                 <button type="submit"
                   className="pixel-btn w-full bg-blue-500 hover:bg-blue-400
                     text-white font-pixel text-sm px-6 py-3 rounded-none">
@@ -92,10 +118,9 @@ export default async function AdminGroupsPage() {
               <form action={assignStudentToGroup} className="space-y-3">
                 <div>
                   <label className="font-pixel text-xs text-gray-400 block mb-1">
-                    STUDENT ID
+                    STUDENT NAME
                   </label>
-                  <input name="studentId" className={inputClass}
-                    placeholder="e.g. 2026010101" required />
+                  <StudentPicker students={students} inputClass={inputClass} />
                 </div>
                 <div>
                   <label className="font-pixel text-xs text-gray-400 block mb-1">
@@ -125,7 +150,9 @@ export default async function AdminGroupsPage() {
             </div>
 
             <div className="space-y-3">
-              {groups.map((group, index) => (
+              {groups.map((group, index) => {
+                const members = students.filter((s) => s.groupId === group.id)
+                return (
                 <PixelCard key={group.id} className="bg-gray-800" glowColor={group.color}>
                   <div className="flex items-center gap-3">
                     <span className="font-pixel text-sm w-8"
@@ -137,9 +164,9 @@ export default async function AdminGroupsPage() {
                       #{index + 1}
                     </span>
                     <div className="w-12 h-12 border-2 border-black flex items-center
-                      justify-center text-2xl flex-shrink-0"
+                      justify-center overflow-hidden flex-shrink-0"
                       style={{ backgroundColor: `${group.color}33` }}>
-                      {group.emblem}
+                      <GroupEmblem emblem={group.emblem} emblemUrl={group.emblemUrl} size={44} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-pixel text-xs" style={{ color: group.color }}>
@@ -153,8 +180,37 @@ export default async function AdminGroupsPage() {
                       {group.totalPoints} PTS
                     </span>
                   </div>
+
+                  {/* Members — remove to unassign (reassign via the form above) */}
+                  {members.length > 0 && (
+                    <div className="mt-3 pt-3 border-t-2 border-gray-700 space-y-1">
+                      {members.map((m) => (
+                        <div key={m.studentId}
+                          className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-pixel text-[10px] text-white truncate">
+                              {m.name}
+                            </p>
+                            <p className="font-pixel text-[8px] text-gray-500">
+                              {m.studentId}
+                            </p>
+                          </div>
+                          <form action={unassignStudent}>
+                            <input type="hidden" name="studentId" value={m.studentId} />
+                            <button type="submit"
+                              className="font-pixel text-[8px] px-2 py-1 border-2 border-black
+                                bg-red-800 text-white hover:bg-red-700 transition-colors"
+                              style={{ boxShadow: '2px 2px 0 #000' }}>
+                              ✕ REMOVE
+                            </button>
+                          </form>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </PixelCard>
-              ))}
+                )
+              })}
 
               {groups.length === 0 && (
                 <PixelCard className="bg-gray-800 text-center py-8">
