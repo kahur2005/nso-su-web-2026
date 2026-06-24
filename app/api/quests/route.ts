@@ -1,5 +1,5 @@
 // app/api/quests/route.ts
-import { prisma } from '@/lib/prisma'
+import { supabase } from '@/lib/supabase'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { NextResponse } from 'next/server'
@@ -12,26 +12,34 @@ export async function GET() {
 
   const studentId = (session.user as any).studentId
 
-  const student = await prisma.student.findUnique({
-    where: { studentId }
-  })
+  const { data: student } = await supabase
+    .from('Student')
+    .select('id')
+    .eq('studentId', studentId)
+    .maybeSingle()
 
   if (!student) {
     return NextResponse.json({ error: 'Student not found' }, { status: 404 })
   }
 
-  const quests = await prisma.quest.findMany({
-    orderBy: [{ type: 'asc' }, { createdAt: 'desc' }],
-    include: {
-      progress: {
-        where: { studentId: student.id }
-      }
-    }
-  })
+  const { data: quests } = await supabase
+    .from('Quest')
+    .select('*')
+    .order('type', { ascending: true })
+    .order('createdAt', { ascending: false })
 
-  const questsWithProgress = quests.map(q => ({
+  const { data: progressRows } = await supabase
+    .from('QuestProgress')
+    .select('*')
+    .eq('studentId', student.id)
+
+  const progressByQuest = new Map(
+    (progressRows ?? []).map((p: any) => [p.questId, p])
+  )
+
+  const questsWithProgress = (quests ?? []).map((q: any) => ({
     ...q,
-    progress: q.progress[0] || null
+    progress: progressByQuest.get(q.id) || null,
   }))
 
   return NextResponse.json({ quests: questsWithProgress })

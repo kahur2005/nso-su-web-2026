@@ -1,6 +1,6 @@
 // app/api/qr/scan/route.ts
 import jwt from 'jsonwebtoken'
-import { prisma } from '@/lib/prisma'
+import { supabase } from '@/lib/supabase'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { NextResponse } from 'next/server'
@@ -19,72 +19,34 @@ export async function POST(request: Request) {
     const decoded = jwt.verify(token, process.env.QR_SECRET_KEY!) as any
     const { npcId, points } = decoded
 
-    // Get student
-    const student = await prisma.student.findUnique({
-      where: { studentId: sessionStudentId },
-      include: { group: true }
-    })
+    // Get student (resolve public studentId -> internal id)
+    const { data: student } = await supabase
+      .from('Student')
+      .select('id')
+      .eq('studentId', sessionStudentId)
+      .maybeSingle()
 
     if (!student) {
       return NextResponse.json({ success: false, error: 'Student not found' })
     }
 
-    // Check duplicate
-    const alreadyScanned = await prisma.scanLog.findFirst({
-      where: { studentId: student.id, npcId }
+    // Atomically record the scan and award points (duplicate check + NPC
+    // lookup happen inside the RPC). Returns the response payload as JSON.
+    const { data: result, error } = await supabase.rpc('scan_npc', {
+      p_student_id: student.id,
+      p_npc_id: npcId,
+      p_points: points,
     })
 
-    if (alreadyScanned) {
-      return NextResponse.json({
-        success: false,
-        error: 'You already collected this fun fact!',
-        alreadyCollected: true
-      })
+    if (error) {
+      console.error(error)
+      return NextResponse.json(
+        { success: false, error: 'Server error' },
+        { status: 500 }
+      )
     }
 
-    // Get NPC
-    const npc = await prisma.nPC.findUnique({ where: { id: npcId } })
-    if (!npc) {
-      return NextResponse.json({ success: false, error: 'Invalid QR Code!' })
-    }
-
-    // Transaction: award points
-    await prisma.$transaction([
-      prisma.scanLog.create({
-        data: {
-          studentId: student.id,
-          npcId,
-          pointsAwarded: points
-        }
-      }),
-      prisma.student.update({
-        where: { id: student.id },
-        data: {
-          points: { increment: points },
-          funFactsCollected: { increment: 1 },
-          xp: { increment: points }
-        }
-      }),
-      ...(student.groupId ? [
-        prisma.group.update({
-          where: { id: student.groupId },
-          data: { totalPoints: { increment: points } }
-        })
-      ] : []),
-      prisma.nPC.update({
-        where: { id: npcId },
-        data: { scanCount: { increment: 1 } }
-      })
-    ])
-
-    return NextResponse.json({
-      success: true,
-      npcName: npc.committeeName,
-      npcRole: npc.role,
-      funFact: npc.funFact,
-      rarity: npc.rarity,
-      pointsAwarded: points,
-    })
+    return NextResponse.json(result)
 
   } catch (error: any) {
     if (error.name === 'JsonWebTokenError') {

@@ -1,5 +1,5 @@
 // app/api/codex/route.ts
-import { prisma } from '@/lib/prisma'
+import { supabase } from '@/lib/supabase'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { NextResponse } from 'next/server'
@@ -12,24 +12,30 @@ export async function GET() {
 
   const studentId = (session.user as any).studentId
 
-  const student = await prisma.student.findUnique({
-    where: { studentId },
-    include: {
-      scanLogs: {
-        select: { npcId: true, scannedAt: true, npc: true }
-      }
-    }
-  })
+  const { data: student } = await supabase
+    .from('Student')
+    .select('id')
+    .eq('studentId', studentId)
+    .maybeSingle()
 
-  const allNPCs = await prisma.nPC.findMany({
-    where: { isActive: true },
-    orderBy: { createdAt: 'asc' }
-  })
+  const { data: scanLogs } = student
+    ? await supabase
+        .from('ScanLog')
+        .select('npcId, scannedAt')
+        .eq('studentId', student.id)
+    : { data: [] as any[] }
 
-  const collectedIds = new Set(student?.scanLogs.map(s => s.npcId) || [])
+  const { data: allNPCs } = await supabase
+    .from('NPC')
+    .select('*')
+    .eq('isActive', true)
+    .order('createdAt', { ascending: true })
 
-  const entries = allNPCs.map((npc, index) => {
-    const scanLog = student?.scanLogs.find(s => s.npcId === npc.id)
+  const scans = scanLogs ?? []
+  const collectedIds = new Set(scans.map((s: any) => s.npcId))
+
+  const entries = (allNPCs ?? []).map((npc: any, index: number) => {
+    const scanLog = scans.find((s: any) => s.npcId === npc.id)
     return {
       id: npc.id,
       npcId: npc.id,
@@ -41,7 +47,7 @@ export async function GET() {
       avatarUrl: npc.avatarUrl,
       collected: collectedIds.has(npc.id),
       collectedAt: scanLog?.scannedAt || null,
-      index: index + 1
+      index: index + 1,
     }
   })
 

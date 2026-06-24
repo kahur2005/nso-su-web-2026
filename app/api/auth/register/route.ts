@@ -1,5 +1,5 @@
 // app/api/auth/register/route.ts
-import { prisma } from '@/lib/prisma'
+import { supabase } from '@/lib/supabase'
 import { hashPassword } from '@/lib/password'
 import { NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
@@ -40,7 +40,11 @@ export async function POST(request: Request) {
     )
   }
 
-  const existing = await prisma.student.findUnique({ where: { email } })
+  const { data: existing } = await supabase
+    .from('Student')
+    .select('id')
+    .eq('email', email)
+    .maybeSingle()
   if (existing) {
     return NextResponse.json(
       { error: 'An account with this email already exists.' },
@@ -48,17 +52,23 @@ export async function POST(request: Request) {
     )
   }
 
-  await prisma.student.create({
-    data: {
-      studentId: `NSO-${randomUUID().slice(0, 8).toUpperCase()}`,
-      name,
-      email,
-      password: hashPassword(password),
-      medicalNote,
-      pastAchievements: achievements,
-      instagram: instagram || null,
-    },
+  const { error } = await supabase.from('Student').insert({
+    studentId: `NSO-${randomUUID().slice(0, 8).toUpperCase()}`,
+    name,
+    email,
+    password: hashPassword(password),
+    medicalNote,
+    pastAchievements: achievements,
+    instagram: instagram || null,
   })
+
+  if (error) {
+    console.error(error)
+    return NextResponse.json(
+      { error: 'Could not create account. Please try again.' },
+      { status: 500 }
+    )
+  }
 
   return NextResponse.json({ success: true })
 }
