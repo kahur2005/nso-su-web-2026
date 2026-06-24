@@ -13,13 +13,55 @@ export default function NpcForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [generatedQr, setGeneratedQr] = useState<string | null>(null)
+  const [generatedName, setGeneratedName] = useState('')
   const [form, setForm] = useState({
     committeeName: '',
     role: '',
     funFact: '',
-    rarity: 'common',
     points: 10,
   })
+
+  // Composite the raw QR data-URL onto a canvas with the NPC name and the time
+  // it was generated, returning a new PNG data-URL (used for display + download).
+  function composeLabeledQr(qrDataUrl: string, name: string, generatedAt: string) {
+    return new Promise<string>((resolve) => {
+      const img = new Image()
+      img.onload = () => {
+        const pad = 24
+        const qrSize = 400
+        const footerH = 104
+        const canvas = document.createElement('canvas')
+        canvas.width = qrSize + pad * 2
+        canvas.height = pad + qrSize + footerH
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return resolve(qrDataUrl)
+
+        ctx.fillStyle = '#FFFFFF'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.drawImage(img, pad, pad, qrSize, qrSize)
+
+        ctx.textAlign = 'center'
+        ctx.fillStyle = '#000000'
+        ctx.font = 'bold 30px sans-serif'
+        ctx.fillText(name, canvas.width / 2, pad + qrSize + 46, qrSize)
+        ctx.fillStyle = '#555555'
+        ctx.font = '18px sans-serif'
+        ctx.fillText(`Generated: ${generatedAt}`, canvas.width / 2, pad + qrSize + 80, qrSize)
+
+        resolve(canvas.toDataURL('image/png'))
+      }
+      img.onerror = () => resolve(qrDataUrl)
+      img.src = qrDataUrl
+    })
+  }
+
+  function downloadQr() {
+    if (!generatedQr) return
+    const a = document.createElement('a')
+    a.href = generatedQr
+    a.download = `qr-${generatedName.trim().replace(/\s+/g, '-').toLowerCase() || 'npc'}.png`
+    a.click()
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -40,8 +82,11 @@ export default function NpcForm() {
         return
       }
 
-      setGeneratedQr(data.qrCode)
-      setForm({ committeeName: '', role: '', funFact: '', rarity: 'common', points: 10 })
+      const generatedAt = new Date(data.npc?.createdAt ?? Date.now()).toLocaleString()
+      const labeled = await composeLabeledQr(data.qrCode, data.npc.committeeName, generatedAt)
+      setGeneratedQr(labeled)
+      setGeneratedName(data.npc.committeeName)
+      setForm({ committeeName: '', role: '', funFact: '', points: 10 })
       router.refresh()
     } catch {
       setError('CONNECTION ERROR')
@@ -95,35 +140,18 @@ export default function NpcForm() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="font-pixel text-xs text-gray-400 block mb-1">
-              RARITY
-            </label>
-            <select
-              className={inputClass}
-              value={form.rarity}
-              onChange={(e) => setForm({ ...form, rarity: e.target.value })}
-            >
-              <option value="common">★ COMMON</option>
-              <option value="rare">★★ RARE</option>
-              <option value="epic">★★★ EPIC</option>
-              <option value="legendary">★★★★ LEGENDARY</option>
-            </select>
-          </div>
-          <div>
-            <label className="font-pixel text-xs text-gray-400 block mb-1">
-              POINTS
-            </label>
-            <input
-              type="number"
-              min={1}
-              className={inputClass}
-              value={form.points}
-              onChange={(e) => setForm({ ...form, points: parseInt(e.target.value) || 0 })}
-              required
-            />
-          </div>
+        <div>
+          <label className="font-pixel text-xs text-gray-400 block mb-1">
+            POINTS
+          </label>
+          <input
+            type="number"
+            min={1}
+            className={inputClass}
+            value={form.points}
+            onChange={(e) => setForm({ ...form, points: parseInt(e.target.value) || 0 })}
+            required
+          />
         </div>
 
         {error && (
@@ -146,13 +174,16 @@ export default function NpcForm() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={generatedQr}
-            alt="Generated QR code"
-            className="mx-auto border-4 border-black bg-white"
-            width={200}
-            height={200}
+            alt={`Generated QR code for ${generatedName}`}
+            className="mx-auto border-4 border-black bg-white max-w-[240px] w-full"
           />
+          <div className="mt-4">
+            <PixelButton type="button" color="blue" fullWidth onClick={downloadQr}>
+              ⬇ DOWNLOAD QR
+            </PixelButton>
+          </div>
           <p className="font-pixel text-[8px] text-gray-400 mt-3">
-            RIGHT-CLICK TO SAVE — OR FIND IT IN THE LIST BELOW
+            NAME & TIME ARE PRINTED ON THE IMAGE — OR FIND IT IN THE LIST BELOW
           </p>
         </div>
       )}
