@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import PixelCard from '@/components/ui/PixelCard'
+import GroupEmblem from '@/components/ui/GroupEmblem'
 
 async function getAdminStats() {
   const todayStart = new Date()
@@ -125,7 +126,7 @@ export default async function AdminDashboard() {
                     <span className="font-pixel text-sm text-gray-400 w-8">
                       #{i + 1}
                     </span>
-                    <span className="text-xl">{group.emblem}</span>
+                    <GroupEmblem emblem={group.emblem} emblemUrl={group.emblemUrl} size={24} />
                     <div className="flex-1">
                       <p className="font-pixel text-xs text-white">{group.name}</p>
                     </div>
