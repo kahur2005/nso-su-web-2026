@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PixelCard from '@/components/ui/PixelCard'
 import ProgressBar from '@/components/ui/ProgressBar'
+import GroupEmblem from '@/components/ui/GroupEmblem'
 
 async function getProfileData(studentId: string) {
   const { data: student } = await supabase
@@ -101,9 +102,10 @@ export default async function ProfilePage() {
                 </p>
               )}
               {student.group && (
-                <p className="font-pixel text-xs mt-1"
+                <p className="font-pixel text-xs mt-1 flex items-center gap-1"
                   style={{ color: student.group.color }}>
-                  {student.group.emblem} {student.group.name}
+                  <GroupEmblem emblem={student.group.emblem} emblemUrl={student.group.emblemUrl} size={16} />
+                  {student.group.name}
                 </p>
               )}
             </div>
