@@ -5,6 +5,7 @@ import PageWrapper from '@/components/layout/PageWrapper'
 import PixelCard from '@/components/ui/PixelCard'
 import ProgressBar from '@/components/ui/ProgressBar'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import GroupEmblem from '@/components/ui/GroupEmblem'
 
 type Tab = 'groups' | 'individual' | 'daily'
 
@@ -12,6 +13,7 @@ interface Group {
   id: string
   name: string
   emblem: string
+  emblemUrl?: string | null
   color: string
   totalPoints: number
   _count: { members: number }
@@ -23,7 +25,7 @@ interface Student {
   studentId: string
   points: number
   funFactsCollected: number
-  group: { name: string; emblem: string; color: string }
+  group: { name: string; emblem: string; emblemUrl?: string | null; color: string }
 }
 
 const rankColors = ['#FFD700', '#C0C0C0', '#CD7F32']
@@ -93,7 +95,9 @@ export default function LeaderboardPage() {
             <p className="font-pixel text-xs text-yellow-400 mb-2">
               👑 CURRENT LEADER 👑
             </p>
-            <div className="text-5xl mb-2 float inline-block">{groups[0].emblem}</div>
+            <div className="mb-2 float inline-block">
+              <GroupEmblem emblem={groups[0].emblem} emblemUrl={groups[0].emblemUrl} size={56} />
+            </div>
             <h2 className="font-pixel text-xl text-white">{groups[0].name}</h2>
             <p className="font-pixel text-2xl text-yellow-400 mt-2">
               {groups[0].totalPoints.toLocaleString()} PTS
@@ -151,7 +155,7 @@ export default function LeaderboardPage() {
                     </div>
 
                     {/* Emblem */}
-                    <span className="text-3xl">{group.emblem}</span>
+                    <GroupEmblem emblem={group.emblem} emblemUrl={group.emblemUrl} size={36} />
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
@@ -197,7 +201,9 @@ export default function LeaderboardPage() {
               className="bg-gray-800 mb-4 text-center"
               glowColor={selectedGroup.color}
             >
-              <div className="text-5xl mb-2">{selectedGroup.emblem}</div>
+              <div className="mb-2">
+                <GroupEmblem emblem={selectedGroup.emblem} emblemUrl={selectedGroup.emblemUrl} size={56} />
+              </div>
               <h2 className="font-pixel text-xl text-white">{selectedGroup.name}</h2>
               <p className="font-pixel text-3xl text-yellow-400 mt-2">
                 {selectedGroup.totalPoints.toLocaleString()} PTS
@@ -252,7 +258,7 @@ export default function LeaderboardPage() {
                   <div className="flex-1">
                     <p className="font-pixel text-xs text-white">{student.name}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-sm">{student.group?.emblem}</span>
+                      <GroupEmblem emblem={student.group?.emblem} emblemUrl={student.group?.emblemUrl} size={18} />
                       <span className="font-pixel text-xs"
                         style={{ color: student.group?.color || '#fff' }}>
                         {student.group?.name}
