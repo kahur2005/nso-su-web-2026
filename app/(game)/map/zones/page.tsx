@@ -33,8 +33,8 @@ const zones: MapZone[] = [
     icon: '📚',
     color: '#9C27B0',
     bg: 'bg-purple-900/40',
-    description: 'Quiet zone full of knowledge. Rumor says rare fun facts hide between the shelves.',
-    tip: 'Look for EPIC rarity NPCs studying here.'
+    description: 'Quiet zone full of knowledge. Rumor says fun facts hide between the shelves.',
+    tip: 'Look for committee NPCs studying here.'
   },
   {
     id: 'cafeteria',
