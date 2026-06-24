@@ -1,7 +1,7 @@
 // lib/auth.ts
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { prisma } from './prisma'
+import { supabase } from './supabase'
 import { verifyPassword } from './password'
 
 export const authOptions: NextAuthOptions = {
@@ -18,9 +18,11 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
 
-        const student = await prisma.student.findUnique({
-          where: { email: credentials.email.toLowerCase().trim() },
-        })
+        const { data: student } = await supabase
+          .from('Student')
+          .select('*')
+          .eq('email', credentials.email.toLowerCase().trim())
+          .maybeSingle()
         if (!student || !student.password) return null
 
         if (!verifyPassword(credentials.password, student.password)) return null
@@ -39,9 +41,11 @@ export const authOptions: NextAuthOptions = {
       // `user` is only present at sign-in; refresh the cached claims then.
       if (user?.studentId) {
         token.studentId = user.studentId
-        const student = await prisma.student.findUnique({
-          where: { studentId: user.studentId },
-        })
+        const { data: student } = await supabase
+          .from('Student')
+          .select('isAdmin, points')
+          .eq('studentId', user.studentId)
+          .maybeSingle()
         token.isAdmin = student?.isAdmin || false
         token.points = student?.points || 0
       }
