@@ -12,12 +12,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { committeeName, role, funFact, rarity, points } = await request.json()
+  const { committeeName, role, funFact, points } = await request.json()
 
   // Create NPC
   const { data: npc, error: createError } = await supabase
     .from('NPC')
-    .insert({ committeeName, role, funFact, rarity, points })
+    .insert({ committeeName, role, funFact, points })
     .select()
     .single()
 
