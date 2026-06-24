@@ -6,14 +6,7 @@ import PixelCard from '@/components/ui/PixelCard'
 import ProgressBar from '@/components/ui/ProgressBar'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
-type RarityFilter = 'all' | 'common' | 'rare' | 'epic' | 'legendary'
-
-const rarityConfig = {
-  common: { color: '#9E9E9E', stars: '★', bg: 'bg-gray-700', border: 'border-gray-500' },
-  rare: { color: '#2196F3', stars: '★★', bg: 'bg-blue-900', border: 'border-blue-500' },
-  epic: { color: '#9C27B0', stars: '★★★', bg: 'bg-purple-900', border: 'border-purple-500' },
-  legendary: { color: '#FFD700', stars: '★★★★', bg: 'bg-yellow-900', border: 'border-yellow-500' },
-}
+const ACCENT = '#9C27B0'
 
 interface CodexEntry {
   id: string
@@ -21,7 +14,6 @@ interface CodexEntry {
   committeeName: string
   role: string
   funFact: string
-  rarity: string
   points: number
   avatarUrl?: string
   collected: boolean
@@ -31,7 +23,6 @@ interface CodexEntry {
 
 export default function CodexPage() {
   const [entries, setEntries] = useState<CodexEntry[]>([])
-  const [activeFilter, setActiveFilter] = useState<RarityFilter>('all')
   const [selectedEntry, setSelectedEntry] = useState<CodexEntry | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -51,14 +42,10 @@ export default function CodexPage() {
     }
   }
 
-  const filtered = activeFilter === 'all'
-    ? entries
-    : entries.filter(e => e.rarity === activeFilter)
+  const filtered = entries
 
   const collected = entries.filter(e => e.collected).length
   const total = entries.length
-
-  const rarityFilters: RarityFilter[] = ['all', 'common', 'rare', 'epic', 'legendary']
 
   if (loading) return <PageWrapper><LoadingSpinner text="LOADING CODEX..." /></PageWrapper>
 
@@ -105,38 +92,12 @@ export default function CodexPage() {
           ))}
         </div>
 
-        {/* Rarity Filter */}
-        <div className="flex gap-1 mb-6 overflow-x-auto pb-2">
-          {rarityFilters.map((filter) => {
-            const cfg = filter === 'all' ? null : rarityConfig[filter]
-            return (
-              <button
-                key={filter}
-                onClick={() => setActiveFilter(filter)}
-                className={`
-                  flex-shrink-0 font-pixel text-xs py-2 px-3
-                  border-2 border-black uppercase transition-all
-                  ${activeFilter === filter ? 'opacity-100' : 'opacity-50 hover:opacity-75'}
-                `}
-                style={{
-                  backgroundColor: cfg ? `${cfg.color}33` : '#374151',
-                  borderColor: cfg?.color || '#000',
-                  color: cfg?.color || '#fff',
-                  boxShadow: activeFilter === filter ? '3px 3px 0 #000' : 'none'
-                }}
-              >
-                {filter === 'all' ? 'ALL' : `${cfg?.stars} ${filter}`}
-              </button>
-            )
-          })}
-        </div>
-
         {/* Entry Detail View */}
         {selectedEntry && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
             <PixelCard
               className="w-full max-w-md"
-              glowColor={rarityConfig[selectedEntry.rarity as keyof typeof rarityConfig]?.color}
+              glowColor={ACCENT}
             >
               <div className="p-4">
                 {/* NPC Info */}
@@ -158,16 +119,8 @@ export default function CodexPage() {
                   </div>
                 </div>
 
-                {/* Rarity Badge */}
+                {/* Points */}
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="font-pixel text-xs px-2 py-1 border-2"
-                    style={{
-                      color: rarityConfig[selectedEntry.rarity as keyof typeof rarityConfig]?.color,
-                      borderColor: rarityConfig[selectedEntry.rarity as keyof typeof rarityConfig]?.color
-                    }}>
-                    {rarityConfig[selectedEntry.rarity as keyof typeof rarityConfig]?.stars}{' '}
-                    {selectedEntry.rarity.toUpperCase()}
-                  </span>
                   <span className="font-pixel text-xs text-yellow-400">
                     +{selectedEntry.points} PTS
                   </span>
@@ -175,9 +128,7 @@ export default function CodexPage() {
 
                 {/* Fun Fact */}
                 <div className="p-4 bg-gray-900 border-2 border-gray-700 mb-4"
-                  style={{
-                    borderColor: rarityConfig[selectedEntry.rarity as keyof typeof rarityConfig]?.color
-                  }}>
+                  style={{ borderColor: ACCENT }}>
                   <p className="font-pixel text-xs text-white leading-relaxed">
                     💬 "{selectedEntry.funFact}"
                   </p>
@@ -207,7 +158,6 @@ export default function CodexPage() {
         {/* Grid */}
         <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
           {filtered.map((entry) => {
-            const cfg = rarityConfig[entry.rarity as keyof typeof rarityConfig]
             return (
               <button
                 key={entry.id}
@@ -217,14 +167,15 @@ export default function CodexPage() {
                   flex flex-col items-center justify-center gap-1 p-2
                   transition-all
                   ${entry.collected
-                    ? `${cfg.bg} hover:opacity-90 cursor-pointer`
+                    ? 'bg-purple-900 hover:opacity-90 cursor-pointer'
                     : 'bg-gray-900 cursor-not-allowed'
                   }
                 `}
                 style={{
-                  boxShadow: `4px 4px 0 #000`,
-                  borderColor: entry.collected ? cfg.color : '#333',
-                  ...(entry.collected && { boxShadow: `4px 4px 0 #000, 0 0 10px ${cfg.color}40` })
+                  boxShadow: entry.collected
+                    ? `4px 4px 0 #000, 0 0 10px ${ACCENT}40`
+                    : '4px 4px 0 #000',
+                  borderColor: entry.collected ? ACCENT : '#333',
                 }}
               >
                 {entry.collected ? (
@@ -233,11 +184,8 @@ export default function CodexPage() {
                       {entry.avatarUrl || '👤'}
                     </div>
                     <p className="font-pixel text-[8px] text-center leading-tight"
-                      style={{ color: cfg.color }}>
+                      style={{ color: ACCENT }}>
                       {entry.committeeName.split(' ')[0]}
-                    </p>
-                    <p className="font-pixel text-[8px]" style={{ color: cfg.color }}>
-                      {cfg.stars}
                     </p>
                   </>
                 ) : (
