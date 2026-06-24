@@ -19,10 +19,6 @@
   --pixel-orange: #FF9800;
   --pixel-sky: #87CEEB;
   --pixel-brown: #795548;
-  --rarity-common: #9E9E9E;
-  --rarity-rare: #2196F3;
-  --rarity-epic: #9C27B0;
-  --rarity-legendary: #FFD700;
 }
 
 * {
@@ -140,12 +136,6 @@ body {
   background-size: auto 100px, auto 64px;
   background-position: 0 20%, 0 100%;
 }
-
-/* Rarity Colors */
-.rarity-common { color: var(--rarity-common); }
-.rarity-rare { color: var(--rarity-rare); }
-.rarity-epic { color: var(--rarity-epic); }
-.rarity-legendary { color: var(--rarity-legendary); }
 
 /* Progress Bar */
 .pixel-progress {
