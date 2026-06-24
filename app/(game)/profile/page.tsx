@@ -2,38 +2,55 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/prisma'
+import { supabase } from '@/lib/supabase'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PixelCard from '@/components/ui/PixelCard'
 import ProgressBar from '@/components/ui/ProgressBar'
 
 async function getProfileData(studentId: string) {
-  const student = await prisma.student.findUnique({
-    where: { studentId },
-    include: {
-      group: true,
-      achievements: { include: { achievement: true } },
-      scanLogs: {
-        include: { npc: true },
-        orderBy: { scannedAt: 'desc' },
-        take: 10
-      },
-      questProgress: {
-        include: { quest: true },
-        where: { status: 'completed' }
-      }
-    }
-  })
+  const { data: student } = await supabase
+    .from('Student')
+    .select('*, group:Group(*)')
+    .eq('studentId', studentId)
+    .maybeSingle()
 
-  const allStudentsRanked = await prisma.student.findMany({
-    orderBy: { points: 'desc' },
-    select: { studentId: true }
-  })
+  if (student) {
+    const [achievements, scanLogs, questProgress] = await Promise.all([
+      supabase
+        .from('StudentAchievement')
+        .select('*, achievement:Achievement(*)')
+        .eq('studentId', student.id),
+      supabase
+        .from('ScanLog')
+        .select('*, npc:NPC(*)')
+        .eq('studentId', student.id)
+        .order('scannedAt', { ascending: false })
+        .limit(10),
+      supabase
+        .from('QuestProgress')
+        .select('*, quest:Quest(*)')
+        .eq('studentId', student.id)
+        .eq('status', 'completed'),
+    ])
+    student.achievements = achievements.data ?? []
+    student.scanLogs = scanLogs.data ?? []
+    student.questProgress = questProgress.data ?? []
+  }
 
-  const globalRank = allStudentsRanked.findIndex(s => s.studentId === studentId) + 1
-  const totalNPCs = await prisma.nPC.count({ where: { isActive: true } })
+  const { data: allStudentsRanked } = await supabase
+    .from('Student')
+    .select('studentId')
+    .order('points', { ascending: false })
 
-  return { student, globalRank, totalNPCs }
+  const globalRank =
+    (allStudentsRanked ?? []).findIndex((s: any) => s.studentId === studentId) + 1
+
+  const { count: totalNPCs } = await supabase
+    .from('NPC')
+    .select('*', { count: 'exact', head: true })
+    .eq('isActive', true)
+
+  return { student, globalRank, totalNPCs: totalNPCs ?? 0 }
 }
 
 const achievements = [
@@ -135,7 +152,7 @@ export default async function ProfilePage() {
           <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
             {achievements.map((ach, i) => {
               const unlocked = student.achievements.some(
-                a => a.achievement.name === ach.name
+                (a: any) => a.achievement.name === ach.name
               )
               return (
                 <div
@@ -163,7 +180,7 @@ export default async function ProfilePage() {
         <div>
           <h3 className="font-pixel text-sm text-white mb-3">📋 ACTIVITY LOG</h3>
           <div className="space-y-2">
-            {student.scanLogs.map((log) => (
+            {student.scanLogs.map((log: any) => (
               <PixelCard key={log.id} className="bg-gray-800">
                 <div className="flex justify-between items-center">
                   <div>

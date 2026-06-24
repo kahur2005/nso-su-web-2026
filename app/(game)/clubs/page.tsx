@@ -2,7 +2,7 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/prisma'
+import { supabase } from '@/lib/supabase'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PixelCard from '@/components/ui/PixelCard'
 
@@ -21,11 +21,14 @@ export default async function ClubsPage() {
   const session = await getServerSession(authOptions)
   if (!session) redirect('/login')
 
-  const clubs = await prisma.club.findMany({
-    orderBy: [{ category: 'asc' }, { name: 'asc' }]
-  })
+  const { data: clubsData } = await supabase
+    .from('Club')
+    .select('*')
+    .order('category', { ascending: true })
+    .order('name', { ascending: true })
 
-  const categories = [...new Set(clubs.map(c => c.category))]
+  const clubs = clubsData ?? []
+  const categories = [...new Set(clubs.map((c: any) => c.category))]
 
   return (
     <PageWrapper>

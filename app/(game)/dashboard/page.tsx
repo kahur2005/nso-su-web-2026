@@ -2,7 +2,7 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/prisma'
+import { supabase } from '@/lib/supabase'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PixelCard from '@/components/ui/PixelCard'
 import ProgressBar from '@/components/ui/ProgressBar'
@@ -10,30 +10,44 @@ import Timeline from '@/components/dashboard/Timeline'
 import Link from 'next/link'
 
 async function getDashboardData(studentId: string) {
-  const student = await prisma.student.findUnique({
-    where: { studentId },
-    include: { group: true }
-  })
+  const { data: student } = await supabase
+    .from('Student')
+    .select('*, group:Group(*)')
+    .eq('studentId', studentId)
+    .maybeSingle()
 
-  const topGroups = await prisma.group.findMany({
-    orderBy: { totalPoints: 'desc' },
-    take: 4
-  })
+  const { data: topGroups } = await supabase
+    .from('Group')
+    .select('*')
+    .order('totalPoints', { ascending: false })
+    .limit(4)
 
-  const activeQuests = await prisma.quest.findMany({
-    where: { isActive: true, isHidden: false },
-    take: 3
-  })
+  const { data: activeQuests } = await supabase
+    .from('Quest')
+    .select('*')
+    .eq('isActive', true)
+    .eq('isHidden', false)
+    .limit(3)
 
-  const announcements = await prisma.announcement.findMany({
-    where: { isActive: true },
-    orderBy: { createdAt: 'desc' },
-    take: 3
-  })
+  const { data: announcements } = await supabase
+    .from('Announcement')
+    .select('*')
+    .eq('isActive', true)
+    .order('createdAt', { ascending: false })
+    .limit(3)
 
-  const totalNPCs = await prisma.nPC.count({ where: { isActive: true } })
+  const { count: totalNPCs } = await supabase
+    .from('NPC')
+    .select('*', { count: 'exact', head: true })
+    .eq('isActive', true)
 
-  return { student, topGroups, activeQuests, announcements, totalNPCs }
+  return {
+    student,
+    topGroups: topGroups ?? [],
+    activeQuests: activeQuests ?? [],
+    announcements: announcements ?? [],
+    totalNPCs: totalNPCs ?? 0,
+  }
 }
 
 export default async function DashboardPage() {

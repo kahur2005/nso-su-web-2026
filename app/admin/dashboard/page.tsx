@@ -2,35 +2,37 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/prisma'
+import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import PixelCard from '@/components/ui/PixelCard'
 
 async function getAdminStats() {
-  const [
-    totalStudents, totalScans, totalNPCs,
-    activeQuests, groups, announcements
-  ] = await Promise.all([
-    prisma.student.count(),
-    prisma.scanLog.count(),
-    prisma.nPC.count({ where: { isActive: true } }),
-    prisma.quest.count({ where: { isActive: true } }),
-    prisma.group.findMany({ orderBy: { totalPoints: 'desc' } }),
-    prisma.announcement.findMany({
-      where: { isActive: true },
-      take: 3
-    })
-  ])
-
   const todayStart = new Date()
   todayStart.setHours(0, 0, 0, 0)
-  const todayScans = await prisma.scanLog.count({
-    where: { scannedAt: { gte: todayStart } }
-  })
+
+  const [
+    students, scans, npcs, quests, groups, announcements, today,
+  ] = await Promise.all([
+    supabase.from('Student').select('*', { count: 'exact', head: true }),
+    supabase.from('ScanLog').select('*', { count: 'exact', head: true }),
+    supabase.from('NPC').select('*', { count: 'exact', head: true }).eq('isActive', true),
+    supabase.from('Quest').select('*', { count: 'exact', head: true }).eq('isActive', true),
+    supabase.from('Group').select('*').order('totalPoints', { ascending: false }),
+    supabase.from('Announcement').select('*').eq('isActive', true).limit(3),
+    supabase
+      .from('ScanLog')
+      .select('*', { count: 'exact', head: true })
+      .gte('scannedAt', todayStart.toISOString()),
+  ])
 
   return {
-    totalStudents, totalScans, totalNPCs,
-    activeQuests, groups, announcements, todayScans
+    totalStudents: students.count ?? 0,
+    totalScans: scans.count ?? 0,
+    totalNPCs: npcs.count ?? 0,
+    activeQuests: quests.count ?? 0,
+    groups: groups.data ?? [],
+    announcements: announcements.data ?? [],
+    todayScans: today.count ?? 0,
   }
 }
 

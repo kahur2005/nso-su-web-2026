@@ -2,7 +2,7 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/prisma'
+import { supabase } from '@/lib/supabase'
 import AdminHeader from '@/components/layout/AdminHeader'
 import PixelCard from '@/components/ui/PixelCard'
 import NpcForm from './NpcForm'
@@ -21,9 +21,12 @@ export default async function AdminNpcPage() {
     redirect('/dashboard')
   }
 
-  const npcs = await prisma.nPC.findMany({
-    orderBy: { createdAt: 'desc' }
-  })
+  const { data: npcsData } = await supabase
+    .from('NPC')
+    .select('*')
+    .order('createdAt', { ascending: false })
+
+  const npcs = npcsData ?? []
 
   return (
     <div className="min-h-screen bg-gray-900 scanlines">

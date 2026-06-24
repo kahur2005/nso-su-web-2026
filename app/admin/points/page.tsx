@@ -2,7 +2,7 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/prisma'
+import { supabase } from '@/lib/supabase'
 import AdminHeader from '@/components/layout/AdminHeader'
 import PixelCard from '@/components/ui/PixelCard'
 import { adjustPoints } from '../actions'
@@ -16,13 +16,13 @@ export default async function AdminPointsPage() {
     redirect('/dashboard')
   }
 
-  const topStudents = await prisma.student.findMany({
-    orderBy: { points: 'desc' },
-    take: 15,
-    include: {
-      group: { select: { name: true, emblem: true, color: true } }
-    }
-  })
+  const { data: topStudentsData } = await supabase
+    .from('Student')
+    .select('*, group:Group(name, emblem, color)')
+    .order('points', { ascending: false })
+    .limit(15)
+
+  const topStudents = topStudentsData ?? []
 
   return (
     <div className="min-h-screen bg-gray-900 scanlines">

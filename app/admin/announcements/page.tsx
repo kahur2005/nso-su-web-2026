@@ -2,7 +2,7 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/prisma'
+import { supabase } from '@/lib/supabase'
 import AdminHeader from '@/components/layout/AdminHeader'
 import PixelCard from '@/components/ui/PixelCard'
 import { createAnnouncement, toggleAnnouncement } from '../actions'
@@ -16,9 +16,12 @@ export default async function AdminAnnouncementsPage() {
     redirect('/dashboard')
   }
 
-  const announcements = await prisma.announcement.findMany({
-    orderBy: { createdAt: 'desc' }
-  })
+  const { data: announcementsData } = await supabase
+    .from('Announcement')
+    .select('*')
+    .order('createdAt', { ascending: false })
+
+  const announcements = announcementsData ?? []
 
   return (
     <div className="min-h-screen bg-gray-900 scanlines">

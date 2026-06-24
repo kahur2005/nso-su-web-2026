@@ -2,7 +2,7 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/prisma'
+import { supabase } from '@/lib/supabase'
 import AdminHeader from '@/components/layout/AdminHeader'
 import PixelCard from '@/components/ui/PixelCard'
 import { createGroup, assignStudentToGroup } from '../actions'
@@ -16,14 +16,20 @@ export default async function AdminGroupsPage() {
     redirect('/dashboard')
   }
 
-  const groups = await prisma.group.findMany({
-    orderBy: { totalPoints: 'desc' },
-    include: { _count: { select: { members: true } } }
+  const { data: rawGroups } = await supabase
+    .from('Group')
+    .select('*, members:Student(count)')
+    .order('totalPoints', { ascending: false })
+
+  const groups = (rawGroups ?? []).map((g: any) => {
+    const { members, ...rest } = g
+    return { ...rest, _count: { members: members?.[0]?.count ?? 0 } }
   })
 
-  const unassignedCount = await prisma.student.count({
-    where: { groupId: null }
-  })
+  const { count: unassignedCount } = await supabase
+    .from('Student')
+    .select('*', { count: 'exact', head: true })
+    .is('groupId', null)
 
   return (
     <div className="min-h-screen bg-gray-900 scanlines">

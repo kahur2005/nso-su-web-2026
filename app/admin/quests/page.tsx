@@ -2,7 +2,7 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/prisma'
+import { supabase } from '@/lib/supabase'
 import AdminHeader from '@/components/layout/AdminHeader'
 import PixelCard from '@/components/ui/PixelCard'
 import { createQuest, toggleQuestActive } from '../actions'
@@ -23,14 +23,26 @@ export default async function AdminQuestsPage() {
     redirect('/dashboard')
   }
 
-  const quests = await prisma.quest.findMany({
-    orderBy: { createdAt: 'desc' },
-    include: {
-      _count: {
-        select: { progress: { where: { status: 'completed' } } }
-      }
-    }
-  })
+  const { data: questRows } = await supabase
+    .from('Quest')
+    .select('*')
+    .order('createdAt', { ascending: false })
+
+  // Count completed progress rows per quest (Prisma's _count with a filter).
+  const { data: completed } = await supabase
+    .from('QuestProgress')
+    .select('questId')
+    .eq('status', 'completed')
+
+  const completedByQuest = new Map<string, number>()
+  for (const p of completed ?? []) {
+    completedByQuest.set(p.questId, (completedByQuest.get(p.questId) ?? 0) + 1)
+  }
+
+  const quests = (questRows ?? []).map((q: any) => ({
+    ...q,
+    _count: { progress: completedByQuest.get(q.id) ?? 0 },
+  }))
 
   return (
     <div className="min-h-screen bg-gray-900 scanlines">
