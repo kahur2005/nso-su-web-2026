@@ -42,7 +42,6 @@ export async function GET() {
       committeeName: npc.committeeName,
       role: npc.role,
       funFact: npc.funFact,
-      rarity: npc.rarity,
       points: npc.points,
       avatarUrl: npc.avatarUrl,
       collected: collectedIds.has(npc.id),
