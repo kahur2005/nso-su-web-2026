@@ -22,7 +22,7 @@ export async function GET() {
 
   const { data: scans } = await supabase
     .from('ScanLog')
-    .select('*, npc:NPC(committeeName, role, rarity)')
+    .select('*, npc:NPC(committeeName, role)')
     .eq('studentId', student.id)
     .order('scannedAt', { ascending: false })
     .limit(20)
