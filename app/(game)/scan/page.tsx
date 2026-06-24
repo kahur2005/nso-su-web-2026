@@ -6,19 +6,13 @@ import PageWrapper from '@/components/layout/PageWrapper'
 import PixelCard from '@/components/ui/PixelCard'
 import PixelButton from '@/components/ui/PixelButton'
 
-const rarityConfig = {
-  common: { color: '#9E9E9E', label: 'COMMON', stars: '★', bg: 'bg-gray-700' },
-  rare: { color: '#2196F3', label: 'RARE', stars: '★★', bg: 'bg-blue-900' },
-  epic: { color: '#9C27B0', label: 'EPIC', stars: '★★★', bg: 'bg-purple-900' },
-  legendary: { color: '#FFD700', label: 'LEGENDARY', stars: '★★★★', bg: 'bg-yellow-900' },
-}
+const ACCENT = '#4CAF50'
 
 interface ScanResult {
   success: boolean
   npcName?: string
   npcRole?: string
   funFact?: string
-  rarity?: string
   pointsAwarded?: number
   error?: string
   alreadyCollected?: boolean
@@ -27,7 +21,7 @@ interface ScanResult {
 interface RecentScan {
   scannedAt: string
   pointsAwarded: number
-  npc?: { committeeName?: string; rarity?: string }
+  npc?: { committeeName?: string }
 }
 
 export default function ScanPage() {
@@ -195,10 +189,6 @@ export default function ScanPage() {
     setResult(null) // triggers the effect that re-opens the camera
   }
 
-  const rarity = result?.rarity
-    ? rarityConfig[result.rarity as keyof typeof rarityConfig]
-    : null
-
   return (
     <PageWrapper>
       <div className="max-w-lg mx-auto px-4 py-6">
@@ -296,8 +286,8 @@ export default function ScanPage() {
             {result.success ? (
               <div className="rpg-dialog p-6 text-center"
                 style={{
-                  borderColor: rarity?.color,
-                  boxShadow: `0 0 30px ${rarity?.color}40, 6px 6px 0 #000`
+                  borderColor: ACCENT,
+                  boxShadow: `0 0 30px ${ACCENT}40, 6px 6px 0 #000`
                 }}>
                 {/* NPC Info */}
                 <div className="mb-4">
@@ -313,18 +303,14 @@ export default function ScanPage() {
 
                 {/* Fun Fact */}
                 <div className="p-4 bg-gray-900 border-2 border-gray-700 mb-4"
-                  style={{ borderColor: rarity?.color }}>
+                  style={{ borderColor: ACCENT }}>
                   <p className="font-pixel text-xs text-white leading-relaxed">
                     &ldquo;{result.funFact}&rdquo;
                   </p>
                 </div>
 
-                {/* Rarity & Points */}
-                <div className="flex items-center justify-center gap-4 mb-6">
-                  <span className="font-pixel text-xs px-3 py-1 border-2"
-                    style={{ color: rarity?.color, borderColor: rarity?.color }}>
-                    {rarity?.stars} {rarity?.label}
-                  </span>
+                {/* Points */}
+                <div className="flex items-center justify-center mb-6">
                   <span className="font-pixel text-xl text-yellow-400"
                     style={{ textShadow: '2px 2px 0 #000' }}>
                     +{result.pointsAwarded} PTS!
@@ -393,17 +379,12 @@ export default function ScanPage() {
           <h3 className="font-pixel text-sm text-white mb-3">🕐 RECENT SCANS</h3>
           <div className="space-y-2">
             {recentScans.slice(0, 5).map((scan, i) => {
-              const r = rarityConfig[scan.npc?.rarity as keyof typeof rarityConfig] || rarityConfig.common
               return (
                 <PixelCard key={i} className="bg-gray-800">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-pixel text-xs text-white">
                         ✅ {scan.npc?.committeeName}
-                      </p>
-                      <p className="font-pixel text-xs mt-1"
-                        style={{ color: r.color }}>
-                        {r.stars} {r.label}
                       </p>
                     </div>
                     <div className="text-right">
