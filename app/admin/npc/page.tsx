@@ -8,13 +8,6 @@ import PixelCard from '@/components/ui/PixelCard'
 import NpcForm from './NpcForm'
 import { toggleNpcActive } from '../actions'
 
-const rarityConfig: Record<string, { color: string; stars: string }> = {
-  common: { color: '#9E9E9E', stars: '★' },
-  rare: { color: '#2196F3', stars: '★★' },
-  epic: { color: '#9C27B0', stars: '★★★' },
-  legendary: { color: '#FFD700', stars: '★★★★' },
-}
-
 export default async function AdminNpcPage() {
   const session = await getServerSession(authOptions)
   if (!session || !session.user?.isAdmin) {
@@ -53,7 +46,6 @@ export default async function AdminNpcPage() {
 
             <div className="space-y-3">
               {npcs.map((npc) => {
-                const rarity = rarityConfig[npc.rarity] || rarityConfig.common
                 return (
                   <PixelCard
                     key={npc.id}
@@ -85,10 +77,6 @@ export default async function AdminNpcPage() {
                           {npc.role}
                         </p>
                         <div className="flex flex-wrap items-center gap-2 mt-2">
-                          <span className="font-pixel text-[8px]"
-                            style={{ color: rarity.color }}>
-                            {rarity.stars} {npc.rarity.toUpperCase()}
-                          </span>
                           <span className="font-pixel text-[8px] text-yellow-400">
                             +{npc.points} PTS
                           </span>
