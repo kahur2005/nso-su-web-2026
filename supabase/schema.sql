@@ -33,6 +33,7 @@ create table "Group" (
   "id"          text primary key default gen_random_uuid()::text,
   "name"        text not null unique,
   "emblem"      text not null,
+  "emblemUrl"   text,
   "color"       text not null,
   "totalPoints" integer not null default 0,
   "createdAt"   timestamptz not null default now()
@@ -67,7 +68,6 @@ create table "NPC" (
   "committeeName" text not null,
   "role"          text not null,
   "funFact"       text not null,
-  "rarity"        text not null default 'common',
   "points"        integer not null default 10,
   "qrToken"       text unique,
   "qrCode"        text,
@@ -214,7 +214,6 @@ begin
     'npcName', v_npc."committeeName",
     'npcRole', v_npc."role",
     'funFact', v_npc."funFact",
-    'rarity', v_npc."rarity",
     'pointsAwarded', p_points
   );
 end;
