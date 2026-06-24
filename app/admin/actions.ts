@@ -3,7 +3,7 @@
 
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { supabase } from '@/lib/supabase'
 import { revalidatePath } from 'next/cache'
 
 async function requireAdmin() {
@@ -26,15 +26,13 @@ export async function createQuest(formData: FormData) {
 
   if (!title || !description || !points) return
 
-  await prisma.quest.create({
-    data: {
-      title,
-      description,
-      type,
-      points,
-      isHidden: type === 'hidden',
-      deadline: deadline ? new Date(deadline) : null,
-    }
+  await supabase.from('Quest').insert({
+    title,
+    description,
+    type,
+    points,
+    isHidden: type === 'hidden',
+    deadline: deadline ? new Date(deadline).toISOString() : null,
   })
 
   revalidatePath('/admin/quests')
@@ -43,13 +41,17 @@ export async function createQuest(formData: FormData) {
 export async function toggleQuestActive(questId: string) {
   await requireAdmin()
 
-  const quest = await prisma.quest.findUnique({ where: { id: questId } })
+  const { data: quest } = await supabase
+    .from('Quest')
+    .select('isActive')
+    .eq('id', questId)
+    .maybeSingle()
   if (!quest) return
 
-  await prisma.quest.update({
-    where: { id: questId },
-    data: { isActive: !quest.isActive }
-  })
+  await supabase
+    .from('Quest')
+    .update({ isActive: !quest.isActive })
+    .eq('id', questId)
 
   revalidatePath('/admin/quests')
 }
@@ -65,9 +67,7 @@ export async function createGroup(formData: FormData) {
 
   if (!name) return
 
-  await prisma.group.create({
-    data: { name, emblem, color }
-  })
+  await supabase.from('Group').insert({ name, emblem, color })
 
   revalidatePath('/admin/groups')
 }
@@ -80,10 +80,10 @@ export async function assignStudentToGroup(formData: FormData) {
 
   if (!studentId || !groupId) return
 
-  await prisma.student.update({
-    where: { studentId },
-    data: { groupId }
-  })
+  await supabase
+    .from('Student')
+    .update({ groupId })
+    .eq('studentId', studentId)
 
   revalidatePath('/admin/groups')
 }
@@ -98,26 +98,18 @@ export async function adjustPoints(formData: FormData) {
 
   if (!studentId || !amount) return
 
-  const student = await prisma.student.findUnique({
-    where: { studentId }
-  })
+  const { data: student } = await supabase
+    .from('Student')
+    .select('id')
+    .eq('studentId', studentId)
+    .maybeSingle()
   if (!student) return
 
-  await prisma.$transaction([
-    prisma.student.update({
-      where: { id: student.id },
-      data: {
-        points: { increment: amount },
-        ...(amount > 0 ? { xp: { increment: amount } } : {})
-      }
-    }),
-    ...(student.groupId ? [
-      prisma.group.update({
-        where: { id: student.groupId },
-        data: { totalPoints: { increment: amount } }
-      })
-    ] : [])
-  ])
+  // Atomic: updates the student's points/xp and keeps the group total in sync.
+  await supabase.rpc('adjust_points', {
+    p_student_id: student.id,
+    p_amount: amount,
+  })
 
   revalidatePath('/admin/points')
 }
@@ -132,9 +124,7 @@ export async function createAnnouncement(formData: FormData) {
 
   if (!title || !content) return
 
-  await prisma.announcement.create({
-    data: { title, content }
-  })
+  await supabase.from('Announcement').insert({ title, content })
 
   revalidatePath('/admin/announcements')
 }
@@ -142,15 +132,17 @@ export async function createAnnouncement(formData: FormData) {
 export async function toggleAnnouncement(announcementId: string) {
   await requireAdmin()
 
-  const announcement = await prisma.announcement.findUnique({
-    where: { id: announcementId }
-  })
+  const { data: announcement } = await supabase
+    .from('Announcement')
+    .select('isActive')
+    .eq('id', announcementId)
+    .maybeSingle()
   if (!announcement) return
 
-  await prisma.announcement.update({
-    where: { id: announcementId },
-    data: { isActive: !announcement.isActive }
-  })
+  await supabase
+    .from('Announcement')
+    .update({ isActive: !announcement.isActive })
+    .eq('id', announcementId)
 
   revalidatePath('/admin/announcements')
 }
@@ -160,13 +152,17 @@ export async function toggleAnnouncement(announcementId: string) {
 export async function toggleNpcActive(npcId: string) {
   await requireAdmin()
 
-  const npc = await prisma.nPC.findUnique({ where: { id: npcId } })
+  const { data: npc } = await supabase
+    .from('NPC')
+    .select('isActive')
+    .eq('id', npcId)
+    .maybeSingle()
   if (!npc) return
 
-  await prisma.nPC.update({
-    where: { id: npcId },
-    data: { isActive: !npc.isActive }
-  })
+  await supabase
+    .from('NPC')
+    .update({ isActive: !npc.isActive })
+    .eq('id', npcId)
 
   revalidatePath('/admin/npc')
 }
