@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PixelCard from '@/components/ui/PixelCard'
 import ProgressBar from '@/components/ui/ProgressBar'
+import GroupEmblem from '@/components/ui/GroupEmblem'
 import Timeline from '@/components/dashboard/Timeline'
 import Link from 'next/link'
 
@@ -79,9 +80,10 @@ export default async function DashboardPage() {
                 {student.name.split(' ')[0].toUpperCase()}!
               </h2>
               <div className="flex gap-4 mt-2 flex-wrap">
-                <span className="font-pixel text-xs"
+                <span className="font-pixel text-xs flex items-center gap-1"
                   style={{ color: student.group?.color || '#4CAF50' }}>
-                  {student.group?.emblem} {student.group?.name || 'UNASSIGNED'}
+                  <GroupEmblem emblem={student.group?.emblem} emblemUrl={student.group?.emblemUrl} size={16} />
+                  {student.group?.name || 'UNASSIGNED'}
                 </span>
                 <span className="font-pixel text-xs text-yellow-400">
                   ⭐ {student.points} PTS
@@ -221,7 +223,7 @@ export default async function DashboardPage() {
                       style={{ color: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : index === 2 ? '#CD7F32' : '#fff' }}>
                       #{index + 1}
                     </span>
-                    <span className="text-xl">{group.emblem}</span>
+                    <GroupEmblem emblem={group.emblem} emblemUrl={group.emblemUrl} size={24} />
                     <div className="flex-1">
                       <p className="font-pixel text-xs text-white">{group.name}</p>
                       <ProgressBar
