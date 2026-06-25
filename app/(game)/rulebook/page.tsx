@@ -139,9 +139,12 @@ export default function RulebookPage() {
           </h2>
           <PixelCard className="bg-gray-800">
             <p className="font-pixel text-xs text-gray-300 leading-relaxed">
-              Every point you earn is also XP. You need{' '}
-              <span className="text-yellow-400">LEVEL × 100 XP</span> to level
-              up. Your points feed your group&apos;s total — the group with the
+              Every point you earn is also XP. Leveling up gets tougher each
+              time: the first level costs{' '}
+              <span className="text-yellow-400">10 XP</span>, and the cost
+              doubles every level after that (
+              <span className="text-yellow-400">10 → 20 → 40 → 80 → 160 …</span>).
+              Your points feed your group&apos;s total — the group with the
               most points at the end of the week wins the{' '}
               <span className="text-yellow-400">GRAND PRIZE</span>. Solo
               champions get glory on the player leaderboard too.
