@@ -15,9 +15,8 @@ export default function BottomNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-gray-900
-      border-t-4 border-black md:hidden"
-      style={{ boxShadow: '0 -4px 0 #000' }}>
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t-4 border-black md:hidden"
+      style={{ backgroundColor: '#fde6c4', boxShadow: '0 -4px 0 #000' }}>
       <div className="flex">
         {items.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
@@ -29,8 +28,8 @@ export default function BottomNav() {
                 flex-1 flex flex-col items-center py-3 gap-1
                 font-pixel text-xs transition-all
                 ${isActive
-                  ? 'bg-green-700 text-white border-t-2 border-green-400'
-                  : 'text-gray-500 hover:text-white'
+                  ? 'bg-green-500 text-white border-t-2 border-green-800'
+                  : 'text-[#7a6a55] hover:text-black'
                 }
                 ${item.label === 'SCAN' ? 'relative' : ''}
               `}
