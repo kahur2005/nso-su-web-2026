@@ -12,7 +12,7 @@ export default function PageWrapper({
   showNav = true 
 }: PageWrapperProps) {
   return (
-    <div className="min-h-screen bg-gray-900 scanlines">
+    <div className="min-h-screen scanlines">
       {showNav && <Navbar />}
       <main className="pb-24 md:pb-8">
         {children}
