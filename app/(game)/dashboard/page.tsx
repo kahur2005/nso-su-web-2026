@@ -7,6 +7,7 @@ import PageWrapper from '@/components/layout/PageWrapper'
 import PixelCard from '@/components/ui/PixelCard'
 import ProgressBar from '@/components/ui/ProgressBar'
 import GroupEmblem from '@/components/ui/GroupEmblem'
+import Avatar from '@/components/ui/Avatar'
 import Timeline from '@/components/dashboard/Timeline'
 import { levelProgress } from '@/lib/leveling'
 import Link from 'next/link'
@@ -72,9 +73,9 @@ export default async function DashboardPage() {
         <div className="rpg-dialog bg-gray-800 p-4 mb-6">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-green-600 border-4 border-black
-              flex items-center justify-center text-2xl flex-shrink-0"
+              flex items-center justify-center text-2xl overflow-hidden flex-shrink-0"
               style={{ boxShadow: '4px 4px 0 #000' }}>
-              {student.avatarUrl || '👤'}
+              <Avatar avatarUrl={student.avatarUrl} fallback="👤" />
             </div>
             <div className="flex-1">
               <p className="font-pixel text-xs text-gray-400">WELCOME BACK, PLAYER</p>
