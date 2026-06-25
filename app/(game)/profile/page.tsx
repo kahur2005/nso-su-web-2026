@@ -172,7 +172,7 @@ export default async function ProfilePage() {
 
         {/* Achievements */}
         <div className="mb-6">
-          <h3 className="font-pixel text-sm text-white mb-3">🏅 ACHIEVEMENTS</h3>
+          <h3 className="font-pixel text-sm text-yellow-400 pixel-text-shadow mb-3">🏅 ACHIEVEMENTS</h3>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
             {achievements.map((ach, i) => {
               const unlocked = student.achievements.some(
@@ -202,7 +202,7 @@ export default async function ProfilePage() {
 
         {/* Recent Activity */}
         <div>
-          <h3 className="font-pixel text-sm text-white mb-3">📋 ACTIVITY LOG</h3>
+          <h3 className="font-pixel text-sm text-yellow-400 pixel-text-shadow mb-3">📋 ACTIVITY LOG</h3>
           <div className="space-y-2">
             {student.scanLogs.map((log: any) => (
               <PixelCard key={log.id} className="bg-gray-800">
