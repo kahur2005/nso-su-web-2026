@@ -7,6 +7,7 @@ import PageWrapper from '@/components/layout/PageWrapper'
 import PixelCard from '@/components/ui/PixelCard'
 import ProgressBar from '@/components/ui/ProgressBar'
 import GroupEmblem from '@/components/ui/GroupEmblem'
+import { levelProgress } from '@/lib/leveling'
 
 async function getProfileData(studentId: string) {
   const { data: student } = await supabase
@@ -72,7 +73,7 @@ export default async function ProfilePage() {
 
   if (!student) redirect('/login')
 
-  const xpToNext = student.level * 100
+  const { level, into, span } = levelProgress(student.xp)
   const completedQuests = student.questProgress.length
 
   return (
@@ -122,10 +123,10 @@ export default async function ProfilePage() {
           {/* Level & XP */}
           <div className="mt-4">
             <ProgressBar
-              value={student.xp % xpToNext}
-              max={xpToNext}
+              value={into}
+              max={span}
               color="#FFD700"
-              label={`LEVEL ${student.level}`}
+              label={`LEVEL ${level} · ${into}/${span} XP`}
             />
           </div>
         </PixelCard>
@@ -136,7 +137,7 @@ export default async function ProfilePage() {
             { icon: '⭐', label: 'TOTAL PTS', value: student.points.toLocaleString(), color: '#FFD700' },
             { icon: '📖', label: 'FUN FACTS', value: `${student.funFactsCollected}/${totalNPCs}`, color: '#9C27B0' },
             { icon: '⚔️', label: 'QUESTS', value: String(completedQuests), color: '#4CAF50' },
-            { icon: '🏆', label: 'LEVEL', value: String(student.level), color: '#2196F3' },
+            { icon: '🏆', label: 'LEVEL', value: String(level), color: '#2196F3' },
           ].map((stat) => (
             <PixelCard key={stat.label} className="bg-gray-800 text-center">
               <div className="text-2xl mb-1">{stat.icon}</div>
