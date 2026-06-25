@@ -177,7 +177,7 @@ export default function UkmClubsPage() {
             className="font-pixel text-xs text-green-400 hover:text-green-300">
             ‹ BACK
           </Link>
-          <h1 className="font-pixel text-lg text-white text-center flex-1"
+          <h1 className="font-pixel text-lg text-yellow-400 text-center flex-1"
             style={{ textShadow: '3px 3px 0 #000' }}>
             🏰 UKM CLUBS
           </h1>
