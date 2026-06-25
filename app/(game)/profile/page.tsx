@@ -7,7 +7,15 @@ import PageWrapper from '@/components/layout/PageWrapper'
 import PixelCard from '@/components/ui/PixelCard'
 import ProgressBar from '@/components/ui/ProgressBar'
 import GroupEmblem from '@/components/ui/GroupEmblem'
+import Avatar from '@/components/ui/Avatar'
+import ProfileSettings from './ProfileSettings'
 import { levelProgress } from '@/lib/leveling'
+
+// Build a usable href from either a full URL or a bare @handle.
+function instagramHref(value: string) {
+  if (/^https?:\/\//i.test(value)) return value
+  return `https://instagram.com/${value.replace(/^@/, '')}`
+}
 
 async function getProfileData(studentId: string) {
   const { data: student } = await supabase
@@ -85,9 +93,9 @@ export default async function ProfilePage() {
           <div className="flex items-start gap-4">
             {/* Avatar */}
             <div className="w-20 h-20 bg-green-700 border-4 border-black
-              flex items-center justify-center text-3xl flex-shrink-0"
+              flex items-center justify-center text-3xl overflow-hidden flex-shrink-0"
               style={{ boxShadow: '4px 4px 0 #000' }}>
-              {student.avatarUrl || '🧑‍🎓'}
+              <Avatar avatarUrl={student.avatarUrl} fallback="🧑‍🎓" />
             </div>
 
             {/* Info */}
@@ -108,6 +116,12 @@ export default async function ProfilePage() {
                   <GroupEmblem emblem={student.group.emblem} emblemUrl={student.group.emblemUrl} size={16} />
                   {student.group.name}
                 </p>
+              )}
+              {student.instagram && (
+                <a href={instagramHref(student.instagram)} target="_blank" rel="noreferrer"
+                  className="font-pixel text-xs text-pink-400 mt-1 inline-block hover:underline">
+                  📸 {student.instagram}
+                </a>
               )}
             </div>
 
@@ -130,6 +144,13 @@ export default async function ProfilePage() {
             />
           </div>
         </PixelCard>
+
+        {/* Edit profile */}
+        <ProfileSettings
+          name={student.name}
+          instagram={student.instagram || ''}
+          avatarUrl={student.avatarUrl}
+        />
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
