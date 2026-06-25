@@ -192,7 +192,7 @@ export default function ScanPage() {
   return (
     <PageWrapper>
       <div className="max-w-lg mx-auto px-4 py-6">
-        <h1 className="font-pixel text-lg text-white text-center mb-6"
+        <h1 className="font-pixel text-lg text-yellow-400 text-center mb-6"
           style={{ textShadow: '3px 3px 0 #000' }}>
           📱 SCAN QR CODE
         </h1>
@@ -376,7 +376,7 @@ export default function ScanPage() {
 
         {/* Recent Scans */}
         <div>
-          <h3 className="font-pixel text-sm text-white mb-3">🕐 RECENT SCANS</h3>
+          <h3 className="font-pixel text-sm text-yellow-400 pixel-text-shadow mb-3">🕐 RECENT SCANS</h3>
           <div className="space-y-2">
             {recentScans.slice(0, 5).map((scan, i) => {
               return (
