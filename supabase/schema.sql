@@ -159,6 +159,30 @@ create trigger "Student_set_updated_at"
   for each row execute function set_updated_at();
 
 -- ---------------------------------------------------------------------------
+-- Progressive level from total XP. The step to the next level doubles each
+-- time (10, 20, 40, 80, ...), so reaching level L costs 10*(2^(L-1)-1) XP.
+-- Keep this in sync with lib/leveling.ts.
+-- ---------------------------------------------------------------------------
+create or replace function level_from_xp(p_xp integer)
+returns integer
+language plpgsql
+immutable
+as $$
+declare
+  v_level integer := 1;
+begin
+  if p_xp is null or p_xp < 10 then
+    return 1;
+  end if;
+  -- threshold to reach level (v_level+1) is 10*(2^v_level - 1)
+  while p_xp >= 10 * (power(2, v_level)::integer - 1) loop
+    v_level := v_level + 1;
+  end loop;
+  return v_level;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
 -- RPC: scan_npc — atomic replacement for the qr/scan transaction.
 -- Records the scan and awards points to student / group / npc in one shot.
 -- Returns a JSON payload matching the old /api/qr/scan response.
@@ -198,6 +222,7 @@ begin
   update "Student"
     set "points" = "points" + p_points,
         "xp" = "xp" + p_points,
+        "level" = level_from_xp("xp" + p_points),
         "funFactsCollected" = "funFactsCollected" + 1
     where "id" = p_student_id
     returning "groupId" into v_group_id;
@@ -235,7 +260,8 @@ declare
 begin
   update "Student"
     set "points" = "points" + p_amount,
-        "xp" = "xp" + (case when p_amount > 0 then p_amount else 0 end)
+        "xp" = "xp" + (case when p_amount > 0 then p_amount else 0 end),
+        "level" = level_from_xp("xp" + (case when p_amount > 0 then p_amount else 0 end))
     where "id" = p_student_id
     returning "groupId" into v_group_id;
 
