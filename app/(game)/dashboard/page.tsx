@@ -8,6 +8,7 @@ import PixelCard from '@/components/ui/PixelCard'
 import ProgressBar from '@/components/ui/ProgressBar'
 import GroupEmblem from '@/components/ui/GroupEmblem'
 import Timeline from '@/components/dashboard/Timeline'
+import { levelProgress } from '@/lib/leveling'
 import Link from 'next/link'
 
 async function getDashboardData(studentId: string) {
@@ -61,6 +62,7 @@ export default async function DashboardPage() {
   if (!student) redirect('/login')
 
   const groupRank = topGroups.findIndex(g => g.id === student.groupId) + 1
+  const { level, into, span } = levelProgress(student.xp)
 
   return (
     <PageWrapper>
@@ -100,10 +102,10 @@ export default async function DashboardPage() {
           {/* XP Bar */}
           <div className="mt-4">
             <ProgressBar
-              value={student.xp}
-              max={student.level * 100}
+              value={into}
+              max={span}
               color="#FFD700"
-              label={`LVL ${student.level}`}
+              label={`LVL ${level} · ${into}/${span} XP`}
             />
           </div>
         </div>
