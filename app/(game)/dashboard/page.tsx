@@ -114,7 +114,7 @@ export default async function DashboardPage() {
         {/* Announcements */}
         {announcements.length > 0 && (
           <div className="mb-6">
-            <h3 className="font-pixel text-sm text-white mb-3">
+            <h3 className="font-pixel text-sm text-yellow-400 pixel-text-shadow mb-3">
               📢 ANNOUNCEMENTS
             </h3>
             <div className="space-y-2">
@@ -163,7 +163,7 @@ export default async function DashboardPage() {
           {/* Active Quests */}
           <div>
             <div className="flex justify-between items-center mb-3">
-              <h3 className="font-pixel text-sm text-white">⚔️ ACTIVE QUESTS</h3>
+              <h3 className="font-pixel text-sm text-yellow-400 pixel-text-shadow">⚔️ ACTIVE QUESTS</h3>
               <Link href="/quests"
                 className="font-pixel text-xs text-green-400 hover:text-green-300">
                 VIEW ALL →
@@ -206,7 +206,7 @@ export default async function DashboardPage() {
           {/* Leaderboard Widget */}
           <div>
             <div className="flex justify-between items-center mb-3">
-              <h3 className="font-pixel text-sm text-white">🏆 LEADERBOARD</h3>
+              <h3 className="font-pixel text-sm text-yellow-400 pixel-text-shadow">🏆 LEADERBOARD</h3>
               <Link href="/leaderboard"
                 className="font-pixel text-xs text-green-400 hover:text-green-300">
                 VIEW ALL →
@@ -250,7 +250,7 @@ export default async function DashboardPage() {
         <div className="mt-6">
           <PixelCard className="bg-gray-800">
             <div className="flex justify-between items-center mb-3">
-              <h3 className="font-pixel text-sm text-white">📖 CODEX PROGRESS</h3>
+              <h3 className="font-pixel text-sm text-yellow-400 pixel-text-shadow">📖 CODEX PROGRESS</h3>
               <Link href="/codex"
                 className="font-pixel text-xs text-green-400">
                 OPEN →
