@@ -33,7 +33,7 @@ export default function RulebookPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="text-5xl mb-3 float inline-block">📜</div>
-          <h1 className="font-pixel text-2xl text-white"
+          <h1 className="font-pixel text-2xl text-yellow-400"
             style={{ textShadow: '3px 3px 0 #000' }}>
             GAME RULEBOOK
           </h1>
