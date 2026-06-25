@@ -70,7 +70,7 @@ export default function InfoHubPage() {
 
         {/* Header */}
         <div className="text-center mb-6">
-          <h1 className="font-pixel text-2xl text-white"
+          <h1 className="font-pixel text-2xl text-yellow-400"
             style={{ textShadow: '3px 3px 0 #000' }}>
             📖 INFO STATION
           </h1>
