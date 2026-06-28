@@ -222,10 +222,18 @@ export default async function DashboardPage() {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="font-pixel text-sm w-8"
-                      style={{ color: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : index === 2 ? '#CD7F32' : '#fff' }}>
-                      #{index + 1}
-                    </span>
+                    {index < 3 ? (
+                      <img
+                        src={`/images/thropy_leaderboard_${index + 1}.png`}
+                        alt={`Rank ${index + 1}`}
+                        className="w-8 h-8 object-contain flex-shrink-0"
+                        style={{ imageRendering: 'pixelated' }}
+                      />
+                    ) : (
+                      <span className="font-pixel text-sm w-8 text-center text-white">
+                        #{index + 1}
+                      </span>
+                    )}
                     <GroupEmblem emblem={group.emblem} emblemUrl={group.emblemUrl} size={24} />
                     <div className="flex-1">
                       <p className="font-pixel text-xs text-white">{group.name}</p>

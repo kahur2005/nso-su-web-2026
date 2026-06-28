@@ -29,7 +29,11 @@ interface Student {
 }
 
 const rankColors = ['#FFD700', '#C0C0C0', '#CD7F32']
-const rankIcons = ['👑', '🥈', '🥉']
+const rankTrophies = [
+  '/images/thropy_leaderboard_1.png',
+  '/images/thropy_leaderboard_2.png',
+  '/images/thropy_leaderboard_3.png',
+]
 
 export default function LeaderboardPage() {
   const [activeTab, setActiveTab] = useState<Tab>('groups')
@@ -146,7 +150,12 @@ export default function LeaderboardPage() {
                     {/* Rank */}
                     <div className="w-10 text-center flex-shrink-0">
                       {index < 3 ? (
-                        <span className="text-2xl">{rankIcons[index]}</span>
+                        <img
+                          src={rankTrophies[index]}
+                          alt={`Rank ${index + 1}`}
+                          className="w-9 h-9 mx-auto object-contain"
+                          style={{ imageRendering: 'pixelated' }}
+                        />
                       ) : (
                         <span className="font-pixel text-lg text-gray-400">
                           #{index + 1}
@@ -244,7 +253,12 @@ export default function LeaderboardPage() {
                 <div className="flex items-center gap-3">
                   <div className="w-10 text-center">
                     {index < 3 ? (
-                      <span className="text-xl">{rankIcons[index]}</span>
+                      <img
+                        src={rankTrophies[index]}
+                        alt={`Rank ${index + 1}`}
+                        className="w-8 h-8 mx-auto object-contain"
+                        style={{ imageRendering: 'pixelated' }}
+                      />
                     ) : (
                       <span className="font-pixel text-sm text-gray-400">
                         #{index + 1}
