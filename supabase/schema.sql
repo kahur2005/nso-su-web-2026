@@ -53,6 +53,7 @@ create table "Student" (
   "funFactsCollected" integer not null default 0,
   "groupId"           text references "Group"("id") on delete set null,
   "isAdmin"           boolean not null default false,
+  "hasSeenIntro"      boolean not null default false,
   "avatarUrl"         text,
   "instagram"         text,
   "medicalNote"       text,
@@ -86,6 +87,19 @@ create table "ScanLog" (
   unique ("studentId", "npcId")
 );
 create index "ScanLog_studentId_idx" on "ScanLog" ("studentId");
+
+-- Audit trail for admin-side manual point corrections (app/admin/points).
+-- Always attributed to the NPC the adjustment is standing in for (e.g. a
+-- failed QR scan, an on-the-ground bonus) plus a free-text reason.
+create table "PointAdjustment" (
+  "id"        text primary key default gen_random_uuid()::text,
+  "studentId" text not null references "Student"("id") on delete cascade,
+  "npcId"     text not null references "NPC"("id") on delete set null,
+  "amount"    integer not null,
+  "reason"    text not null,
+  "createdAt" timestamptz not null default now()
+);
+create index "PointAdjustment_studentId_idx" on "PointAdjustment" ("studentId");
 
 create table "Quest" (
   "id"          text primary key default gen_random_uuid()::text,

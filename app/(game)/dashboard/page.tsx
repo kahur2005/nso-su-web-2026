@@ -9,6 +9,7 @@ import ProgressBar from '@/components/ui/ProgressBar'
 import GroupEmblem from '@/components/ui/GroupEmblem'
 import Avatar from '@/components/ui/Avatar'
 import Timeline from '@/components/dashboard/Timeline'
+import DashboardIntro from '@/components/dashboard/DashboardIntro'
 import { levelProgress } from '@/lib/leveling'
 import Link from 'next/link'
 
@@ -67,10 +68,11 @@ export default async function DashboardPage() {
 
   return (
     <PageWrapper>
+      <DashboardIntro show={!student.hasSeenIntro} />
       <div className="max-w-6xl mx-auto px-4 py-6">
 
         {/* Welcome Banner */}
-        <div className="rpg-dialog bg-gray-800 p-4 mb-6">
+        <div className="rpg-dialog bg-gray-800 p-4 mb-6" data-tour="profile">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-green-600 border-4 border-black
               flex items-center justify-center text-2xl overflow-hidden flex-shrink-0"
@@ -101,7 +103,7 @@ export default async function DashboardPage() {
           </div>
 
           {/* XP Bar */}
-          <div className="mt-4">
+          <div className="mt-4" data-tour="xp">
             <ProgressBar
               value={into}
               max={span}
@@ -134,7 +136,7 @@ export default async function DashboardPage() {
         )}
 
         {/* Quick Actions Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6" data-tour="actions">
           {[
             { href: '/scan', icon: '📱', label: 'SCAN QR', color: '#4CAF50', bg: 'bg-green-900/50' },
             { href: '/quests', icon: '⚔️', label: 'QUESTS', color: '#FFD700', bg: 'bg-yellow-900/50' },
@@ -161,7 +163,7 @@ export default async function DashboardPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Active Quests */}
-          <div>
+          <div data-tour="quests">
             <div className="flex justify-between items-center mb-3">
               <h3 className="font-pixel text-sm text-yellow-400 pixel-text-shadow">⚔️ ACTIVE QUESTS</h3>
               <Link href="/quests"
@@ -204,7 +206,7 @@ export default async function DashboardPage() {
           </div>
 
           {/* Leaderboard Widget */}
-          <div>
+          <div data-tour="leaderboard">
             <div className="flex justify-between items-center mb-3">
               <h3 className="font-pixel text-sm text-yellow-400 pixel-text-shadow">🏆 LEADERBOARD</h3>
               <Link href="/leaderboard"
@@ -255,7 +257,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Codex Progress */}
-        <div className="mt-6">
+        <div className="mt-6" data-tour="codex">
           <PixelCard className="bg-gray-800">
             <div className="flex justify-between items-center mb-3">
               <h3 className="font-pixel text-sm text-yellow-400 pixel-text-shadow">📖 CODEX PROGRESS</h3>
