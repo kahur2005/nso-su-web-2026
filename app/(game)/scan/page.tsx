@@ -38,6 +38,10 @@ export default function ScanPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const processingRef = useRef(false)        // guard against double-decode
   const startingRef = useRef(false)          // guard against overlapping starts
+  // In-flight scanner.start() promise. stop/teardown must await it: html5-qrcode's
+  // stop() throws synchronously unless the camera is fully running, and a start()
+  // that resolves after teardown would leave the camera streaming forever.
+  const startPromiseRef = useRef<Promise<unknown> | null>(null)
 
   const fetchRecentScans = useCallback(async () => {
     try {
@@ -88,6 +92,8 @@ export default function ScanPage() {
   }, [])
 
   const stopCamera = useCallback(async () => {
+    // Let a pending start() settle so the stream can't outlive this stop.
+    try { await startPromiseRef.current } catch {}
     const scanner = qrRef.current
     if (scanner) {
       try { await scanner.stop() } catch {}
@@ -110,7 +116,7 @@ export default function ScanPage() {
     try {
       const scanner = await getScanner()
       try { await scanner.stop() } catch {}
-      await scanner.start(
+      const startPromise = scanner.start(
         { facingMode: mode },
         {
           fps: 10,
@@ -123,12 +129,15 @@ export default function ScanPage() {
         (decodedText: string) => { handleDecoded(decodedText) },
         () => { /* ignore per-frame decode errors */ }
       )
+      startPromiseRef.current = startPromise
+      await startPromise
       setCameraOn(true)
     } catch {
       setCameraError('CAMERA UNAVAILABLE — ALLOW ACCESS OR UPLOAD AN IMAGE')
       setCameraOn(false)
     } finally {
       startingRef.current = false
+      startPromiseRef.current = null
     }
   }, [getScanner, handleDecoded])
 
@@ -147,16 +156,21 @@ export default function ScanPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result])
 
-  // Tear down the scanner instance once, on unmount.
+  // Tear down the scanner instance once, on unmount. Everything is awaited
+  // inside try/catch: stop() throws *synchronously* when the camera isn't
+  // running, and a start() still in flight must settle before we stop it,
+  // or the camera stream would keep running after navigation.
   useEffect(() => {
     return () => {
-      const scanner = qrRef.current
-      if (scanner) {
-        scanner.stop().catch(() => {}).finally(() => {
-          try { scanner.clear() } catch {}
-          qrRef.current = null
-        })
+      const teardown = async () => {
+        try { await startPromiseRef.current } catch {}
+        const scanner = qrRef.current
+        if (!scanner) return
+        try { await scanner.stop() } catch {}
+        try { scanner.clear() } catch {}
+        qrRef.current = null
       }
+      teardown()
     }
   }, [])
 
@@ -262,13 +276,17 @@ export default function ScanPage() {
               </PixelButton>
             </div>
 
-            {cameraError && (
-              <div className="mt-3">
-                <PixelButton onClick={() => startCamera(facingMode)} color="green" fullWidth>
-                  ▶ RETRY CAMERA
+            <div className="mt-3">
+              {cameraOn ? (
+                <PixelButton onClick={stopCamera} color="red" fullWidth>
+                  ⏹ CLOSE CAMERA
                 </PixelButton>
-              </div>
-            )}
+              ) : (
+                <PixelButton onClick={() => startCamera(facingMode)} color="green" fullWidth>
+                  ▶ {cameraError ? 'RETRY CAMERA' : 'START CAMERA'}
+                </PixelButton>
+              )}
+            </div>
 
             {loading && (
               <div className="text-center mt-4">
