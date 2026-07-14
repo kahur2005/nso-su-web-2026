@@ -3,7 +3,6 @@ import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
-import PixelCard from '@/components/ui/PixelCard'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -24,7 +23,7 @@ export default function LoginPage() {
     })
 
     if (res?.error) {
-      setError('WRONG EMAIL OR PASSWORD.')
+      setError('Wrong email or password!')
       setLoading(false)
       return
     }
@@ -34,136 +33,117 @@ export default function LoginPage() {
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center relative overflow-hidden scanlines"
-      style={{
-        background: 'linear-gradient(180deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%)'
-      }}
-    >
-      {/* Pixel stars background */}
-      {[...Array(30)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-1 h-1 bg-white"
-          style={{
-            top: `${Math.random() * 70}%`,
-            left: `${Math.random() * 100}%`,
-            opacity: Math.random() * 0.8 + 0.2,
-            animation: `blink ${Math.random() * 2 + 1}s infinite`
-          }}
+    <div className="relative min-h-dvh w-full overflow-hidden">
+      {/* Illustrated forest background — mobile shows the left grove like the
+          Figma crop, desktop reveals the full scene */}
+      <img
+        src="/images/login/bg.png"
+        alt=""
+        aria-hidden
+        className="absolute inset-0 h-full w-full object-cover object-[31%_50%] lg:object-center"
+      />
+
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-sm flex-col items-center px-6 py-8 lg:max-w-md">
+        {/* Crest logo */}
+        <img
+          src="/images/login/logo-512.png"
+          alt="NSO 2026"
+          className="mt-2 w-44 lg:w-56"
         />
-      ))}
 
-      <div className="relative z-10 w-full max-w-md px-4">
         {/* Title */}
-        <div className="text-center mb-8">
-          <h1 className="font-pixel text-2xl text-yellow-400"
-            style={{ textShadow: '3px 3px 0 #b45309' }}>
-            NSO 2026
-          </h1>
-          <p className="font-pixel text-xs text-gray-400 mt-2">
-            PLAYER LOGIN
-          </p>
-        </div>
+        <h1 className="mt-4 text-center font-bytebounce leading-[0.8] text-[#fbc94c]">
+          <span
+            className="block text-[clamp(3.5rem,22vw,6rem)] lg:text-[6.5rem]"
+            style={{ textShadow: '5px 5px 0 #4e342e' }}
+          >
+            Welcome,
+          </span>
+          <span
+            className="block text-[clamp(2.25rem,14vw,3.75rem)] lg:text-[4rem]"
+            style={{ textShadow: '3px 3.3px 0 #4e342e' }}
+          >
+            New Student!
+          </span>
+        </h1>
 
-        {/* Login Card */}
-        <PixelCard className="bg-gray-900/90 border-white/20">
-          <form onSubmit={handleLogin} className="p-6">
-            {/* Save file icon */}
-            <div className="text-6xl mb-4 float inline-block w-full text-center">🏰</div>
-
-            <h2 className="font-pixel text-sm text-white mb-2 text-center">
-              WELCOME BACK!
-            </h2>
-            <p className="font-pixel text-xs text-gray-400 mb-6 text-center">
-              LOG IN TO CONTINUE YOUR ADVENTURE
-            </p>
-
-            {/* Email */}
-            <label className="font-pixel text-xs text-gray-300 block mb-2">
-              EMAIL
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              placeholder="you@email.com"
-              className="w-full font-pixel text-xs text-white bg-gray-800
-                border-4 border-black py-3 px-3 mb-4
-                focus:outline-none focus:border-blue-500
-                placeholder:text-gray-600"
-            />
-
-            {/* Password */}
-            <label className="font-pixel text-xs text-gray-300 block mb-2">
-              PASSWORD
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              placeholder="••••••••"
-              className="w-full font-pixel text-xs text-white bg-gray-800
-                border-4 border-black py-3 px-3 mb-6
-                focus:outline-none focus:border-blue-500
-                placeholder:text-gray-600"
-            />
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full font-pixel text-sm text-white
-                bg-blue-600 hover:bg-blue-500
-                border-4 border-black py-4 px-6
-                transition-all duration-75
-                active:translate-x-1 active:translate-y-1
-                disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ boxShadow: '4px 4px 0px #000' }}
-            >
-              {loading ? (
-                <span className="blink">⏳ LOADING...</span>
-              ) : (
-                <>🎮 LOG IN</>
-              )}
-            </button>
-
-            {error && (
-              <div className="mt-4 p-3 bg-red-900 border-2 border-red-500">
-                <p className="font-pixel text-xs text-red-300">❌ {error}</p>
-              </div>
-            )}
-
-            {/* Register link */}
-            <div className="mt-6 text-center">
-              <p className="font-pixel text-xs text-gray-400">
-                NEW PLAYER?{' '}
-                <Link href="/register" className="text-yellow-400 hover:text-yellow-300 underline">
-                  CREATE AN ACCOUNT
-                </Link>
-              </p>
-            </div>
-
-            {/* Info box */}
-            <div className="mt-6 p-3 bg-yellow-900/50 border-2 border-yellow-600">
-              <p className="font-pixel text-xs text-yellow-300">
-                ⚠️ ONLY FOR NSO 2026
-              </p>
-              <p className="font-pixel text-xs text-yellow-400 mt-1">
-                NEW STUDENTS BATCH 2026
-              </p>
-            </div>
-          </form>
-        </PixelCard>
-
-        {/* Footer */}
-        <p className="text-center font-pixel text-xs text-gray-600 mt-6">
-          © NSO 2026 COMMITTEE
+        {/* Register banner line */}
+        <p className="mt-4 text-center font-bytebounce text-[19px] leading-none">
+          <Link
+            href="/register"
+            className="wood-plank inline-block px-3 py-2 text-[#7aff06] hover:brightness-110"
+            style={{ textShadow: '1.5px 1.3px 0 #4e342e' }}
+          >
+            Create a new account
+          </Link>{' '}
+          <span className="text-[#24e9d5]" style={{ textShadow: '1.5px 1.3px 0 #4e342e' }}>
+            or login to get started
+          </span>
         </p>
+
+        {/* Login form */}
+        <form onSubmit={handleLogin} className="mt-auto w-full pt-10">
+          <label
+            htmlFor="email"
+            className="block font-bytebounce text-[22px] text-[#e0b391]"
+            style={{ textShadow: '2px 1.4px 0 #4e342e' }}
+          >
+            Login
+          </label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+            placeholder="you@email.com"
+            className="mt-1 h-[52px] w-full rounded-[13px] border-2 border-[#e0b391] bg-white px-4 font-bytebounce text-[22px] text-[#4e342e] placeholder:text-[#c9b6a4] focus:border-[#fbc94c] focus:outline-none"
+          />
+
+          <label
+            htmlFor="password"
+            className="mt-6 block font-bytebounce text-[22px] text-[#e0b391]"
+            style={{ textShadow: '2px 1.4px 0 #4e342e' }}
+          >
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+            placeholder="••••••••"
+            className="mt-1 h-[52px] w-full rounded-[13px] border-2 border-[#e0b391] bg-white px-4 font-bytebounce text-[22px] text-[#4e342e] placeholder:text-[#c9b6a4] focus:border-[#fbc94c] focus:outline-none"
+          />
+
+          <p
+            className="mt-2 text-right font-bytebounce text-[16px] text-[#d6101d]"
+            style={{ textShadow: '1.2px 0.7px 0 #e0b391' }}
+          >
+            Forgot password?
+          </p>
+
+          {error && (
+            <p
+              className="mt-3 text-center font-bytebounce text-[18px] text-[#d6101d]"
+              style={{ textShadow: '1.2px 0.7px 0 #e0b391' }}
+            >
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="wood-plank mt-8 block h-[52px] w-full font-bytebounce text-[28px] text-[#e0b391] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+            style={{ textShadow: '2.7px 1.8px 0 #4e342e' }}
+          >
+            {loading ? <span className="blink">Loading...</span> : 'Login'}
+          </button>
+        </form>
       </div>
     </div>
   )

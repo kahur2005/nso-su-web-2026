@@ -1,10 +1,30 @@
 /* app/globals.css */
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Adamina&display=swap');
 
 @import 'tailwindcss';
 
+@font-face {
+  font-family: 'ByteBounce';
+  font-style: normal;
+  font-weight: 500;
+  src: url('/fonts/ByteBounce.woff') format('woff');
+  font-display: swap;
+}
+
+/* Sampoerna University brand font (headings/wordmark) */
+@font-face {
+  font-family: 'Campton';
+  font-style: normal;
+  font-weight: 600;
+  src: url('/fonts/CamptonSemiBold.woff') format('woff');
+  font-display: swap;
+}
+
 @theme {
   --font-pixel: 'Press Start 2P', monospace;
+  --font-bytebounce: 'ByteBounce', 'Press Start 2P', monospace;
+  --font-campton: 'Campton', 'Poppins', sans-serif;
+  --font-adamina: 'Adamina', Georgia, serif;
 }
 
 :root {
@@ -50,6 +70,21 @@ body::before {
 @keyframes cloudDrift {
   from { background-position: 0 0; }
   to { background-position: 256px 0; }
+}
+
+/* Wooden plank (login banner + button) — rebuilt in CSS from the Figma
+   sprite palette; the raw exports carry a stray white bottom edge row */
+.wood-plank {
+  border: 2px solid #4e342e;
+  border-radius: 6px;
+  background: linear-gradient(
+    180deg,
+    #ae8566 0%, #ae8566 5%,
+    #88684e 5%, #88684e 45%,
+    #7e5e49 45%, #7e5e49 50%,
+    #6d4c41 50%, #6d4c41 87%,
+    #4e342e 87%, #4e342e 100%
+  );
 }
 
 /* Pixel Border */

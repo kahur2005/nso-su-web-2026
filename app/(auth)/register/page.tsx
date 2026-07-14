@@ -2,18 +2,34 @@
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import Link from 'next/link'
-import PixelCard from '@/components/ui/PixelCard'
+
+const TOTAL_STEPS = 4
+
+const STEP_TITLES: [string, string][] = [
+  ["Let's get", 'started'],
+  ['About', 'you'],
+  ['Your', 'story'],
+  ['Last', 'step!'],
+]
+
+const labelClass = 'block font-bytebounce text-[22px] text-[#e0b391]'
+const labelShadow = { textShadow: '2px 1.4px 0 #4e342e' }
+const inputClass =
+  'mt-1 w-full rounded-[13px] border-2 border-[#e0b391] bg-white px-4 font-bytebounce text-[22px] text-[#4e342e] placeholder:text-[#c9b6a4] focus:border-[#fbc94c] focus:outline-none'
 
 export default function RegisterPage() {
   const router = useRouter()
+  const [step, setStep] = useState(0)
   const [form, setForm] = useState({
     name: '',
     email: '',
     password: '',
-    medicalNote: '',
-    achievements: '',
+    confirmPassword: '',
     instagram: '',
+    major: '',
+    hobby: '',
+    achievements: '',
+    medicalNote: '',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -22,26 +38,54 @@ export default function RegisterPage() {
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setForm((f) => ({ ...f, [key]: e.target.value }))
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const goBack = () => {
+    setError('')
+    if (step === 0) {
+      router.push('/login')
+    } else {
+      setStep(step - 1)
+    }
+  }
+
+  const handleNext = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
     setError('')
 
+    if (step === 0 && form.password !== form.confirmPassword) {
+      setError('Passwords do not match!')
+      return
+    }
+
+    if (step < TOTAL_STEPS - 1) {
+      setStep(step + 1)
+      return
+    }
+
+    // Final step — register, then auto sign-in.
+    setLoading(true)
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          password: form.password,
+          instagram: form.instagram,
+          major: form.major,
+          hobby: form.hobby,
+          achievements: form.achievements,
+          medicalNote: form.medicalNote,
+        }),
       })
       const data = await res.json()
 
       if (!res.ok) {
-        setError((data.error || 'REGISTRATION FAILED.').toUpperCase())
+        setError(data.error || 'Registration failed.')
         setLoading(false)
         return
       }
 
-      // Auto sign-in with the credentials we just registered.
       const signInRes = await signIn('credentials', {
         email: form.email,
         password: form.password,
@@ -57,191 +101,242 @@ export default function RegisterPage() {
       router.push('/dashboard')
       router.refresh()
     } catch {
-      setError('CONNECTION ERROR. TRY AGAIN.')
+      setError('Connection error. Try again.')
       setLoading(false)
     }
   }
 
-  const inputClass = `w-full font-pixel text-xs text-white bg-gray-800
-    border-4 border-black py-3 px-3
-    focus:outline-none focus:border-blue-500
-    placeholder:text-gray-600`
+  const [titleTop, titleBottom] = STEP_TITLES[step]
+  const isLastStep = step === TOTAL_STEPS - 1
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center relative overflow-hidden scanlines py-10"
-      style={{
-        background: 'linear-gradient(180deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%)'
-      }}
-    >
-      <div className="relative z-10 w-full max-w-md px-4">
+    <div className="relative min-h-dvh w-full overflow-hidden">
+      {/* Illustrated forest background — same crop as /login on mobile */}
+      <img
+        src="/images/login/bg.png"
+        alt=""
+        aria-hidden
+        className="absolute inset-0 h-full w-full object-cover object-[31%_50%] lg:object-center"
+      />
+
+      {/* Back button */}
+      <button
+        type="button"
+        onClick={goBack}
+        aria-label={step === 0 ? 'Back to login' : 'Previous step'}
+        className="absolute left-5 top-8 z-20 w-[64px] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5"
+      >
+        <img src="/images/login/back-button.png" alt="" className="w-full" />
+      </button>
+
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-sm flex-col px-6 pb-8 pt-28 lg:max-w-md">
         {/* Title */}
-        <div className="text-center mb-6">
-          <h1 className="font-pixel text-2xl text-yellow-400"
-            style={{ textShadow: '3px 3px 0 #b45309' }}>
-            NSO 2026
-          </h1>
-          <p className="font-pixel text-xs text-gray-400 mt-2">
-            CREATE YOUR CHARACTER
-          </p>
-        </div>
+        <h1 className="text-center font-bytebounce leading-[0.9] text-[#fbc94c]">
+          <span
+            className="block text-[clamp(2.75rem,15vw,4rem)] lg:text-[4.25rem]"
+            style={{ textShadow: '3.4px 3.1px 0 #4e342e' }}
+          >
+            {titleTop}
+          </span>
+          <span
+            className="block text-[clamp(2.75rem,15vw,4rem)] lg:text-[4.25rem]"
+            style={{ textShadow: '3.4px 3.1px 0 #4e342e' }}
+          >
+            {titleBottom}
+          </span>
+        </h1>
 
-        <PixelCard className="bg-gray-900/90 border-white/20">
-          <form onSubmit={handleRegister} className="p-6 space-y-5">
-            <div className="text-5xl mb-2 float inline-block w-full text-center">🧙</div>
+        <p
+          className="mt-2 text-center font-bytebounce text-[18px] text-[#e0b391]"
+          style={labelShadow}
+        >
+          Step {step + 1} of {TOTAL_STEPS}
+        </p>
 
-            {/* Name */}
-            <div>
-              <label className="font-pixel text-xs text-gray-300 block mb-2">
-                YOUR NAME
-              </label>
-              <input
-                type="text"
-                value={form.name}
-                onChange={update('name')}
-                required
-                autoComplete="name"
-                placeholder="e.g. Alex Tan"
-                className={inputClass}
-              />
+        <form onSubmit={handleNext} className="mt-8 flex w-full flex-1 flex-col">
+          {step === 0 && (
+            <div className="space-y-5">
+              <div>
+                <label htmlFor="email" className={labelClass} style={labelShadow}>
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={form.email}
+                  onChange={update('email')}
+                  required
+                  autoComplete="email"
+                  placeholder="you@email.com"
+                  className={`${inputClass} h-[52px]`}
+                />
+              </div>
+              <div>
+                <label htmlFor="password" className={labelClass} style={labelShadow}>
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={form.password}
+                  onChange={update('password')}
+                  required
+                  minLength={6}
+                  autoComplete="new-password"
+                  placeholder="At least 6 characters"
+                  className={`${inputClass} h-[52px]`}
+                />
+              </div>
+              <div>
+                <label htmlFor="confirmPassword" className={labelClass} style={labelShadow}>
+                  Confirm password
+                </label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  value={form.confirmPassword}
+                  onChange={update('confirmPassword')}
+                  required
+                  minLength={6}
+                  autoComplete="new-password"
+                  placeholder="Repeat your password"
+                  className={`${inputClass} h-[52px]`}
+                />
+              </div>
+              <div>
+                <label htmlFor="instagram" className={labelClass} style={labelShadow}>
+                  Instagram profile link
+                </label>
+                <input
+                  id="instagram"
+                  type="text"
+                  value={form.instagram}
+                  onChange={update('instagram')}
+                  autoComplete="off"
+                  placeholder="@yourhandle (optional)"
+                  className={`${inputClass} h-[52px]`}
+                />
+              </div>
             </div>
+          )}
 
-            {/* Email */}
-            <div>
-              <label className="font-pixel text-xs text-gray-300 block mb-2">
-                EMAIL
-              </label>
-              <input
-                type="email"
-                value={form.email}
-                onChange={update('email')}
-                required
-                autoComplete="email"
-                placeholder="you@email.com"
-                className={inputClass}
-              />
+          {step === 1 && (
+            <div className="space-y-5">
+              <div>
+                <label htmlFor="fullName" className={labelClass} style={labelShadow}>
+                  Name
+                </label>
+                <input
+                  id="fullName"
+                  type="text"
+                  value={form.name}
+                  onChange={update('name')}
+                  required
+                  autoComplete="name"
+                  placeholder="Your full name"
+                  className={`${inputClass} h-[52px]`}
+                />
+              </div>
+              <div>
+                <label htmlFor="major" className={labelClass} style={labelShadow}>
+                  Major
+                </label>
+                <input
+                  id="major"
+                  type="text"
+                  value={form.major}
+                  onChange={update('major')}
+                  required
+                  placeholder="e.g. Computer Science"
+                  className={`${inputClass} h-[52px]`}
+                />
+              </div>
             </div>
+          )}
 
-            {/* Password */}
-            <div>
-              <label className="font-pixel text-xs text-gray-300 block mb-2">
-                PASSWORD
-              </label>
-              <input
-                type="password"
-                value={form.password}
-                onChange={update('password')}
-                required
-                minLength={6}
-                autoComplete="new-password"
-                placeholder="At least 6 characters"
-                className={inputClass}
-              />
+          {step === 2 && (
+            <div className="space-y-5">
+              <div>
+                <label htmlFor="hobby" className={labelClass} style={labelShadow}>
+                  Your hobby
+                </label>
+                <input
+                  id="hobby"
+                  type="text"
+                  value={form.hobby}
+                  onChange={update('hobby')}
+                  required
+                  placeholder="e.g. football, drawing, gaming"
+                  className={`${inputClass} h-[52px]`}
+                />
+              </div>
+              <div>
+                <label htmlFor="achievements" className={labelClass} style={labelShadow}>
+                  An achievement you&apos;re proud of
+                </label>
+                <textarea
+                  id="achievements"
+                  value={form.achievements}
+                  onChange={update('achievements')}
+                  required
+                  rows={4}
+                  placeholder={`Awards, projects, competitions — type "none" to skip`}
+                  className={`${inputClass} py-3`}
+                />
+              </div>
             </div>
+          )}
 
-            {/* Questionnaire divider */}
-            <div className="flex items-center gap-2 pt-2">
-              <div className="flex-1 h-px bg-gray-700" />
-              <span className="font-pixel text-[8px] text-gray-500">A FEW QUESTIONS</span>
-              <div className="flex-1 h-px bg-gray-700" />
-            </div>
-
-            {/* Q1 — medical */}
+          {step === 3 && (
             <div>
-              <label className="font-pixel text-xs text-gray-300 block mb-2">
-                1. ANY HEALTH CONDITIONS WE SHOULD KNOW ABOUT?
+              <label htmlFor="medicalNote" className={labelClass} style={labelShadow}>
+                Any health or condition we should know about you?
               </label>
-              <p className="font-pixel text-[9px] text-gray-500 leading-relaxed mb-2">
-                Got any illness, disability, or medical condition? Your answer is
-                kept private — it just helps the committee look after you during
-                orientation. 💙
+              <p
+                className="mt-2 font-bytebounce text-[16px] leading-tight text-[#24e9d5]"
+                style={{ textShadow: '1.2px 1px 0 #4e342e' }}
+              >
+                Kept private, it just helps the committee look after you during
+                orientation.
               </p>
               <textarea
+                id="medicalNote"
                 value={form.medicalNote}
                 onChange={update('medicalNote')}
                 required
-                rows={3}
+                rows={5}
                 placeholder={`Type "none" if this doesn't apply to you`}
-                className={inputClass}
+                className={`${inputClass} mt-3 py-3`}
               />
             </div>
+          )}
 
-            {/* Q2 — achievements */}
-            <div>
-              <label className="font-pixel text-xs text-gray-300 block mb-2">
-                2. ANY ACHIEVEMENTS YOU&apos;RE PROUD OF?
-              </label>
-              <p className="font-pixel text-[9px] text-gray-500 leading-relaxed mb-2">
-                Tell us about something you&apos;ve accomplished — awards, projects,
-                competitions, anything! 🏆
-              </p>
-              <textarea
-                value={form.achievements}
-                onChange={update('achievements')}
-                required
-                rows={3}
-                placeholder={`Type "none" if you'd rather skip this`}
-                className={inputClass}
-              />
-            </div>
+          {error && (
+            <p
+              className="mt-4 text-center font-bytebounce text-[18px] text-[#d6101d]"
+              style={{ textShadow: '1.2px 0.7px 0 #e0b391' }}
+            >
+              {error}
+            </p>
+          )}
 
-            {/* Q3 — instagram (optional) */}
-            <div>
-              <label className="font-pixel text-xs text-gray-300 block mb-2">
-                3. WHAT&apos;S YOUR INSTAGRAM? <span className="text-gray-500">(OPTIONAL)</span>
-              </label>
-              <p className="font-pixel text-[9px] text-gray-500 leading-relaxed mb-2">
-                Drop your handle so we can connect — totally up to you. 📸
-              </p>
-              <input
-                type="text"
-                value={form.instagram}
-                onChange={update('instagram')}
-                placeholder="@yourhandle"
-                className={inputClass}
-              />
-            </div>
-
-            {/* Submit */}
+          <div className="mt-auto pt-10">
             <button
               type="submit"
               disabled={loading}
-              className="w-full font-pixel text-sm text-black
-                bg-yellow-400 hover:bg-yellow-300
-                border-4 border-black py-4 px-6
-                transition-all duration-75
-                active:translate-x-1 active:translate-y-1
-                disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ boxShadow: '4px 4px 0px #000' }}
+              className="wood-plank block h-[52px] w-full font-bytebounce text-[28px] text-[#e0b391] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+              style={{ textShadow: '2.7px 1.8px 0 #4e342e' }}
             >
               {loading ? (
-                <span className="blink">⏳ CREATING...</span>
+                <span className="blink">Creating...</span>
+              ) : isLastStep ? (
+                'Register'
               ) : (
-                <>✨ START ADVENTURE</>
+                'Next'
               )}
             </button>
-
-            {error && (
-              <div className="p-3 bg-red-900 border-2 border-red-500">
-                <p className="font-pixel text-xs text-red-300">❌ {error}</p>
-              </div>
-            )}
-
-            {/* Login link */}
-            <div className="text-center">
-              <p className="font-pixel text-xs text-gray-400">
-                ALREADY HAVE AN ACCOUNT?{' '}
-                <Link href="/login" className="text-yellow-400 hover:text-yellow-300 underline">
-                  LOG IN
-                </Link>
-              </p>
-            </div>
-          </form>
-        </PixelCard>
-
-        <p className="text-center font-pixel text-xs text-gray-600 mt-6">
-          © NSO 2026 COMMITTEE
-        </p>
+          </div>
+        </form>
       </div>
     </div>
   )

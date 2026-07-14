@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -o '^[A-Z_]*=' .env)",
+      "Bash(ls prisma/migrations)",
+      "Bash(ls prisma/)"
+    ]
+  }
+}

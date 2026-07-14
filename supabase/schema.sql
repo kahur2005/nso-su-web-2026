@@ -59,6 +59,7 @@ create table "Student" (
   "medicalNote"       text,
   "password"          text,
   "pastAchievements"  text,
+  "hobby"             text,
   "createdAt"         timestamptz not null default now(),
   "updatedAt"         timestamptz not null default now()
 );

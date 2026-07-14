@@ -16,6 +16,8 @@ export async function POST(request: Request) {
   const medicalNote = String(body.medicalNote || '').trim()
   const achievements = String(body.achievements || '').trim()
   const instagram = String(body.instagram || '').trim()
+  const major = String(body.major || '').trim()
+  const hobby = String(body.hobby || '').trim()
 
   if (!name || !email || !password) {
     return NextResponse.json(
@@ -32,10 +34,10 @@ export async function POST(request: Request) {
       { status: 400 }
     )
   }
-  // Questionnaire Q1 and Q2 are required (Q3 / instagram is optional).
-  if (!medicalNote || !achievements) {
+  // Questionnaire steps are required (instagram is optional).
+  if (!major || !hobby || !medicalNote || !achievements) {
     return NextResponse.json(
-      { error: 'Please answer the medical and achievement questions.' },
+      { error: 'Please answer the major, hobby, achievement, and health questions.' },
       { status: 400 }
     )
   }
@@ -60,6 +62,8 @@ export async function POST(request: Request) {
     medicalNote,
     pastAchievements: achievements,
     instagram: instagram || null,
+    major,
+    hobby,
   })
 
   if (error) {
