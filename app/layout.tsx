@@ -14,9 +14,24 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+import type { Viewport } from "next";
+
 export const metadata: Metadata = {
   title: "NSO 2026",
   description: "SU New Student Orientation 2026 — gamified campus adventure",
+  formatDetection: {
+    telephone: false,
+    date: false,
+    address: false,
+    email: false,
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({

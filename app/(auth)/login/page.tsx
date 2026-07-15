@@ -33,7 +33,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative min-h-dvh w-full overflow-hidden">
+    <div className="relative min-h-dvh w-full overflow-y-auto">
       {/* Illustrated forest background — mobile shows the left grove like the
           Figma crop, desktop reveals the full scene */}
       <img

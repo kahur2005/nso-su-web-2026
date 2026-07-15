@@ -9,10 +9,14 @@ export default function IntroSequence() {
   const [phase, setPhase] = useState<'idle' | 'logo' | 'text' | 'blink' | 'fadeout' | 'done'>('idle')
 
   useEffect(() => {
-    // Skip if already seen this session
-    if (sessionStorage.getItem(STORAGE_KEY)) {
-      setPhase('done')
-      return
+    try {
+      // Skip if already seen this session
+      if (typeof window !== 'undefined' && window.sessionStorage && sessionStorage.getItem(STORAGE_KEY)) {
+        setPhase('done')
+        return
+      }
+    } catch (e) {
+      console.warn('sessionStorage is not accessible:', e)
     }
 
     // Sequence timeline
@@ -21,7 +25,13 @@ export default function IntroSequence() {
     const t3 = setTimeout(() => setPhase('blink'),  1900)
     const t4 = setTimeout(() => setPhase('fadeout'), 2300)
     const t5 = setTimeout(() => {
-      sessionStorage.setItem(STORAGE_KEY, '1')
+      try {
+        if (typeof window !== 'undefined' && window.sessionStorage) {
+          sessionStorage.setItem(STORAGE_KEY, '1')
+        }
+      } catch (e) {
+        console.warn('Failed to write to sessionStorage:', e)
+      }
       setPhase('done')
     }, TOTAL_MS)
 

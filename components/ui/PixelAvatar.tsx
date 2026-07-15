@@ -7,6 +7,10 @@ interface PixelAvatarProps {
   skin?: string | null
   /** e.g. "hairb2" or "hairg1.2" */
   hair?: string | null
+  /** e.g. "eyes1" */
+  eyes?: string | null
+  /** e.g. "brow1" */
+  brow?: string | null
   size?: number
   className?: string
 }
@@ -14,6 +18,8 @@ interface PixelAvatarProps {
 export default function PixelAvatar({
   skin = 'skin1',
   hair,
+  eyes,
+  brow,
   size = 48,
   className = '',
 }: PixelAvatarProps) {
@@ -33,6 +39,30 @@ export default function PixelAvatar({
         className="absolute inset-0 w-full h-full object-contain"
         style={{ imageRendering: 'pixelated' }}
       />
+
+      {/* Eyes layer */}
+      {eyes && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={`/images/avatar/${eyes}.png`}
+          alt=""
+          aria-hidden
+          className="absolute inset-0 w-full h-full object-contain"
+          style={{ imageRendering: 'pixelated' }}
+        />
+      )}
+
+      {/* Brows layer */}
+      {brow && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={`/images/avatar/${brow}.png`}
+          alt=""
+          aria-hidden
+          className="absolute inset-0 w-full h-full object-contain"
+          style={{ imageRendering: 'pixelated' }}
+        />
+      )}
 
       {/* Hair overlay (transparent PNG on top) */}
       {hair && (

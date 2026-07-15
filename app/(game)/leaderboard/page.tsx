@@ -28,6 +28,8 @@ interface Student {
   funFactsCollected: number
   avatarSkin?: string | null
   avatarHair?: string | null
+  avatarEyes?: string | null
+  avatarBrows?: string | null
   group: { name: string; emblem: string; emblemUrl?: string | null; color: string }
 }
 
@@ -88,7 +90,7 @@ export default function LeaderboardPage() {
   if (loading) return <PageWrapper><LoadingSpinner text="LOADING SCORES..." /></PageWrapper>
 
   // Shared podium renderer
-  function Podium({ list }: { list: Array<{ name: string; points: number; sub?: string; emblem?: string; emblemUrl?: string | null; color?: string; skin?: string | null; hair?: string | null }> }) {
+  function Podium({ list }: { list: Array<{ name: string; points: number; sub?: string; emblem?: string; emblemUrl?: string | null; color?: string; skin?: string | null; hair?: string | null; eyes?: string | null; brow?: string | null }> }) {
     if (list.length < 1) return null
     const top3 = list.slice(0, 3)
 
@@ -115,7 +117,7 @@ export default function LeaderboardPage() {
                   <GroupEmblem emblem={entry.emblem} emblemUrl={entry.emblemUrl} size={28} />
                 )}
                 {entry.skin && (
-                  <PixelAvatar skin={entry.skin} hair={entry.hair ?? undefined} size={36} />
+                  <PixelAvatar skin={entry.skin} hair={entry.hair ?? undefined} eyes={entry.eyes ?? undefined} brow={entry.brow ?? undefined} size={36} />
                 )}
                 <p
                   className="font-pixel text-[8px] text-center leading-tight px-1"
@@ -290,6 +292,8 @@ export default function LeaderboardPage() {
                 color: s.group?.color,
                 skin: s.avatarSkin,
                 hair: s.avatarHair,
+                eyes: s.avatarEyes,
+                brow: s.avatarBrows,
               }))}
             />
             <div className="space-y-3">
@@ -299,9 +303,11 @@ export default function LeaderboardPage() {
                     <span className="font-pixel text-sm text-gray-400 w-10 text-center">
                       #{index + 4}
                     </span>
-                    <PixelAvatar
+                     <PixelAvatar
                       skin={student.avatarSkin ?? 'skin1'}
                       hair={student.avatarHair ?? undefined}
+                      eyes={student.avatarEyes ?? undefined}
+                      brow={student.avatarBrows ?? undefined}
                       size={40}
                       className="border-2 border-black"
                     />

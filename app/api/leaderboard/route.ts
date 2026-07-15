@@ -21,7 +21,7 @@ export async function GET() {
 
     const { data: topStudents, error: studentsError } = await supabase
       .from('Student')
-      .select('id, name, studentId, points, funFactsCollected, avatarSkin, avatarHair, group:Group(name, emblem, emblemUrl, color)')
+      .select('id, name, studentId, points, funFactsCollected, avatarSkin, avatarHair, avatarEyes, avatarBrows, group:Group(name, emblem, emblemUrl, color)')
       .order('points', { ascending: false })
       .limit(20)
 
