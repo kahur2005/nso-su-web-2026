@@ -68,7 +68,7 @@ export default function LoginPage() {
         </h1>
 
         {/* Register banner line */}
-        <p className="mt-4 text-center font-bytebounce text-[19px] leading-none">
+        <p className="mt-4 text-center font-bytebounce text-[16px] leading-none">
           <Link
             href="/register"
             className="wood-plank inline-block px-3 py-2 text-[#7aff06] hover:brightness-110"
