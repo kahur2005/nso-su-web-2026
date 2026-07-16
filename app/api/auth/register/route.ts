@@ -18,6 +18,10 @@ export async function POST(request: Request) {
   const instagram = String(body.instagram || '').trim()
   const major = String(body.major || '').trim()
   const hobby = String(body.hobby || '').trim()
+  const avatarSkin = String(body.avatarSkin || 'skin1').trim()
+  const avatarHair = body.avatarHair ? String(body.avatarHair).trim() : null
+  const avatarEyes = body.avatarEyes ? String(body.avatarEyes).trim() : null
+  const avatarBrows = body.avatarBrows ? String(body.avatarBrows).trim() : null
 
   if (!name || !email || !password) {
     return NextResponse.json(
@@ -64,6 +68,10 @@ export async function POST(request: Request) {
     instagram: instagram || null,
     major,
     hobby,
+    avatarSkin,
+    avatarHair,
+    avatarEyes,
+    avatarBrows,
   })
 
   if (error) {

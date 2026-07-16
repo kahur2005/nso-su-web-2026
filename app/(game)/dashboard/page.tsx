@@ -7,7 +7,7 @@ import PageWrapper from '@/components/layout/PageWrapper'
 import PixelCard from '@/components/ui/PixelCard'
 import ProgressBar from '@/components/ui/ProgressBar'
 import GroupEmblem from '@/components/ui/GroupEmblem'
-import Avatar from '@/components/ui/Avatar'
+import PixelAvatar from '@/components/ui/PixelAvatar'
 import Timeline from '@/components/dashboard/Timeline'
 import DashboardIntro from '@/components/dashboard/DashboardIntro'
 import { levelProgress } from '@/lib/leveling'
@@ -74,11 +74,14 @@ export default async function DashboardPage() {
         {/* Welcome Banner */}
         <div className="rpg-dialog bg-gray-800 p-4 mb-6" data-tour="profile">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-green-600 border-4 border-black
-              flex items-center justify-center text-2xl overflow-hidden flex-shrink-0"
-              style={{ boxShadow: '4px 4px 0 #000' }}>
-              <Avatar avatarUrl={student.avatarUrl} fallback="👤" />
-            </div>
+            <PixelAvatar
+              skin={student.avatarSkin ?? 'skin1'}
+              hair={student.avatarHair ?? undefined}
+              eyes={student.avatarEyes ?? undefined}
+              brow={student.avatarBrows ?? undefined}
+              size={64}
+              className="border-4 border-black"
+            />
             <div className="flex-1">
               <p className="font-pixel text-xs text-gray-400">WELCOME BACK, PLAYER</p>
               <h2 className="font-pixel text-lg text-white mt-1">
@@ -226,7 +229,7 @@ export default async function DashboardPage() {
                   <div className="flex items-center gap-3">
                     {index < 3 ? (
                       <img
-                        src={`/images/thropy_leaderboard_${index + 1}.png`}
+                        src={`/images/trophy_${index + 1}.png`}
                         alt={`Rank ${index + 1}`}
                         className="w-8 h-8 object-contain flex-shrink-0"
                         style={{ imageRendering: 'pixelated' }}

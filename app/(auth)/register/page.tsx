@@ -2,13 +2,15 @@
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import PixelAvatar from '@/components/ui/PixelAvatar'
 
-const TOTAL_STEPS = 4
+const TOTAL_STEPS = 5
 
 const STEP_TITLES: [string, string][] = [
   ["Let's get", 'started'],
   ['About', 'you'],
   ['Your', 'story'],
+  ['Your', 'avatar!'],
   ['Last', 'step!'],
 ]
 
@@ -16,6 +18,33 @@ const labelClass = 'block font-bytebounce text-[22px] text-[#e0b391]'
 const labelShadow = { textShadow: '2px 1.4px 0 #4e342e' }
 const inputClass =
   'mt-1 w-full rounded-[13px] border-2 border-[#e0b391] bg-white px-4 font-bytebounce text-[22px] text-[#4e342e] placeholder:text-[#c9b6a4] focus:border-[#fbc94c] focus:outline-none'
+
+// ── Avatar option data ──────────────────────────────────────────────────────
+const SKINS = ['skin1', 'skin2', 'skin3', 'skin4', 'skin5', 'skin6', 'skin7', 'skin8', 'skin9']
+const EYES = Array.from({ length: 16 }, (_, i) => `eyes${i + 1}`)
+const BROWS = Array.from({ length: 18 }, (_, i) => `brow${i + 1}`)
+
+// Hair options: base key used for the file path + display label
+const HAIR_STYLES = [
+  { key: null,      label: 'Bald' },
+  { key: 'hairb1',   label: 'Short A' },
+  { key: 'hairb2',   label: 'Short B' },
+  { key: 'hairb3',   label: 'Short C' },
+  { key: 'hairb4',   label: 'Short D' },
+  { key: 'hairg1',   label: 'Long A' },
+  { key: 'hairg2',   label: 'Long B' },
+  { key: 'hairg3',   label: 'Long C' },
+  { key: 'hairg4',   label: 'Long D' },
+  { key: 'hairg5',   label: 'Long E' },
+]
+
+// Color variants per hair style (suffix appended to key)
+const HAIR_COLORS: { suffix: string; label: string; swatch: string }[] = [
+  { suffix: '',    label: 'Dark',  swatch: '#2c1a0e' },
+  { suffix: '.2',  label: 'Brown', swatch: '#6b3a1f' },
+  { suffix: '.3',  label: 'Light', swatch: '#c68642' },
+]
+// ───────────────────────────────────────────────────────────────────────────
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -31,8 +60,15 @@ export default function RegisterPage() {
     achievements: '',
     medicalNote: '',
   })
+  const [avatarSkin, setAvatarSkin] = useState('skin1')
+  const [avatarHairStyle, setAvatarHairStyle] = useState<string | null>('hairb1')
+  const [avatarHairColor, setAvatarHairColor] = useState('')
+  const [avatarEyes, setAvatarEyes] = useState('eyes1')
+  const [avatarBrows, setAvatarBrows] = useState('brow1')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const hairKey = avatarHairStyle ? `${avatarHairStyle}${avatarHairColor}` : null
 
   const update = (key: keyof typeof form) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -76,6 +112,10 @@ export default function RegisterPage() {
           hobby: form.hobby,
           achievements: form.achievements,
           medicalNote: form.medicalNote,
+          avatarSkin,
+          avatarHair: hairKey,
+          avatarEyes,
+          avatarBrows,
         }),
       })
       const data = await res.json()
@@ -93,7 +133,6 @@ export default function RegisterPage() {
       })
 
       if (signInRes?.error) {
-        // Account exists but auto-login failed — send them to the login page.
         router.push('/login')
         return
       }
@@ -110,8 +149,7 @@ export default function RegisterPage() {
   const isLastStep = step === TOTAL_STEPS - 1
 
   return (
-    <div className="relative min-h-dvh w-full overflow-hidden">
-      {/* Illustrated forest background — same crop as /login on mobile */}
+    <div className="relative min-h-dvh w-full overflow-y-auto">
       <img
         src="/images/login/bg.png"
         alt=""
@@ -119,7 +157,6 @@ export default function RegisterPage() {
         className="absolute inset-0 h-full w-full object-cover object-[31%_50%] lg:object-center"
       />
 
-      {/* Back button */}
       <button
         type="button"
         onClick={goBack}
@@ -154,6 +191,7 @@ export default function RegisterPage() {
         </p>
 
         <form onSubmit={handleNext} className="mt-8 flex w-full flex-1 flex-col">
+          {/* ── Step 0: Credentials ── */}
           {step === 0 && (
             <div className="space-y-5">
               <div>
@@ -161,14 +199,9 @@ export default function RegisterPage() {
                   Email
                 </label>
                 <input
-                  id="email"
-                  type="email"
-                  value={form.email}
-                  onChange={update('email')}
-                  required
-                  autoComplete="email"
-                  placeholder="you@email.com"
-                  className={`${inputClass} h-[52px]`}
+                  id="email" type="email" value={form.email}
+                  onChange={update('email')} required autoComplete="email"
+                  placeholder="you@email.com" className={`${inputClass} h-[52px]`}
                 />
               </div>
               <div>
@@ -176,14 +209,9 @@ export default function RegisterPage() {
                   Password
                 </label>
                 <input
-                  id="password"
-                  type="password"
-                  value={form.password}
-                  onChange={update('password')}
-                  required
-                  minLength={6}
-                  autoComplete="new-password"
-                  placeholder="At least 6 characters"
+                  id="password" type="password" value={form.password}
+                  onChange={update('password')} required minLength={6}
+                  autoComplete="new-password" placeholder="At least 6 characters"
                   className={`${inputClass} h-[52px]`}
                 />
               </div>
@@ -192,14 +220,9 @@ export default function RegisterPage() {
                   Confirm password
                 </label>
                 <input
-                  id="confirmPassword"
-                  type="password"
-                  value={form.confirmPassword}
-                  onChange={update('confirmPassword')}
-                  required
-                  minLength={6}
-                  autoComplete="new-password"
-                  placeholder="Repeat your password"
+                  id="confirmPassword" type="password" value={form.confirmPassword}
+                  onChange={update('confirmPassword')} required minLength={6}
+                  autoComplete="new-password" placeholder="Repeat your password"
                   className={`${inputClass} h-[52px]`}
                 />
               </div>
@@ -208,11 +231,8 @@ export default function RegisterPage() {
                   Instagram profile link
                 </label>
                 <input
-                  id="instagram"
-                  type="text"
-                  value={form.instagram}
-                  onChange={update('instagram')}
-                  autoComplete="off"
+                  id="instagram" type="text" value={form.instagram}
+                  onChange={update('instagram')} autoComplete="off"
                   placeholder="@yourhandle (optional)"
                   className={`${inputClass} h-[52px]`}
                 />
@@ -220,6 +240,7 @@ export default function RegisterPage() {
             </div>
           )}
 
+          {/* ── Step 1: About you ── */}
           {step === 1 && (
             <div className="space-y-5">
               <div>
@@ -227,14 +248,9 @@ export default function RegisterPage() {
                   Name
                 </label>
                 <input
-                  id="fullName"
-                  type="text"
-                  value={form.name}
-                  onChange={update('name')}
-                  required
-                  autoComplete="name"
-                  placeholder="Your full name"
-                  className={`${inputClass} h-[52px]`}
+                  id="fullName" type="text" value={form.name}
+                  onChange={update('name')} required autoComplete="name"
+                  placeholder="Your full name" className={`${inputClass} h-[52px]`}
                 />
               </div>
               <div>
@@ -242,11 +258,8 @@ export default function RegisterPage() {
                   Major
                 </label>
                 <input
-                  id="major"
-                  type="text"
-                  value={form.major}
-                  onChange={update('major')}
-                  required
+                  id="major" type="text" value={form.major}
+                  onChange={update('major')} required
                   placeholder="e.g. Computer Science"
                   className={`${inputClass} h-[52px]`}
                 />
@@ -254,6 +267,7 @@ export default function RegisterPage() {
             </div>
           )}
 
+          {/* ── Step 2: Your story ── */}
           {step === 2 && (
             <div className="space-y-5">
               <div>
@@ -261,25 +275,19 @@ export default function RegisterPage() {
                   Your hobby
                 </label>
                 <input
-                  id="hobby"
-                  type="text"
-                  value={form.hobby}
-                  onChange={update('hobby')}
-                  required
+                  id="hobby" type="text" value={form.hobby}
+                  onChange={update('hobby')} required
                   placeholder="e.g. football, drawing, gaming"
                   className={`${inputClass} h-[52px]`}
                 />
               </div>
               <div>
                 <label htmlFor="achievements" className={labelClass} style={labelShadow}>
-                  An achievement you&apos;re proud of
+                  Past achievement or award you&apos;re proud of
                 </label>
                 <textarea
-                  id="achievements"
-                  value={form.achievements}
-                  onChange={update('achievements')}
-                  required
-                  rows={4}
+                  id="achievements" value={form.achievements}
+                  onChange={update('achievements')} required rows={4}
                   placeholder={`Awards, projects, competitions — type "none" to skip`}
                   className={`${inputClass} py-3`}
                 />
@@ -287,24 +295,158 @@ export default function RegisterPage() {
             </div>
           )}
 
+          {/* ── Step 3: Avatar customization ── */}
           {step === 3 && (
+            <div className="space-y-5">
+              {/* Live preview */}
+              <div className="flex justify-center">
+                <div className="flex flex-col items-center gap-2">
+                  <PixelAvatar skin={avatarSkin} hair={hairKey} eyes={avatarEyes} brow={avatarBrows} size={112} />
+                  <p className="font-bytebounce text-[13px] text-[#fbc94c]" style={labelShadow}>
+                    Your avatar
+                  </p>
+                </div>
+              </div>
+
+              {/* Skin picker */}
+              <div>
+                <p className={labelClass} style={labelShadow}>Skin tone</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {SKINS.map((s) => (
+                    <button
+                      key={s} type="button"
+                      onClick={() => setAvatarSkin(s)}
+                      className="relative border-2 rounded transition-transform active:scale-95"
+                      style={{
+                        borderColor: avatarSkin === s ? '#fbc94c' : '#e0b391',
+                        boxShadow: avatarSkin === s ? '0 0 0 2px #fbc94c' : 'none',
+                      }}
+                    >
+                      <img
+                        src={`/images/avatar/${s}.png`}
+                        alt={s}
+                        className="w-12 h-12 object-contain"
+                        style={{ imageRendering: 'pixelated' }}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Eyes picker */}
+              <div>
+                <p className={labelClass} style={labelShadow}>Eyes Style</p>
+                <div className="mt-2 flex gap-2 overflow-x-auto py-1 scrollbar-thin">
+                  {EYES.map((e) => (
+                    <button
+                      key={e} type="button"
+                      onClick={() => setAvatarEyes(e)}
+                      className="relative border-2 rounded transition-transform active:scale-95 bg-white/80 p-0.5"
+                      style={{
+                        borderColor: avatarEyes === e ? '#fbc94c' : '#e0b391',
+                        boxShadow: avatarEyes === e ? '0 0 0 2px #fbc94c' : 'none',
+                      }}
+                    >
+                      <PixelAvatar skin={avatarSkin} eyes={e} size={44} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Brows picker */}
+              <div>
+                <p className={labelClass} style={labelShadow}>Eyebrows Style</p>
+                <div className="mt-2 flex gap-2 overflow-x-auto py-1 scrollbar-thin">
+                  {BROWS.map((b) => (
+                    <button
+                      key={b} type="button"
+                      onClick={() => setAvatarBrows(b)}
+                      className="relative border-2 rounded transition-transform active:scale-95 bg-white/80 p-0.5"
+                      style={{
+                        borderColor: avatarBrows === b ? '#fbc94c' : '#e0b391',
+                        boxShadow: avatarBrows === b ? '0 0 0 2px #fbc94c' : 'none',
+                      }}
+                    >
+                      <PixelAvatar skin={avatarSkin} eyes={avatarEyes} brow={b} size={44} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Hair style picker */}
+              <div>
+                <p className={labelClass} style={labelShadow}>Hair style</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {HAIR_STYLES.map((h) => (
+                    <button
+                      key={h.key ?? 'bald'} type="button"
+                      onClick={() => setAvatarHairStyle(h.key)}
+                      className="relative border-2 rounded transition-transform active:scale-95 bg-white/80"
+                      style={{
+                        borderColor: avatarHairStyle === h.key ? '#fbc94c' : '#e0b391',
+                        boxShadow: avatarHairStyle === h.key ? '0 0 0 2px #fbc94c' : 'none',
+                      }}
+                    >
+                      {h.key ? (
+                        <img
+                          src={`/images/avatar/${h.key}.png`}
+                          alt={h.label}
+                          className="w-12 h-12 object-contain"
+                          style={{ imageRendering: 'pixelated' }}
+                        />
+                      ) : (
+                        <div className="w-12 h-12 flex items-center justify-center font-bytebounce text-[10px] text-[#4e342e]">
+                          Bald
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Hair color picker (only when a style is selected) */}
+              {avatarHairStyle && (
+                <div>
+                  <p className={labelClass} style={labelShadow}>Hair color</p>
+                  <div className="mt-2 flex gap-3">
+                    {HAIR_COLORS.map((c) => (
+                      <button
+                        key={c.suffix} type="button"
+                        onClick={() => setAvatarHairColor(c.suffix)}
+                        className="flex flex-col items-center gap-1"
+                      >
+                        <div
+                          className="w-8 h-8 border-2 rounded-full transition-transform active:scale-95"
+                          style={{
+                            background: c.swatch,
+                            borderColor: avatarHairColor === c.suffix ? '#fbc94c' : '#e0b391',
+                            boxShadow: avatarHairColor === c.suffix ? '0 0 0 2px #fbc94c' : 'none',
+                          }}
+                        />
+                        <span className="font-bytebounce text-[10px] text-[#e0b391]">{c.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Step 4: Health / allergies ── */}
+          {step === 4 && (
             <div>
               <label htmlFor="medicalNote" className={labelClass} style={labelShadow}>
-                Any health or condition we should know about you?
+                Allergies or health conditions we should know?
               </label>
               <p
                 className="mt-2 font-bytebounce text-[16px] leading-tight text-[#24e9d5]"
                 style={{ textShadow: '1.2px 1px 0 #4e342e' }}
               >
-                Kept private, it just helps the committee look after you during
-                orientation.
+                Kept private — helps the committee keep you safe during orientation.
               </p>
               <textarea
-                id="medicalNote"
-                value={form.medicalNote}
-                onChange={update('medicalNote')}
-                required
-                rows={5}
+                id="medicalNote" value={form.medicalNote}
+                onChange={update('medicalNote')} required rows={5}
                 placeholder={`Type "none" if this doesn't apply to you`}
                 className={`${inputClass} mt-3 py-3`}
               />

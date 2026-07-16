@@ -55,6 +55,8 @@ create table "Student" (
   "isAdmin"           boolean not null default false,
   "hasSeenIntro"      boolean not null default false,
   "avatarUrl"         text,
+  "avatarEyes"        text,
+  "avatarBrows"       text,
   "instagram"         text,
   "medicalNote"       text,
   "password"          text,
