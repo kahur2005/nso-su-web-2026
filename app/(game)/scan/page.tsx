@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PixelCard from '@/components/ui/PixelCard'
 import PixelButton from '@/components/ui/PixelButton'
+import WoodButton from '@/components/ui/WoodButton'
+import RecentScansPopup from './RecentScansPopup'
 
 const ACCENT = '#4CAF50'
 
@@ -32,6 +34,8 @@ export default function ScanPage() {
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment')
   const [recentScans, setRecentScans] = useState<RecentScan[]>([])
+  const [totalScans, setTotalScans] = useState(0)
+  const [showRecent, setShowRecent] = useState(false)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const qrRef = useRef<any>(null)            // Html5Qrcode instance
@@ -48,6 +52,7 @@ export default function ScanPage() {
       const res = await fetch('/api/qr/recent')
       const data = await res.json()
       setRecentScans(data.scans || [])
+      setTotalScans(data.total ?? (data.scans?.length || 0))
     } catch (e) {
       console.error(e)
     }
@@ -132,7 +137,8 @@ export default function ScanPage() {
       startPromiseRef.current = startPromise
       await startPromise
       setCameraOn(true)
-    } catch {
+    } catch (e) {
+      console.error('camera start failed:', e)
       setCameraError('CAMERA UNAVAILABLE — ALLOW ACCESS OR UPLOAD AN IMAGE')
       setCameraOn(false)
     } finally {
@@ -205,10 +211,20 @@ export default function ScanPage() {
 
   return (
     <PageWrapper>
-      <div className="max-w-lg mx-auto px-4 py-6">
-        <h1 className="font-pixel text-lg text-yellow-400 text-center mb-6"
-          style={{ textShadow: '3px 3px 0 #000' }}>
-          📱 SCAN QR CODE
+      {/* Forest artwork background (scan-page section of the grand design) */}
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          backgroundImage: 'url(/images/scan/bg.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          imageRendering: 'pixelated',
+        }}
+      />
+
+      <div className="max-w-lg mx-auto px-4 py-4">
+        <h1 className="font-bytebounce text-[56px] leading-none text-[#ffecb3] text-center mb-4">
+          Scan QR Code
         </h1>
 
         {/* Hidden file input for image upload */}
@@ -223,35 +239,41 @@ export default function ScanPage() {
         {/* Scanner Area — kept mounted (hidden under a result) so #qr-reader
             always exists in the DOM for the html5-qrcode instance. */}
         <div className={result ? 'hidden' : ''}>
-          <PixelCard className="bg-gray-800 mb-6">
-            <p className="font-pixel text-xs text-gray-400 text-center mb-4">
-              POINT YOUR CAMERA AT A
-              <br />
-              <span className="text-green-400">COMMITTEE QR CODE</span>
-              <br />
-              TO COLLECT A FUN FACT!
-            </p>
+          {/* Paper panel */}
+          <div
+            className="px-7 py-6 mb-4"
+            style={{
+              backgroundImage: 'url(/images/scan/paper.png)',
+              backgroundSize: '100% 100%',
+              imageRendering: 'pixelated',
+            }}
+          >
+            <div className="font-bytebounce text-[19px] leading-[0.8] text-[#7d5a3d] text-center mb-3">
+              <p>Point your camera at a</p>
+              <p className="text-[#2eaa31]">Committee QR Code</p>
+              <p>to get a fun fact!</p>
+            </div>
 
             {/* Camera viewfinder */}
-            <div className="relative mx-auto w-full max-w-[280px]">
+            <div className="relative mx-auto w-full max-w-[250px]">
               {/* Pixel corner decorations + scan line (only while camera live) */}
               {cameraOn && (
                 <>
                   <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4
-                    border-green-400 z-10 pointer-events-none" />
+                    border-[#2eaa31] z-10 pointer-events-none" />
                   <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4
-                    border-green-400 z-10 pointer-events-none" />
+                    border-[#2eaa31] z-10 pointer-events-none" />
                   <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4
-                    border-green-400 z-10 pointer-events-none" />
+                    border-[#2eaa31] z-10 pointer-events-none" />
                   <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4
-                    border-green-400 z-10 pointer-events-none" />
-                  <div className="absolute left-0 right-0 h-0.5 bg-green-400 z-10 pointer-events-none"
+                    border-[#2eaa31] z-10 pointer-events-none" />
+                  <div className="absolute left-0 right-0 h-0.5 bg-[#2eaa31] z-10 pointer-events-none"
                     style={{ animation: 'scanLine 2s linear infinite', top: '0%' }} />
                 </>
               )}
 
               {/* html5-qrcode renders the live camera here */}
-              <div id="qr-reader" className="w-full overflow-hidden border-4 border-green-500
+              <div id="qr-reader" className="w-full overflow-hidden border-4 border-[#2eaa31]
                 bg-gray-900 min-h-[200px]" />
 
               {/* Overlay shown when the camera could not start */}
@@ -267,35 +289,35 @@ export default function ScanPage() {
             </div>
 
             {/* Controls */}
-            <div className="mt-6 flex gap-3">
-              <PixelButton onClick={flipCamera} color="blue" fullWidth>
-                🔄 FLIP
-              </PixelButton>
-              <PixelButton onClick={onUploadClick} color="yellow" fullWidth>
-                🖼️ UPLOAD
-              </PixelButton>
+            <div className="mt-5 flex gap-4 justify-center">
+              <WoodButton onClick={flipCamera} className="h-[54px] flex-1 max-w-[130px]" textClassName="text-[34px]">
+                Flip
+              </WoodButton>
+              <WoodButton onClick={onUploadClick} className="h-[54px] flex-1 max-w-[130px]" textClassName="text-[34px]">
+                Upload
+              </WoodButton>
             </div>
 
-            <div className="mt-3">
+            <div className="mt-3 flex justify-center">
               {cameraOn ? (
-                <PixelButton onClick={stopCamera} color="red" fullWidth>
-                  ⏹ CLOSE CAMERA
-                </PixelButton>
+                <WoodButton onClick={stopCamera} className="h-[54px] w-full max-w-[276px]" textClassName="text-[30px]">
+                  Close Camera
+                </WoodButton>
               ) : (
-                <PixelButton onClick={() => startCamera(facingMode)} color="green" fullWidth>
-                  ▶ {cameraError ? 'RETRY CAMERA' : 'START CAMERA'}
-                </PixelButton>
+                <WoodButton onClick={() => startCamera(facingMode)} className="h-[54px] w-full max-w-[276px]" textClassName="text-[30px]">
+                  {cameraError ? 'Retry Camera' : 'Start Camera'}
+                </WoodButton>
               )}
             </div>
 
             {loading && (
-              <div className="text-center mt-4">
-                <p className="font-pixel text-xs text-yellow-400 blink">
-                  ⏳ PROCESSING SCAN...
+              <div className="text-center mt-3">
+                <p className="font-bytebounce text-[20px] text-[#7d5a3d] blink">
+                  Processing scan...
                 </p>
               </div>
             )}
-          </PixelCard>
+          </div>
         </div>
 
         {/* Scan Result - RPG Dialog Style */}
@@ -373,63 +395,54 @@ export default function ScanPage() {
           </div>
         )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          <PixelCard className="bg-gray-800 text-center">
-            <p className="font-pixel text-xs text-gray-400">TODAY&apos;S SCANS</p>
-            <p className="font-pixel text-2xl text-yellow-400 mt-1">
-              {recentScans.filter(s => {
+        {/* Stats — paper cards */}
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          {[
+            {
+              label: "Today's scans",
+              value: recentScans.filter(s => {
                 const today = new Date().toDateString()
                 return new Date(s.scannedAt).toDateString() === today
-              }).length}
-            </p>
-          </PixelCard>
-          <PixelCard className="bg-gray-800 text-center">
-            <p className="font-pixel text-xs text-gray-400">TOTAL COLLECTED</p>
-            <p className="font-pixel text-2xl text-purple-400 mt-1">
-              {recentScans.length}
-            </p>
-          </PixelCard>
+              }).length,
+            },
+            { label: 'Total Collected', value: totalScans },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="h-[124px] flex flex-col items-center pt-4 pb-2"
+              style={{
+                backgroundImage: 'url(/images/scan/paper.png)',
+                backgroundSize: '100% 100%',
+                imageRendering: 'pixelated',
+              }}
+            >
+              <p className="font-bytebounce text-[22px] leading-none text-[#6d4c41]">
+                {stat.label}
+              </p>
+              <p className="font-bytebounce text-[106px] leading-[0.75] text-[#3e2723] flex-1 flex items-start -mt-1">
+                {stat.value}
+              </p>
+            </div>
+          ))}
         </div>
 
-        {/* Recent Scans */}
-        <div>
-          <h3 className="font-pixel text-sm text-yellow-400 pixel-text-shadow mb-3">🕐 RECENT SCANS</h3>
-          <div className="space-y-2">
-            {recentScans.slice(0, 5).map((scan, i) => {
-              return (
-                <PixelCard key={i} className="bg-gray-800">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-pixel text-xs text-white">
-                        ✅ {scan.npc?.committeeName}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-pixel text-xs text-yellow-400">
-                        +{scan.pointsAwarded} pts
-                      </p>
-                      <p className="font-pixel text-xs text-gray-500">
-                        {new Date(scan.scannedAt).toLocaleTimeString('en', {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                </PixelCard>
-              )
-            })}
-            {recentScans.length === 0 && (
-              <PixelCard className="bg-gray-800">
-                <p className="font-pixel text-xs text-gray-500 text-center py-4">
-                  NO SCANS YET — GO FIND AN NPC!
-                </p>
-              </PixelCard>
-            )}
-          </div>
-        </div>
+        {/* Recent Scans — opens the receipt popup */}
+        <WoodButton
+          onClick={() => setShowRecent(true)}
+          className="h-[48px] w-full"
+          textClassName="text-[30px]"
+        >
+          Recent Scans
+        </WoodButton>
       </div>
+
+      {showRecent && (
+        <RecentScansPopup
+          scans={recentScans}
+          total={totalScans}
+          onClose={() => setShowRecent(false)}
+        />
+      )}
     </PageWrapper>
   )
 }

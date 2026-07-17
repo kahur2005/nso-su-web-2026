@@ -53,25 +53,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Daytime pixel-cloud field drifting behind all content */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  opacity: 0.95;
-  background-repeat: repeat;
-  background-size: 256px 160px;
-  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='256' height='160' viewBox='0 0 256 160'><g fill='%23ffffff'><rect x='40' y='24' width='48' height='12'/><rect x='24' y='36' width='88' height='12'/><rect x='16' y='48' width='104' height='16'/></g><rect x='16' y='64' width='104' height='6' fill='%23dceeff'/><g fill='%23ffffff'><rect x='168' y='96' width='36' height='10'/><rect x='156' y='106' width='64' height='10'/><rect x='150' y='116' width='80' height='12'/></g><rect x='150' y='128' width='80' height='5' fill='%23dceeff'/></svg>");
-  animation: cloudDrift 90s linear infinite;
-}
-
-@keyframes cloudDrift {
-  from { background-position: 0 0; }
-  to { background-position: 256px 0; }
-}
-
 /* Wooden plank (login banner + button) — rebuilt in CSS from the Figma
    sprite palette; the raw exports carry a stray white bottom edge row */
 .wood-plank {
