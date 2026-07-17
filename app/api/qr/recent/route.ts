@@ -27,5 +27,11 @@ export async function GET() {
     .order('scannedAt', { ascending: false })
     .limit(20)
 
-  return NextResponse.json({ scans: scans ?? [] })
+  // All-time scan count (the list above is capped at 20)
+  const { count } = await supabase
+    .from('ScanLog')
+    .select('*', { count: 'exact', head: true })
+    .eq('studentId', student.id)
+
+  return NextResponse.json({ scans: scans ?? [], total: count ?? 0 })
 }
