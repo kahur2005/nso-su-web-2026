@@ -14,7 +14,7 @@ export default function PageWrapper({
   return (
     <div className="min-h-screen scanlines">
       {showNav && <Navbar />}
-      <main className="pb-24 md:pb-8">
+      <main className="pb-28 md:pb-8">
         {children}
       </main>
       {showNav && <BottomNav />}
