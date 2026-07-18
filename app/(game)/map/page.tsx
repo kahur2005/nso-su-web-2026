@@ -1,113 +1,76 @@
 // app/(game)/map/page.tsx
 import PageWrapper from '@/components/layout/PageWrapper'
-import PixelCard from '@/components/ui/PixelCard'
 import Link from 'next/link'
 
 interface InfoTile {
   href: string
-  icon: string
-  title: string
-  subtitle: string
-  color: string
-  bg: string
+  img: string
+  label: string
 }
 
+// Tile art (banner + icon + text) is exported straight from the Figma frame.
 const tiles: InfoTile[] = [
   {
-    href: '/map/zones',
-    icon: '🗺️',
-    title: 'MAP',
-    subtitle: 'Campus zones & scan spots',
-    color: '#4CAF50',
-    bg: 'bg-green-900/40',
-  },
-  {
-    href: '/map/timeline',
-    icon: '🗓️',
-    title: 'TIMELINE',
-    subtitle: 'Day-by-day event agenda',
-    color: '#FFD700',
-    bg: 'bg-yellow-900/40',
-  },
-  {
-    href: '/codex',
-    icon: '📖',
-    title: 'CODEX',
-    subtitle: 'Fun facts you collected',
-    color: '#9C27B0',
-    bg: 'bg-purple-900/40',
-  },
-  {
     href: '/map/guidebook',
-    icon: '📔',
-    title: 'GUIDE BOOK',
-    subtitle: 'Survival tips for SU life',
-    color: '#2196F3',
-    bg: 'bg-blue-900/40',
-  },
-  {
-    href: '/map/clubs',
-    icon: '🏰',
-    title: 'UKM CLUBS',
-    subtitle: 'Explore student clubs',
-    color: '#E91E63',
-    bg: 'bg-pink-900/40',
+    img: '/images/map/tile-guidebook.png',
+    label: 'Guide Book — survival tips for SU life',
   },
   {
     href: '/map/committee',
-    icon: '🎖️',
-    title: 'COMMITTEE',
-    subtitle: 'Meet the NSO 2026 team',
-    color: '#FF5722',
-    bg: 'bg-red-900/40',
+    img: '/images/map/tile-committee.png',
+    label: "NSO'26 Committee — the team behind NSO26",
+  },
+  {
+    href: '/map/timeline',
+    img: '/images/map/tile-timeline.png',
+    label: 'Timeline — day-by-day event agenda',
+  },
+  {
+    href: '/map/clubs',
+    img: '/images/map/tile-clubs.png',
+    label: 'UKM Clubs — explore student clubs',
+  },
+  {
+    href: '/map/zones',
+    img: '/images/map/tile-map.png',
+    label: 'Map — campus zones & scan spots',
   },
 ]
 
 export default function InfoHubPage() {
   return (
     <PageWrapper>
-      <div className="max-w-4xl mx-auto px-4 py-6">
-
+      {/* min-h = viewport minus navbar (~60px) + bottom-nav clearance (7rem),
+          so the info station centers vertically in the visible area */}
+      <div className="mx-auto flex min-h-[calc(100dvh-11rem)] w-full max-w-md flex-col justify-center px-3 py-2 lg:max-w-lg">
         {/* Header */}
-        <div className="text-center mb-6">
-          <h1 className="font-pixel text-2xl text-yellow-400"
-            style={{ textShadow: '3px 3px 0 #000' }}>
-            📖 INFO STATION
-          </h1>
-          <p className="font-pixel text-xs text-gray-400 mt-2">
-            EVERYTHING YOU NEED TO SURVIVE NSO 2026
-          </p>
-        </div>
+        <h1 className="text-center font-bytebounce text-[clamp(2.75rem,15vw,4rem)] leading-none text-[#d7a717]">
+          INFO STATION
+        </h1>
+        <p className="mx-auto mt-1 max-w-[280px] text-center font-bytebounce text-[17px] leading-tight text-[#7d5a3d]">
+          Everything you need to know to survive NSO 2026
+        </p>
 
-        {/* Info Tiles */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {tiles.map((tile) => (
-            <Link key={tile.href} href={tile.href}>
-              <PixelCard
-                className={`${tile.bg} cursor-pointer transition-transform hover:scale-[1.03]`}
-                glowColor={tile.color}
+        {/* Parchment scroll with tile banners — translated up so the title
+            and subtitle keep their position (transform doesn't affect flow) */}
+        <div className="relative mt-2 -translate-y-8">
+          <img src="/images/map/scroll.png" alt="" aria-hidden className="w-full" />
+          <nav
+            aria-label="Info station"
+            className="absolute bottom-[14.1%] left-[15%] right-[15%] top-[13.8%] flex flex-col justify-between"
+          >
+            {tiles.map((tile) => (
+              <Link
+                key={tile.href}
+                href={tile.href}
+                aria-label={tile.label}
+                className="block transition-transform duration-100 hover:scale-[1.03] hover:brightness-110 active:scale-[0.98]"
               >
-                <div className="flex items-center gap-4 py-2">
-                  <div className="w-14 h-14 border-4 border-black flex items-center
-                    justify-center text-3xl flex-shrink-0"
-                    style={{ backgroundColor: `${tile.color}33`, boxShadow: '4px 4px 0 #000' }}>
-                    {tile.icon}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-pixel text-sm" style={{ color: tile.color }}>
-                      {tile.title}
-                    </p>
-                    <p className="font-pixel text-xs text-gray-300 mt-1 leading-relaxed">
-                      {tile.subtitle}
-                    </p>
-                  </div>
-                  <span className="font-pixel text-lg text-gray-500">›</span>
-                </div>
-              </PixelCard>
-            </Link>
-          ))}
+                <img src={tile.img} alt="" className="w-full" />
+              </Link>
+            ))}
+          </nav>
         </div>
-
       </div>
     </PageWrapper>
   )
