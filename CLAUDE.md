@@ -12,11 +12,15 @@ The warning above is real: this repo uses Next.js 16.2.9, which post-dates train
 - `npm run build` — production build (also the de-facto type check; no separate `tsc` script)
 - `npm run lint` — ESLint (flat config, `eslint.config.mjs`)
 
+`npm run lint` is **already failing on a clean checkout** (~44 errors / 17 warnings as of 2026-07-20 — mostly `@typescript-eslint/no-explicit-any` and `react-hooks/static-components`). A non-zero exit does not mean you broke something; diff the output against a pre-change run before assuming your edit is at fault, and don't take on a repo-wide lint cleanup unless asked.
+
 No test framework is configured.
 
 `README.md` has a "Key Files to Change" table, the design-system CSS class/color reference, and the team's branch workflow: branch from `main` as `dev/<yourname>`, push, and open a PR with base `main`.
 
-Database is **Supabase** (hosted PostgreSQL), accessed via `@supabase/supabase-js`. There is no ORM and no migration CLI — the schema is a plain SQL file (`supabase/schema.sql`) you run in the Supabase dashboard. You browse/edit data in the Supabase **Table Editor**, not a local studio. See **"Supabase setup (step by step)"** below — written for a first-time Supabase user.
+Database is **Supabase** (hosted PostgreSQL, project ref `ndezlikvpsjmbvuptlfc`, Postgres 17), accessed via `@supabase/supabase-js`. There is no ORM and no migration workflow in use — the schema is a plain SQL file (`supabase/schema.sql`) you run in the Supabase dashboard. You browse/edit data in the Supabase **Table Editor**, not a local studio. See **"Supabase setup (step by step)"** below — written for a first-time Supabase user.
+
+> The `supabase` CLI is a devDependency and `supabase/migrations/` exists, but the directory is **empty** and no migration has ever been generated. Don't assume `supabase db push`/`db diff` reflects reality; the SQL file plus manual `alter table` in the dashboard is the actual process.
 
 ## What this app is
 
@@ -31,9 +35,15 @@ A gamified New Student Orientation (NSO 2026) web app. Students scan QR codes ca
 - `app/api/*` — route handlers (leaderboard, leaderboard/feed, quests, codex, qr/scan, qr/generate, qr/recent, onboarding/complete, me/avatar, auth/register, auth/[...nextauth])
 - `app/font-test` — dev-only font preview page, not linked from the app
 
-**Data layer**: Supabase client singleton in `lib/supabase.ts` (import `supabase` from `@/lib/supabase`). It is created with `createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)` — the **service-role** key, which bypasses Row Level Security. This client is **server-only**; never import it from a client component or expose the key. The schema lives in `supabase/schema.sql` (run once in the dashboard). Tables: `Student` ↔ `Group`, `NPC`, `ScanLog` (unique on `(studentId, npcId)` — this constraint is the duplicate-scan guard), `Quest`/`QuestProgress`, `Achievement`/`StudentAchievement`, `Announcement`, `Club`. Table and column names are **quoted PascalCase/camelCase** (e.g. `"Student"`, `"funFactsCollected"`) — so always quote them in raw SQL and match the casing exactly in `.from('Student')` / `.select('funFactsCollected')`. `Student` carries a hashed `password`, the registration-questionnaire fields (`medicalNote`, `pastAchievements`, `instagram`, `major`, `hobby`), the pixel-avatar part keys (`avatarSkin`, `avatarHair`, `avatarEyes`, `avatarBrows`), and `hasSeenIntro` (dashboard onboarding flag). ⚠️ Known drift: the live DB has `avatarSkin`/`avatarHair` columns (registration inserts them and several pages select them) but `supabase/schema.sql` does not define them — if you rebuild a database from `schema.sql`, add those two columns or registration will fail. Server components and API routes query Supabase directly; API routes exist for client-side fetches. Two atomic multi-row operations are **Postgres functions** called via `supabase.rpc(...)`: `scan_npc` and `adjust_points` (defined in `supabase/schema.sql`).
+**Data layer**: Supabase client singleton in `lib/supabase.ts` (import `supabase` from `@/lib/supabase`). It is created with `createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)` — the **service-role** key, which bypasses Row Level Security. This client is **server-only**; never import it from a client component or expose the key. The schema lives in `supabase/schema.sql` (run once in the dashboard). Tables: `Student` ↔ `Group`, `NPC`, `ScanLog` (unique on `(studentId, npcId)` — this constraint is the duplicate-scan guard), `Quest`/`QuestProgress`, `Achievement`/`StudentAchievement`, `Announcement`, `Club`. Table and column names are **quoted PascalCase/camelCase** (e.g. `"Student"`, `"funFactsCollected"`) — so always quote them in raw SQL and match the casing exactly in `.from('Student')` / `.select('funFactsCollected')`. `Student` carries a hashed `password`, the registration-questionnaire fields (`medicalNote`, `pastAchievements`, `instagram`, `major`, `hobby`), the pixel-avatar part keys (`avatarSkin`, `avatarHair`, `avatarEyes`, `avatarBrows`), and `hasSeenIntro` (dashboard onboarding flag). ⚠️ Known drift (verified against the live DB on 2026-07-20): the live `Student` table has `avatarSkin` and `avatarHair` columns — registration inserts them and several pages select them — but `supabase/schema.sql` does **not** define them. If you rebuild a database from `schema.sql`, registration will fail until you run:
+```sql
+alter table "Student" add column "avatarSkin" text, add column "avatarHair" text;
+```
+Everything else in `schema.sql` matches the live database. Server components and API routes query Supabase directly; API routes exist for client-side fetches. Two atomic multi-row operations are **Postgres functions** called via `supabase.rpc(...)`: `scan_npc` and `adjust_points` (defined in `supabase/schema.sql`).
 
-**Leveling / XP**: `lib/leveling.ts` derives a student's level from their stored `xp` with a doubling curve (step cost `10·2^(L-1)`, so total XP to reach level L is `10·(2^(L-1)−1)`). The DB only stores raw `xp`; level and in-level progress are computed on read (used by `dashboard` and `profile` — call `levelProgress(xp)` rather than recomputing). The same curve is duplicated as the `level_from_xp` Postgres function in `supabase/schema.sql` — if you change the curve, change **both**.
+**Leveling / XP**: `lib/leveling.ts` derives a student's level from their stored `xp` with a doubling curve (step cost `10·2^(L-1)`, so total XP to reach level L is `10·(2^(L-1)−1)`). The same curve is duplicated as the `level_from_xp` Postgres function in `supabase/schema.sql` — if you change the curve, change **both**.
+
+`Student` has *both* an `xp` and a denormalized `level` column, but they are not used the same way. `xp` is the source of truth: `dashboard` and `profile` call `levelProgress(xp)` and compute level + in-level progress on read — call that helper rather than recomputing. The stored `level` column is written by the `scan_npc` and `adjust_points` RPCs (`"level" = level_from_xp(...)`) and, as of this writing, **read by nothing in the app**. Treat it as a convenience for SQL-side queries, not as a value to display; never update `xp` with a bare `.update()` that skips the RPCs, or the two will silently diverge.
 
 **Image uploads**: `lib/storage.ts` `uploadImage(bucket, file)` lazily creates a **public** Supabase Storage bucket on first use and returns the public URL (or `null`). Used for student avatars (`avatars` bucket) and admin-supplied art.
 
@@ -61,7 +71,7 @@ New students default to `isAdmin: false`. To grant admin, flip `isAdmin` on the 
 - `components/IntroSequence.tsx` — a ~3 s pixel splash on first page load per browser session (`sessionStorage`), mounted globally in `app/layout.tsx`. Replay via `sessionStorage.clear()`.
 - `components/dashboard/DashboardIntro.tsx` — a one-time-per-account walkthrough shown on the dashboard while `Student.hasSeenIntro` is false; it POSTs to `/api/onboarding/complete` to set the flag.
 
-**UI**: Tailwind CSS 4 (via `@tailwindcss/postcss`, no tailwind.config; theme tokens and pixel/RPG utility classes like `scanlines`, `pixel-card`, `wood-plank`, `rpg-dialog` live in `app/globals.css`). Custom fonts in `public/fonts/` (ByteBounce — main pixel display font, `font-bytebounce`; Campton; VCR). Shared components in `components/ui/` (PixelButton, PixelCard, ProgressBar, CountdownTimer, LoadingSpinner, Avatar, PixelAvatar, GroupEmblem) and `components/layout/`. There are **no route-group `layout.tsx` files** — each student page wraps its own content in `<PageWrapper>` (renders Navbar + BottomNav) and admin pages render `<AdminHeader>` themselves; follow that pattern for new pages. Also available: framer-motion, zustand, recharts, lucide-react, html5-qrcode (client-side QR scanning).
+**UI**: Tailwind CSS 4 (via `@tailwindcss/postcss`, no tailwind.config; theme tokens and pixel/RPG utility classes like `scanlines`, `pixel-card`, `wood-plank`, `rpg-dialog` live in `app/globals.css`). Custom fonts in `public/fonts/` (ByteBounce — main pixel display font, `font-bytebounce`; Campton; VCR). Shared components in `components/ui/` (PixelButton, WoodButton, PixelCard, ProgressBar, CountdownTimer, LoadingSpinner, Avatar, PixelAvatar, GroupEmblem) and `components/layout/`. There are **no route-group `layout.tsx` files** — each student page wraps its own content in `<PageWrapper>` (renders Navbar + BottomNav) and admin pages render `<AdminHeader>` themselves; follow that pattern for new pages. Also available: framer-motion, zustand, recharts, lucide-react, html5-qrcode (client-side QR scanning).
 
 **Env vars** (in `.env`, not committed): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `QR_SECRET_KEY`, `NEXT_PUBLIC_BASE_URL`. The `SUPABASE_SERVICE_ROLE_KEY` is a secret admin key — keep it server-side, never prefix it with `NEXT_PUBLIC_`, never commit it.
 
@@ -110,6 +120,12 @@ New students default to `isAdmin: false`. To grant admin, flip `isAdmin` on the 
 - **Change the schema** → edit `supabase/schema.sql` to keep it the source of
   truth, **and** apply the change live in the SQL Editor (e.g.
   `alter table "Student" add column "nickname" text;`). There is no auto-migrate.
+- **Inspect the schema without leaving the editor** → if the Supabase MCP server
+  is connected, `list_tables` / `execute_sql` / `get_advisors` hit this project
+  directly, which is the fastest way to confirm the live shape of a table before
+  trusting `schema.sql`. Reads are safe; anything that writes (`apply_migration`,
+  DDL via `execute_sql`) touches **production data** — there is no staging
+  project, so confirm with the team first.
 - **Security model**: every table has RLS enabled with **no policies**, so the
   public `anon` key can access nothing. The app only ever connects with the
   `service_role` key (server-side), which bypasses RLS. Don't add client-side
