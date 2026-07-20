@@ -71,6 +71,8 @@ create table "NPC" (
   "id"            text primary key default gen_random_uuid()::text,
   "committeeName" text not null,
   "role"          text not null,
+  "division"      text,
+  "instagram"     text,
   "funFact"       text not null,
   "points"        integer not null default 10,
   "qrToken"       text unique,
@@ -80,6 +82,7 @@ create table "NPC" (
   "scanCount"     integer not null default 0,
   "createdAt"     timestamptz not null default now()
 );
+create index "NPC_division_idx" on "NPC" ("division");
 
 create table "ScanLog" (
   "id"            text primary key default gen_random_uuid()::text,
@@ -154,6 +157,9 @@ create table "Club" (
   "name"        text not null,
   "category"    text not null,
   "description" text not null,
+  "images"      text[] not null default '{}',
+  "instagram"   text,
+  "registrationUrl" text,
   "memberCount" integer not null default 0,
   "established" text,
   "iconUrl"     text,
