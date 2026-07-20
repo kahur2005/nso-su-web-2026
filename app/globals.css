@@ -68,6 +68,39 @@ body {
   );
 }
 
+/* ── Committee scroll (/map/committee, Figma node 338:91) ──────────────────
+   scroll.png is sliced into three parts so the parchment can grow with its
+   content: scroll-top.png (roll + drips), scroll-mid.png (a 40px repeating
+   strip that carries the left/right borders), scroll-bottom.png. */
+.scroll-body {
+  background-image: url('/images/map/scroll-mid.png');
+  background-repeat: repeat-y;
+  background-size: 100% auto;
+}
+
+/* Dark wooden frame around each committee member card. */
+.committee-frame {
+  background: linear-gradient(
+    180deg,
+    #8a5a37 0%, #8a5a37 8%,
+    #6f4526 8%, #6f4526 55%,
+    #5c3720 55%, #5c3720 88%,
+    #46281a 88%, #46281a 100%
+  );
+  box-shadow: 0 0 0 3px #2f1c10, 3px 3px 0 3px #2f1c1055;
+}
+
+/* Division banner: gold edge stripes over the division colour, dark outline.
+   Colour comes from the inline `background-color` set per division. */
+.committee-banner {
+  box-shadow:
+    inset 0 5px 0 #ffd83d,
+    inset 0 -5px 0 #ffd83d,
+    inset 0 8px 0 #f57c00,
+    inset 0 -8px 0 #f57c00,
+    0 0 0 4px #3a2418;
+}
+
 /* Pixel Border */
 .pixel-border {
   border: 4px solid #000;

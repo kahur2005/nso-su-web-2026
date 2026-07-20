@@ -1,9 +1,11 @@
 // app/(game)/map/committee/page.tsx
-// Committee introduction page (Figma node 338:91) — pixel scroll with
-// division ribbon tabs, paginated member cards, and QR-gated fun facts.
+// Committee introduction page (Figma node 338:91) — a pixel parchment scroll
+// with colour-coded division bookmarks down the right edge, a division banner,
+// a fun-fact collection counter, paginated member cards, and QR-gated facts.
 'use client'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PixelAvatar from '@/components/ui/PixelAvatar'
+// lucide-react dropped brand glyphs; Camera matches the Figma icon closely.
 import { Camera } from 'lucide-react'
 import { useState } from 'react'
 
@@ -15,7 +17,7 @@ import { useState } from 'react'
 interface Division {
   id: string
   name: string
-  /** ribbon color */
+  /** bookmark + banner colour, sampled from the Figma ribbon tabs */
   color: string
 }
 
@@ -32,20 +34,24 @@ interface CommitteeMember {
   avatar: { skin: string; eyes: string; brow: string; hair?: string }
 }
 
+// Order + colours follow the Figma bookmark ribbon, top to bottom.
+// Mainboard is always first.
 const DIVISIONS: Division[] = [
-  { id: 'mainboard', name: 'Mainboard', color: '#ab47bc' },
-  { id: 'creative', name: 'Creative & Media', color: '#e91e63' },
-  { id: 'event', name: 'Event', color: '#4caf50' },
-  { id: 'publication', name: 'Publication', color: '#ff9800' },
-  { id: 'logistics', name: 'Logi & IT', color: '#2196f3' },
+  { id: 'mainboard', name: 'Mainboards', color: '#a83fbf' },
+  { id: 'itlog', name: 'IT & Logistics', color: '#331f8f' },
+  { id: 'pubdoc', name: 'PubDoc', color: '#22998f' },
+  { id: 'event', name: 'Event', color: '#cc0505' },
+  { id: 'creative', name: 'Creative', color: '#f5187a' },
+  { id: 'groupleader', name: 'Group Leader', color: '#7fa510' },
 ]
 
 const ROLES: Record<string, string[]> = {
-  mainboard: ['Project Officer', 'Vice PO', 'Secretary', 'Treasurer'],
-  creative: ['Division Head', 'Designer', 'Videographer', 'Animator'],
+  mainboard: ['Project Officer', 'Vice PO', 'Secretary', 'Treasurer', 'Advisor', 'Liaison'],
+  itlog: ['Division Head', 'Equipment', 'IT Support', 'Runner'],
+  pubdoc: ['Division Head', 'Copywriter', 'Photographer', 'Editor'],
   event: ['Division Head', 'Stage Manager', 'Game Master', 'Crew'],
-  publication: ['Division Head', 'Copywriter', 'Photographer', 'Editor'],
-  logistics: ['Division Head', 'Equipment', 'IT Support', 'Runner'],
+  creative: ['Division Head', 'Designer', 'Videographer', 'Animator'],
+  groupleader: ['Head of Leaders', 'Group Leader', 'Group Leader', 'Group Leader'],
 }
 
 const SKINS = ['skin1', 'skin2', 'skin3']
@@ -53,7 +59,6 @@ const EYES = ['eyes1', 'eyes3', 'eyes5', 'eyes8']
 const BROWS = ['brow1', 'brow2', 'brow4']
 const HAIRS = ['hairb1', 'hairb2', 'hairb1.2', undefined]
 
-// 4 placeholder members per division → 2 pages at 3 per page.
 const MEMBERS: CommitteeMember[] = DIVISIONS.flatMap((division, d) =>
   ROLES[division.id].map((role, i) => ({
     id: `${division.id}-${i + 1}`,
@@ -64,7 +69,7 @@ const MEMBERS: CommitteeMember[] = DIVISIONS.flatMap((division, d) =>
     funFact:
       'Placeholder fun fact — scan this member’s QR to unlock the real one!',
     divisionId: division.id,
-    isScanned: i % 2 === 0, // demo both states
+    isScanned: i % 3 === 0, // demo both states
     avatar: {
       skin: SKINS[(d + i) % SKINS.length],
       eyes: EYES[(d * 2 + i) % EYES.length],
@@ -76,17 +81,26 @@ const MEMBERS: CommitteeMember[] = DIVISIONS.flatMap((division, d) =>
 
 const PER_PAGE = 3
 
+/** Gold display text with the design's brown pixel outline. */
+const OUTLINE_GOLD = {
+  color: '#ffd23f',
+  textShadow:
+    '3px 3px 0 #4e342e, -3px 3px 0 #4e342e, 3px -3px 0 #4e342e, -3px -3px 0 #4e342e, 0 5px 0 #4e342e',
+}
+
 export default function CommitteePage() {
   const [activeDivision, setActiveDivision] = useState(DIVISIONS[0].id)
   const [currentPage, setCurrentPage] = useState(0)
 
+  const active = DIVISIONS.find((d) => d.id === activeDivision)!
   const divisionMembers = MEMBERS.filter((m) => m.divisionId === activeDivision)
   const pageCount = Math.max(1, Math.ceil(divisionMembers.length / PER_PAGE))
   const pageMembers = divisionMembers.slice(
     currentPage * PER_PAGE,
     currentPage * PER_PAGE + PER_PAGE
   )
-  const active = DIVISIONS.find((d) => d.id === activeDivision)!
+  // Fun-fact progress for the division currently on screen.
+  const collected = divisionMembers.filter((m) => m.isScanned).length
 
   const selectDivision = (id: string) => {
     setActiveDivision(id)
@@ -95,24 +109,36 @@ export default function CommitteePage() {
 
   return (
     <PageWrapper>
-      <div className="mx-auto w-full max-w-md px-3 py-2 lg:max-w-lg">
+      <div className="mx-auto w-full max-w-md px-3 pb-4 pt-1 lg:max-w-lg">
         {/* Header */}
-        <h1 className="text-center font-bytebounce text-[clamp(2.5rem,13vw,3.5rem)] leading-none text-[#d7a717]">
-          NSO&rsquo;26 COMMITTEE
+        <h1 className="text-center font-bytebounce leading-[0.85]">
+          <span
+            className="block text-[clamp(1.9rem,9vw,2.5rem)]"
+            style={OUTLINE_GOLD}
+          >
+            NSO SU 2026
+          </span>
+          <span
+            className="block text-[clamp(2.6rem,13vw,3.4rem)]"
+            style={OUTLINE_GOLD}
+          >
+            COMMITTEE
+          </span>
         </h1>
-        <p className="mx-auto mt-1 max-w-[280px] text-center font-bytebounce text-[17px] leading-tight text-[#7d5a3d]">
-          The team behind NSO 2026 — {active.name}
+        <p
+          className="mt-1 text-center font-bytebounce text-[19px] leading-tight text-white"
+          style={{ textShadow: '2px 2px 0 #4e342e' }}
+        >
+          The team behind NSO 2026
         </p>
 
-        {/* Parchment scroll */}
+        {/* ── Parchment scroll ────────────────────────────────────────── */}
         <div className="relative mt-2">
-          <img src="/images/map/scroll.png" alt="" aria-hidden className="w-full" />
-
-          {/* Division ribbon tabs */}
+          {/* Bookmarks: one per division, notched tabs down the right edge */}
           <div
-            className="absolute -right-1 top-[15%] z-20 flex flex-col gap-2"
+            className="absolute right-[-14px] top-[110px] z-20 flex flex-col gap-[6px]"
             role="tablist"
-            aria-label="Divisions"
+            aria-label="Committee divisions"
           >
             {DIVISIONS.map((division) => {
               const isActive = division.id === activeDivision
@@ -121,112 +147,183 @@ export default function CommitteePage() {
                   key={division.id}
                   role="tab"
                   aria-selected={isActive}
+                  aria-label={division.name}
                   title={division.name}
                   onClick={() => selectDivision(division.id)}
-                  className={`rounded-l-md border-2 border-r-0 border-[#4e342e] py-1.5 pl-2 pr-1 text-left font-bytebounce text-[13px] leading-none text-white transition-all ${
-                    isActive ? 'w-28 brightness-110' : 'w-16 opacity-75 hover:opacity-100'
+                  className={`h-[26px] transition-all ${
+                    isActive
+                      ? 'w-[44px] brightness-110'
+                      : 'w-[34px] brightness-90 hover:w-[40px] hover:brightness-105'
                   }`}
                   style={{
                     backgroundColor: division.color,
-                    textShadow: '1.5px 1.5px 0 #4e342e',
+                    clipPath:
+                      'polygon(0 0, 100% 0, 100% 30%, 62% 50%, 100% 70%, 100% 100%, 0 100%)',
                   }}
-                >
-                  {isActive ? division.name : division.name.split(' ')[0]}
-                </button>
+                />
               )
             })}
           </div>
 
-          {/* Scroll content: member cards + pagination */}
-          <div className="absolute bottom-[13%] left-[13%] right-[13%] top-[13%] flex flex-col">
-            <div className="flex flex-1 flex-col justify-start gap-3 overflow-hidden">
+          <img
+            src="/images/map/scroll-top.png"
+            alt=""
+            aria-hidden
+            className="block w-full"
+          />
+
+          {/* Scroll interior — repeats the parchment strip, so it grows with
+              however many cards the current page holds. */}
+          <div className="scroll-body px-[12%] pb-2">
+            {/* Division banner */}
+            <div className="relative mx-auto w-[88%] pt-1">
+              {/* folded tails behind the banner body */}
+              <span
+                aria-hidden
+                className="absolute -left-[7%] top-[14px] h-[34px] w-[13%]"
+                style={{
+                  backgroundColor: active.color,
+                  filter: 'brightness(0.75)',
+                  clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 68%, 0 100%)',
+                }}
+              />
+              <span
+                aria-hidden
+                className="absolute -right-[7%] top-[14px] h-[34px] w-[13%]"
+                style={{
+                  backgroundColor: active.color,
+                  filter: 'brightness(0.75)',
+                  clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 68%, 0 100%)',
+                }}
+              />
+              <h2
+                className="committee-banner relative truncate px-3 py-[7px] text-center font-bytebounce text-[clamp(18px,6vw,26px)] uppercase leading-none tracking-[2px]"
+                style={{ backgroundColor: active.color, ...OUTLINE_GOLD, textShadow: '2px 2px 0 #4e342e' }}
+              >
+                {active.name}
+              </h2>
+            </div>
+
+            {/* Fun-fact progress for this division */}
+            <p className="mt-2 text-center font-bytebounce text-[17px] leading-none text-[#8a7355]">
+              {collected}/{divisionMembers.length} collected
+            </p>
+
+            {/* Member cards */}
+            <div className="mt-3 flex flex-col gap-5">
               {pageMembers.map((member) => (
-                <article
-                  key={member.id}
-                  className="rounded-md border-2 border-[#4e342e] bg-[#f9ecc5] p-2 shadow-[2px_2px_0_#4e342e66]"
-                >
-                  {/* Name row */}
-                  <div className="wood-plank relative flex items-center gap-2 rounded p-1.5 pr-9">
-                    {member.imageUrl ? (
-                      <img
-                        src={member.imageUrl}
-                        alt={member.name}
-                        className="size-12 rounded border border-[#4e342e] object-cover"
-                      />
-                    ) : (
-                      <PixelAvatar
-                        skin={member.avatar.skin}
-                        eyes={member.avatar.eyes}
-                        brow={member.avatar.brow}
-                        hair={member.avatar.hair}
-                        size={48}
-                      />
-                    )}
-                    <div className="min-w-0">
-                      <p
-                        className="truncate font-bytebounce text-[20px] leading-tight text-[#ffe9c9]"
-                        style={{ textShadow: '1.5px 1.5px 0 #4e342e' }}
-                      >
-                        {member.name}
-                      </p>
-                      <p
-                        className="truncate font-bytebounce text-[14px] leading-none"
-                        style={{ color: active.color, textShadow: '1px 1px 0 #4e342e' }}
-                      >
-                        {member.role}
-                      </p>
+                <article key={member.id} className="relative pt-[14px]">
+                  <div className="committee-frame rounded-[3px] p-[7px]">
+                    <div className="flex h-[104px] overflow-hidden rounded-[2px] border-2 border-[#2f1c10] bg-[#fdf6e3]">
+                      {/* Portrait */}
+                      <div className="flex w-[38%] shrink-0 items-end justify-center bg-[#efe3c6]">
+                        {member.imageUrl ? (
+                          <img
+                            src={member.imageUrl}
+                            alt={member.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <PixelAvatar
+                            skin={member.avatar.skin}
+                            eyes={member.avatar.eyes}
+                            brow={member.avatar.brow}
+                            hair={member.avatar.hair}
+                            size={86}
+                          />
+                        )}
+                      </div>
+
+                      {/* Fun fact — hidden until this member's QR is scanned */}
+                      <div className="relative flex flex-1 items-center justify-center px-2 pb-1 pt-7">
+                        <p
+                          className={`text-center font-bytebounce text-[15px] leading-[1.05] ${
+                            member.isScanned ? 'text-[#5d4330]' : 'text-[#b3a184]'
+                          }`}
+                        >
+                          {member.isScanned ? `“${member.funFact}”` : '? ? ?'}
+                        </p>
+                        <span
+                          aria-hidden
+                          className="absolute bottom-1 right-1.5 text-[11px] leading-none text-[#a89170]"
+                        >
+                          ▼
+                        </span>
+                      </div>
                     </div>
-                    {/* Instagram button (placeholder URL for now) */}
-                    <a
-                      href={member.instagramUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={`${member.name} on Instagram`}
-                      className="absolute right-1.5 top-1.5 rounded border border-[#4e342e] bg-[#f9ecc5] p-1 text-[#4e342e] transition-transform hover:scale-110 active:scale-95"
-                    >
-                      <Camera size={14} strokeWidth={2.5} />
-                    </a>
                   </div>
 
-                  {/* Fun fact — hidden until this member's QR is scanned */}
-                  <p
-                    className={`mt-1.5 min-h-9 rounded border border-dashed border-[#a8875f] bg-[#fff8e1] px-2 py-1 font-bytebounce text-[14px] leading-tight ${
-                      member.isScanned ? 'text-[#5d4330]' : 'text-center text-[#b09a77]'
-                    }`}
+                  {/* Name plaque — overlaps the top of the frame */}
+                  <div className="absolute left-[14%] top-0 flex max-w-[62%] items-center">
+                    <div
+                      className="relative py-[3px] pl-3 pr-4 font-bytebounce text-[20px] leading-none text-[#ffeccf]"
+                      style={{
+                        backgroundColor: active.color,
+                        boxShadow: '0 0 0 3px #3a2418, inset 0 0 0 2px #ffd83d',
+                        textShadow: '2px 2px 0 #4e342e',
+                        clipPath:
+                          'polygon(0 0, 100% 0, 88% 50%, 100% 100%, 0 100%)',
+                      }}
+                    >
+                      <span className="block truncate">{member.name}</span>
+                    </div>
+                  </div>
+
+                  {/* Role pill, tucked under the plaque */}
+                  <div
+                    className="absolute left-[16%] top-[36px] rounded-[2px] border-2 border-[#3a2418] px-2 py-[1px] font-bytebounce text-[13px] leading-none text-[#ffd23f]"
+                    style={{
+                      background: 'linear-gradient(180deg,#8a5a37,#6b4224)',
+                      textShadow: '1px 1px 0 #3a2418',
+                    }}
                   >
-                    {member.isScanned ? member.funFact : '? ? ?'}
-                  </p>
+                    {member.role}
+                  </div>
+
+                  {/* Instagram link (placeholder URL for now) */}
+                  <a
+                    href={member.instagramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${member.name} on Instagram`}
+                    className="absolute right-[10%] top-0 rounded-[4px] border-[3px] border-[#3a2418] bg-[#fdf6e3] p-[3px] text-[#3a2418] transition-transform hover:scale-110 active:scale-95"
+                  >
+                    <Camera size={18} strokeWidth={2.5} />
+                  </a>
                 </article>
               ))}
             </div>
 
             {/* Pagination */}
-            <div className="mt-2 flex items-center justify-center gap-6">
+            <div className="mt-4 flex items-center justify-center gap-3">
               <button
                 onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
                 disabled={currentPage === 0}
                 aria-label="Previous page"
-                className="w-11 transition-transform active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-35"
+                className="font-bytebounce text-[22px] leading-none text-[#6b4a2d] transition-transform active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-30"
               >
-                <img src="/images/login/back-button.png" alt="" className="w-full" />
+                ◀▌
               </button>
-              <span className="font-bytebounce text-[20px] text-[#7d5a3d]">
+              <span className="font-bytebounce text-[22px] leading-none text-[#6b4a2d]">
                 {currentPage + 1}/{pageCount}
               </span>
               <button
                 onClick={() => setCurrentPage((p) => Math.min(pageCount - 1, p + 1))}
                 disabled={currentPage >= pageCount - 1}
                 aria-label="Next page"
-                className="w-11 transition-transform active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-35"
+                className="font-bytebounce text-[22px] leading-none text-[#6b4a2d] transition-transform active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-30"
               >
-                <img
-                  src="/images/login/back-button.png"
-                  alt=""
-                  className="w-full -scale-x-100"
-                />
+                ▐▶
               </button>
             </div>
           </div>
+
+          <img
+            src="/images/map/scroll-bottom.png"
+            alt=""
+            aria-hidden
+            className="-mt-px block w-full"
+          />
         </div>
       </div>
     </PageWrapper>
