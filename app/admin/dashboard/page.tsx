@@ -46,7 +46,7 @@ export default async function AdminDashboard() {
   const stats = await getAdminStats()
 
   const adminMenus = [
-    { href: '/admin/npc', icon: '👤', label: 'MANAGE NPCs', desc: 'Add & generate QR codes', color: '#4CAF50' },
+    { href: '/admin/qr', icon: '👤', label: 'MANAGE NPCs', desc: 'Add & generate QR codes', color: '#4CAF50' },
     { href: '/admin/quests', icon: '⚔️', label: 'QUESTS', desc: 'Create & activate quests', color: '#FFD700' },
     { href: '/admin/groups', icon: '⚔️', label: 'GROUPS', desc: 'Manage student groups', color: '#2196F3' },
     { href: '/admin/points', icon: '⭐', label: 'POINTS', desc: 'Manual point adjustment', color: '#FF9800' },

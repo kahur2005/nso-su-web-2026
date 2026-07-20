@@ -164,5 +164,5 @@ export async function toggleNpcActive(npcId: string) {
     .update({ isActive: !npc.isActive })
     .eq('id', npcId)
 
-  revalidatePath('/admin/npc')
+  revalidatePath('/admin/qr')
 }

@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { NextResponse } from 'next/server'
+import { isDivisionId } from '@/lib/divisions'
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions)
@@ -12,12 +13,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { committeeName, role, funFact, points } = await request.json()
+  const { committeeName, role, division, instagram, funFact, points } = await request.json()
+
+  // division is nullable on NPC -- allow it to be absent/empty, but reject
+  // anything present that isn't one of the known division ids.
+  if (division && !isDivisionId(division)) {
+    return NextResponse.json({ error: 'Invalid division' }, { status: 400 })
+  }
 
   // Create NPC
   const { data: npc, error: createError } = await supabase
     .from('NPC')
-    .insert({ committeeName, role, funFact, points })
+    .insert({
+      committeeName,
+      role,
+      division: division || null,
+      instagram: instagram || null,
+      funFact,
+      points,
+    })
     .select()
     .single()
 
