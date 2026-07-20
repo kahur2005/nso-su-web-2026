@@ -12,18 +12,25 @@ const STORAGE_KEY = 'admin-sidebar-collapsed'
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
-  const [ready, setReady] = useState(false)
 
   // Read persisted state after mount so server and client markup agree.
   useEffect(() => {
-    setCollapsed(localStorage.getItem(STORAGE_KEY) === '1')
-    setReady(true)
+    try {
+      setCollapsed(localStorage.getItem(STORAGE_KEY) === '1')
+    } catch (e) {
+      console.warn('localStorage is not accessible:', e)
+    }
   }, [])
 
   function toggle() {
     setCollapsed((c) => {
-      localStorage.setItem(STORAGE_KEY, c ? '0' : '1')
-      return !c
+      const next = !c
+      try {
+        localStorage.setItem(STORAGE_KEY, next ? '1' : '0')
+      } catch (e) {
+        console.warn('Failed to write to localStorage:', e)
+      }
+      return next
     })
   }
 
@@ -56,6 +63,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                 key={href}
                 href={href}
                 title={collapsed ? label : undefined}
+                aria-label={label}
                 className={`flex items-center gap-3 px-4 py-2.5 text-sm
                   ${active
                     ? 'bg-slate-100 text-slate-900 font-medium border-r-2 border-slate-900'
@@ -71,6 +79,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         <Link
           href="/dashboard"
           title={collapsed ? 'Back to app' : undefined}
+          aria-label="Back to app"
           className="flex items-center gap-3 px-4 py-3 text-sm text-slate-500
             border-t border-slate-200 hover:bg-slate-50"
         >
@@ -83,7 +92,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         <header className="h-14 flex items-center px-6 border-b border-slate-200 bg-white">
           <h1 className="text-base font-semibold">{current?.label ?? 'Admin'}</h1>
         </header>
-        <main className="flex-1 p-6" suppressHydrationWarning={!ready}>
+        <main className="flex-1 p-6">
           {children}
         </main>
       </div>

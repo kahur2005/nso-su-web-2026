@@ -14,7 +14,7 @@ export default function AdminLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <div className={`${poppins.variable} font-[var(--font-poppins)] antialiased`}>
+    <div className={`${poppins.variable} font-[family-name:var(--font-poppins)] antialiased`}>
       <AdminShell>{children}</AdminShell>
     </div>
   )
