@@ -3,12 +3,11 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import AdminHeader from '@/components/layout/AdminHeader'
-import PixelCard from '@/components/ui/PixelCard'
+import DataTable from '@/components/admin/DataTable'
 import { createAnnouncement, toggleAnnouncement } from '../actions'
 
-const inputClass = `w-full bg-gray-900 border-2 border-black text-white
-  font-pixel text-xs p-3 focus:outline-none focus:border-pink-500`
+const inputClass = `w-full bg-white border border-slate-300 rounded-md text-slate-800
+  text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400`
 
 export default async function AdminAnnouncementsPage() {
   const session = await getServerSession(authOptions)
@@ -24,100 +23,89 @@ export default async function AdminAnnouncementsPage() {
   const announcements = announcementsData ?? []
 
   return (
-    <div className="min-h-screen bg-gray-900 scanlines">
-      <AdminHeader title="📢 ANNOUNCEMENTS" subtitle="BROADCAST TO ALL PLAYERS" />
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-lg font-semibold text-slate-900">Announcements</h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Broadcast short notices to the student dashboard. Toggle an announcement
+          to hide it without deleting it.
+        </p>
+      </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="border border-slate-200 rounded-lg bg-white p-5 h-fit">
+        <h2 className="text-sm font-medium text-slate-900 mb-3">New announcement</h2>
 
-          {/* Create form */}
+        <form action={createAnnouncement} className="space-y-3">
           <div>
-            <PixelCard className="bg-gray-800">
-              <h2 className="font-pixel text-sm text-white mb-4">➕ NEW ANNOUNCEMENT</h2>
+            <label className="text-xs font-medium text-slate-500 block mb-1">Title</label>
+            <input
+              name="title"
+              className={inputClass}
+              placeholder="e.g. Lunch break extended!"
+              required
+            />
+          </div>
 
-              <form action={createAnnouncement} className="space-y-3">
-                <div>
-                  <label className="font-pixel text-xs text-gray-400 block mb-1">
-                    TITLE
-                  </label>
-                  <input name="title" className={inputClass}
-                    placeholder="e.g. Lunch break extended!" required />
-                </div>
+          <div>
+            <label className="text-xs font-medium text-slate-500 block mb-1">Content</label>
+            <textarea
+              name="content"
+              rows={3}
+              className={inputClass}
+              placeholder="The message players will see on their dashboard"
+              required
+            />
+          </div>
 
-                <div>
-                  <label className="font-pixel text-xs text-gray-400 block mb-1">
-                    CONTENT
-                  </label>
-                  <textarea name="content" rows={4} className={inputClass}
-                    placeholder="The message players will see on their dashboard" required />
-                </div>
+          <button
+            type="submit"
+            className="bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium
+              rounded-md px-4 py-2 transition-colors"
+          >
+            Broadcast
+          </button>
+        </form>
+      </div>
 
-                <button type="submit"
-                  className="pixel-btn w-full bg-red-500 hover:bg-red-400
-                    text-white font-pixel text-sm px-6 py-3 rounded-none">
-                  📣 BROADCAST
+      <DataTable headers={['Title', 'Content', 'Status', 'Created']}>
+        {announcements.map((ann) => (
+          <tr key={ann.id}>
+            <td className="px-4 py-2.5 font-medium text-slate-800 align-top whitespace-nowrap">
+              {ann.title}
+            </td>
+            <td className="px-4 py-2.5 text-slate-600 align-top max-w-md">
+              <p className="line-clamp-2" title={ann.content}>
+                {ann.content}
+              </p>
+            </td>
+            <td className="px-4 py-2.5 align-top whitespace-nowrap">
+              <form action={toggleAnnouncement.bind(null, ann.id)}>
+                <button
+                  type="submit"
+                  className={`text-xs font-medium px-2.5 py-1 rounded-full border transition-colors
+                    ${ann.isActive
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                      : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
+                    }`}
+                >
+                  {ann.isActive ? 'Active' : 'Inactive'}
                 </button>
               </form>
-            </PixelCard>
-          </div>
+            </td>
+            <td className="px-4 py-2.5 text-slate-600 align-top whitespace-nowrap">
+              {new Date(ann.createdAt).toLocaleString()}
+            </td>
+          </tr>
+        ))}
 
-          {/* Announcement list */}
-          <div>
-            <div className="flex justify-between items-center mb-3">
-              <h2 className="font-pixel text-sm text-white">🗞️ HISTORY</h2>
-              <span className="font-pixel text-xs text-gray-400">
-                {announcements.length} TOTAL
-              </span>
-            </div>
-
-            <div className="space-y-3">
-              {announcements.map((ann) => (
-                <PixelCard
-                  key={ann.id}
-                  className={`bg-gray-800 ${!ann.isActive ? 'opacity-50' : ''}`}
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="text-xl flex-shrink-0">🔔</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-pixel text-xs text-white">{ann.title}</p>
-                      <p className="font-pixel text-[8px] text-gray-400 mt-1 leading-relaxed">
-                        {ann.content}
-                      </p>
-                      <p className="font-pixel text-[8px] text-gray-600 mt-2">
-                        📅 {new Date(ann.createdAt).toLocaleString()}
-                      </p>
-                    </div>
-
-                    <form action={toggleAnnouncement.bind(null, ann.id)}>
-                      <button
-                        type="submit"
-                        className={`font-pixel text-[8px] px-2 py-1 border-2 border-black
-                          transition-colors ${ann.isActive
-                            ? 'bg-green-700 text-white hover:bg-green-600'
-                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-                          }`}
-                        style={{ boxShadow: '2px 2px 0 #000' }}
-                      >
-                        {ann.isActive ? '✅ LIVE' : '⛔ HIDDEN'}
-                      </button>
-                    </form>
-                  </div>
-                </PixelCard>
-              ))}
-
-              {announcements.length === 0 && (
-                <PixelCard className="bg-gray-800 text-center py-8">
-                  <span className="text-4xl">📢</span>
-                  <p className="font-pixel text-xs text-gray-400 mt-4">
-                    NO ANNOUNCEMENTS YET
-                  </p>
-                </PixelCard>
-              )}
-            </div>
-          </div>
-
-        </div>
-      </div>
+        {announcements.length === 0 && (
+          <tr>
+            <td colSpan={4} className="px-4 py-8 text-center text-sm text-slate-400">
+              No announcements yet.
+            </td>
+          </tr>
+        )}
+      </DataTable>
     </div>
   )
 }
