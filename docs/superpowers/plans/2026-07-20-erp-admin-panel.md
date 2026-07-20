@@ -189,7 +189,12 @@ export default function AdminLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <div className={`${poppins.variable} font-[var(--font-poppins)] antialiased`}>
+    {/* NOTE: the `family-name:` type hint is required. Without it, Tailwind 4
+        infers the bracketed var() as a font-WEIGHT and emits
+        `font-weight: var(--font-poppins)`, which is invalid and silently
+        ignored -- leaving the admin panel inheriting the global pixel font.
+        `npm run build` does NOT catch this; verify the generated CSS. */}
+    <div className={`${poppins.variable} font-[family-name:var(--font-poppins)] antialiased`}>
       <AdminShell>{children}</AdminShell>
     </div>
   )
