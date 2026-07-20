@@ -304,3 +304,26 @@ alter table "Achievement"        enable row level security;
 alter table "StudentAchievement" enable row level security;
 alter table "Announcement"       enable row level security;
 alter table "Club"               enable row level security;
+
+-- ---------------------------------------------------------------------------
+-- Seed: the 15 canonical NSO 2026 groups.
+-- Logos are extracted from public/images/group/group-logo.svg by
+-- scripts/extract-group-logos.mjs and served as static files.
+-- ---------------------------------------------------------------------------
+
+insert into "Group" ("name", "emblem", "color", "emblemUrl") values
+  ('Siren',    '🧜', '#1e63d0', '/images/group/siren.png'),
+  ('Unicorn',  '🦄', '#b06fd6', '/images/group/unicorn.png'),
+  ('Griffin',  '🦅', '#c9922b', '/images/group/griffin.png'),
+  ('Sphinx',   '🏺', '#d4a017', '/images/group/sphinx.png'),
+  ('Wyvern',   '🐉', '#2f8f4e', '/images/group/wyvern.png'),
+  ('Faerie',   '🧚', '#e86bb0', '/images/group/faerie.png'),
+  ('Nymph',    '🌿', '#4fae8b', '/images/group/nymph.png'),
+  ('Minotaur', '🐂', '#a3402a', '/images/group/minotaur.png'),
+  ('Pegasus',  '🐴', '#5b9bd5', '/images/group/pegasus.png'),
+  ('Kraken',   '🦑', '#2b5f7a', '/images/group/kraken.png'),
+  ('Kitsune',  '🦊', '#e87d2b', '/images/group/kitsune.png'),
+  ('Phoenix',  '🔥', '#d63a1e', '/images/group/phoenix.png'),
+  ('Harpy',    '🪶', '#8a7fbf', '/images/group/harpy.png'),
+  ('Chimera',  '🦁', '#9b3b6e', '/images/group/chimera.png'),
+  ('Fenrir',   '🐺', '#5a6b7d', '/images/group/fenrir.png');
