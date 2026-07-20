@@ -23,6 +23,7 @@ export default async function AdminGroupsPage() {
     .from('Group')
     .select('*, members:Student(count)')
     .order('totalPoints', { ascending: false })
+    .order('name', { ascending: true })
 
   const groups = (rawGroups ?? []).map((g: any) => {
     const { members, ...rest } = g
