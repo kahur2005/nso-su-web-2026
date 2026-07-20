@@ -8,19 +8,13 @@ import PixelAvatar from '@/components/ui/PixelAvatar'
 // lucide-react dropped brand glyphs; Camera matches the Figma icon closely.
 import { Camera } from 'lucide-react'
 import { useState } from 'react'
+import { DIVISIONS } from '@/lib/divisions'
 
 /* ────────────────────────────────────────────────────────────────────────
  * MOCK DATA — placeholder until wired to the codex/scan system.
  * `isScanned` will come from the student's ScanLog; `funFact`, `imageUrl`,
  * and `instagramUrl` will come from the NPC/committee tables.
  * ──────────────────────────────────────────────────────────────────────── */
-interface Division {
-  id: string
-  name: string
-  /** bookmark + banner colour, sampled from the Figma ribbon tabs */
-  color: string
-}
-
 interface CommitteeMember {
   id: string
   name: string
@@ -33,17 +27,6 @@ interface CommitteeMember {
   /** placeholder pixel-avatar parts, used while imageUrl is null */
   avatar: { skin: string; eyes: string; brow: string; hair?: string }
 }
-
-// Order + colours follow the Figma bookmark ribbon, top to bottom.
-// Mainboard is always first.
-const DIVISIONS: Division[] = [
-  { id: 'mainboard', name: 'Mainboards', color: '#a83fbf' },
-  { id: 'itlog', name: 'IT & Logistics', color: '#331f8f' },
-  { id: 'pubdoc', name: 'PubDoc', color: '#22998f' },
-  { id: 'event', name: 'Event', color: '#cc0505' },
-  { id: 'creative', name: 'Creative', color: '#f5187a' },
-  { id: 'groupleader', name: 'Group Leader', color: '#7fa510' },
-]
 
 const ROLES: Record<string, string[]> = {
   mainboard: ['Project Officer', 'Vice PO', 'Secretary', 'Treasurer', 'Advisor', 'Liaison'],
@@ -89,7 +72,7 @@ const OUTLINE_GOLD = {
 }
 
 export default function CommitteePage() {
-  const [activeDivision, setActiveDivision] = useState(DIVISIONS[0].id)
+  const [activeDivision, setActiveDivision] = useState<string>(DIVISIONS[0].id)
   const [currentPage, setCurrentPage] = useState(0)
 
   const active = DIVISIONS.find((d) => d.id === activeDivision)!
