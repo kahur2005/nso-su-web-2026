@@ -3,14 +3,15 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import AdminHeader from '@/components/layout/AdminHeader'
-import PixelCard from '@/components/ui/PixelCard'
+import DataTable from '@/components/admin/DataTable'
 import StudentPicker from '@/components/admin/StudentPicker'
 import GroupEmblem from '@/components/ui/GroupEmblem'
 import { assignStudentToGroup, unassignStudent } from '../actions'
 
-const inputClass = `w-full bg-gray-900 border-2 border-black text-white
-  font-pixel text-xs p-3 focus:outline-none focus:border-blue-500`
+const inputClass = `w-full bg-white border border-slate-300 rounded-md text-slate-800
+  text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400`
+
+const labelClass = 'text-xs font-medium text-slate-500 block mb-1'
 
 export default async function AdminGroupsPage() {
   const session = await getServerSession(authOptions)
@@ -46,139 +47,140 @@ export default async function AdminGroupsPage() {
     groupName: s.group?.name ?? null,
   }))
 
+  // Groups sorted by name for the logo grid (the ranking table below keeps
+  // the points-descending order already applied by the query).
+  const groupsByName = [...groups].sort((a, b) => a.name.localeCompare(b.name))
+
   return (
-    <div className="min-h-screen bg-gray-900 scanlines">
-      <AdminHeader title="🛡️ MANAGE GROUPS" subtitle="STUDENT GUILDS & TEAMS" />
+    <div className="space-y-6">
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="border border-slate-200 rounded-lg bg-white p-5 text-center">
+          <p className="text-xs font-medium text-slate-500">Groups</p>
+          <p className="text-2xl font-semibold text-slate-900 mt-1">{groups.length}</p>
+        </div>
+        <div className="border border-slate-200 rounded-lg bg-white p-5 text-center">
+          <p className="text-xs font-medium text-slate-500">Unassigned students</p>
+          <p className="text-2xl font-semibold text-slate-900 mt-1">{unassignedCount ?? 0}</p>
+        </div>
+      </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      {/* Logo grid — the 15 fixed, pre-seeded groups. There is no create-group
+          flow: the roster is fixed and every group already has a designed
+          logo, so an ad-hoc 16th group would have no art. */}
+      <div>
+        <h2 className="text-sm font-semibold text-slate-800 mb-3">Groups</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+          {groupsByName.map((group) => (
+            <div
+              key={group.id}
+              className="border border-slate-200 rounded-lg bg-white p-4 flex flex-col
+                items-center text-center gap-2 border-l-4"
+              style={{ borderLeftColor: group.color }}
+            >
+              <GroupEmblem emblem={group.emblem} emblemUrl={group.emblemUrl} size={56} />
+              <p className="text-sm font-medium text-slate-800 truncate w-full">{group.name}</p>
+              <p className="text-xs text-slate-500">{group.totalPoints} pts</p>
+            </div>
+          ))}
+        </div>
+      </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          <PixelCard className="bg-gray-800 text-center">
-            <p className="font-pixel text-xs text-gray-400">GROUPS</p>
-            <p className="font-pixel text-2xl text-blue-400 mt-1">{groups.length}</p>
-          </PixelCard>
-          <PixelCard className="bg-gray-800 text-center">
-            <p className="font-pixel text-xs text-gray-400">UNASSIGNED PLAYERS</p>
-            <p className="font-pixel text-2xl text-red-400 mt-1">{unassignedCount}</p>
-          </PixelCard>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        {/* Assign form */}
+        <div className="border border-slate-200 rounded-lg bg-white p-5 h-fit">
+          <h2 className="text-sm font-semibold text-slate-800 mb-4">Assign student</h2>
+          <form action={assignStudentToGroup} className="space-y-3">
+            <div>
+              <label className={labelClass}>Student name</label>
+              <StudentPicker students={students} inputClass={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Group</label>
+              <select name="groupId" className={inputClass} required>
+                {groups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              type="submit"
+              className="w-full text-sm font-medium text-white bg-slate-900 hover:bg-slate-800
+                rounded-md px-4 py-2 transition-colors"
+            >
+              Assign
+            </button>
+          </form>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-          {/* Forms */}
-          <div className="space-y-6">
-            <PixelCard className="bg-gray-800">
-              <h2 className="font-pixel text-sm text-white mb-4">🎯 ASSIGN STUDENT</h2>
-              <form action={assignStudentToGroup} className="space-y-3">
-                <div>
-                  <label className="font-pixel text-xs text-gray-400 block mb-1">
-                    STUDENT NAME
-                  </label>
-                  <StudentPicker students={students} inputClass={inputClass} />
-                </div>
-                <div>
-                  <label className="font-pixel text-xs text-gray-400 block mb-1">
-                    GROUP
-                  </label>
-                  <select name="groupId" className={inputClass} required>
-                    {groups.map((group) => (
-                      <option key={group.id} value={group.id}>
-                        {group.emblem} {group.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <button type="submit"
-                  className="pixel-btn w-full bg-green-500 hover:bg-green-400
-                    text-white font-pixel text-sm px-6 py-3 rounded-none">
-                  ✅ ASSIGN
-                </button>
-              </form>
-            </PixelCard>
-          </div>
-
-          {/* Group list */}
+        {/* Ranking + member lists */}
+        <div className="space-y-4">
           <div>
-            <div className="flex justify-between items-center mb-3">
-              <h2 className="font-pixel text-sm text-white">🏆 GROUP RANKINGS</h2>
-            </div>
-
-            <div className="space-y-3">
-              {groups.map((group, index) => {
-                const members = students.filter((s) => s.groupId === group.id)
-                return (
-                <PixelCard key={group.id} className="bg-gray-800" glowColor={group.color}>
-                  <div className="flex items-center gap-3">
-                    <span className="font-pixel text-sm w-8"
-                      style={{
-                        color: index === 0 ? '#FFD700'
-                          : index === 1 ? '#C0C0C0'
-                          : index === 2 ? '#CD7F32' : '#fff'
-                      }}>
-                      #{index + 1}
-                    </span>
-                    <div className="w-12 h-12 border-2 border-black flex items-center
-                      justify-center overflow-hidden flex-shrink-0"
-                      style={{ backgroundColor: `${group.color}33` }}>
-                      <GroupEmblem emblem={group.emblem} emblemUrl={group.emblemUrl} size={44} />
+            <h2 className="text-sm font-semibold text-slate-800 mb-3">Group rankings</h2>
+            <DataTable headers={['#', 'Group', 'Points', 'Members']}>
+              {groups.map((group, index) => (
+                <tr key={group.id}>
+                  <td className="px-4 py-2.5 text-slate-500 whitespace-nowrap">{index + 1}</td>
+                  <td className="px-4 py-2.5 whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      <GroupEmblem emblem={group.emblem} emblemUrl={group.emblemUrl} size={24} />
+                      <span className="font-medium text-slate-800">{group.name}</span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-pixel text-xs" style={{ color: group.color }}>
-                        {group.name}
-                      </p>
-                      <p className="font-pixel text-[8px] text-gray-400 mt-1">
-                        👥 {group._count.members} MEMBERS
-                      </p>
-                    </div>
-                    <span className="font-pixel text-xs text-yellow-400">
-                      {group.totalPoints} PTS
-                    </span>
-                  </div>
-
-                  {/* Members — remove to unassign (reassign via the form above) */}
-                  {members.length > 0 && (
-                    <div className="mt-3 pt-3 border-t-2 border-gray-700 space-y-1">
-                      {members.map((m) => (
-                        <div key={m.studentId}
-                          className="flex items-center justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="font-pixel text-[10px] text-white truncate">
-                              {m.name}
-                            </p>
-                            <p className="font-pixel text-[8px] text-gray-500">
-                              {m.studentId}
-                            </p>
-                          </div>
-                          <form action={unassignStudent}>
-                            <input type="hidden" name="studentId" value={m.studentId} />
-                            <button type="submit"
-                              className="font-pixel text-[8px] px-2 py-1 border-2 border-black
-                                bg-red-800 text-white hover:bg-red-700 transition-colors"
-                              style={{ boxShadow: '2px 2px 0 #000' }}>
-                              ✕ REMOVE
-                            </button>
-                          </form>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </PixelCard>
-                )
-              })}
-
-              {groups.length === 0 && (
-                <PixelCard className="bg-gray-800 text-center py-8">
-                  <span className="text-4xl">🛡️</span>
-                  <p className="font-pixel text-xs text-gray-400 mt-4">
-                    NO GROUPS YET — FOUND THE FIRST GUILD!
-                  </p>
-                </PixelCard>
-              )}
-            </div>
+                  </td>
+                  <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">{group.totalPoints}</td>
+                  <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">
+                    {group._count.members}
+                  </td>
+                </tr>
+              ))}
+            </DataTable>
           </div>
 
+          <div className="space-y-3">
+            {groups.map((group) => {
+              const members = students.filter((s) => s.groupId === group.id)
+              if (members.length === 0) return null
+              return (
+                <div key={group.id} className="border border-slate-200 rounded-lg bg-white p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <GroupEmblem emblem={group.emblem} emblemUrl={group.emblemUrl} size={20} />
+                    <p className="text-sm font-medium text-slate-800">{group.name}</p>
+                  </div>
+                  <div className="space-y-1">
+                    {members.map((m) => (
+                      <div key={m.studentId} className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm text-slate-700 truncate">{m.name}</p>
+                          <p className="text-xs text-slate-400">{m.studentId}</p>
+                        </div>
+                        <form action={unassignStudent}>
+                          <input type="hidden" name="studentId" value={m.studentId} />
+                          <button
+                            type="submit"
+                            className="text-xs font-medium px-2.5 py-1 rounded-full border
+                              border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
+                          >
+                            Remove
+                          </button>
+                        </form>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+
+            {students.every((s) => !s.groupId) && (
+              <div className="border border-slate-200 rounded-lg bg-white p-8 text-center">
+                <p className="text-sm text-slate-500">No students are assigned to a group yet.</p>
+              </div>
+            )}
+          </div>
         </div>
+
       </div>
     </div>
   )
