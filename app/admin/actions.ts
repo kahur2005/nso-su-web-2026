@@ -5,6 +5,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import { revalidatePath } from 'next/cache'
+import { uploadImage } from '@/lib/storage'
 
 async function requireAdmin() {
   const session = await getServerSession(authOptions)
@@ -165,4 +166,52 @@ export async function toggleNpcActive(npcId: string) {
     .eq('id', npcId)
 
   revalidatePath('/admin/qr')
+}
+
+// --- Clubs ---
+
+export async function createClub(formData: FormData) {
+  await requireAdmin()
+
+  const name = String(formData.get('name') || '').trim()
+  const category = String(formData.get('category') || '').trim()
+  const description = String(formData.get('description') || '').trim()
+  const instagram = String(formData.get('instagram') || '').trim() || null
+  const registrationUrl = String(formData.get('registrationUrl') || '').trim() || null
+
+  if (!name || !category || !description) return
+
+  // Unlimited carousel images; upload in parallel. uploadImage() never throws —
+  // a failed upload just returns null, so we track which ones dropped and
+  // surface that instead of silently inserting a club with fewer images than
+  // the operator selected.
+  const files = formData.getAll('images').filter(
+    (f): f is File => f instanceof File && f.size > 0
+  )
+  const uploaded = await Promise.all(files.map((f) => uploadImage('club-images', f)))
+  const images = uploaded.filter((url): url is string => Boolean(url))
+  const failedCount = files.length - images.length
+
+  await supabase.from('Club').insert({
+    name, category, description, instagram, registrationUrl, images,
+  })
+
+  revalidatePath('/admin/clubs')
+  revalidatePath('/map/clubs')
+
+  if (failedCount > 0) {
+    return { warning: `${failedCount} of ${files.length} image(s) failed to upload and were skipped.` }
+  }
+}
+
+export async function deleteClub(formData: FormData) {
+  await requireAdmin()
+
+  const id = String(formData.get('id') || '')
+  if (!id) return
+
+  await supabase.from('Club').delete().eq('id', id)
+
+  revalidatePath('/admin/clubs')
+  revalidatePath('/map/clubs')
 }
