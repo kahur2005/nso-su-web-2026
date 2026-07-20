@@ -7,7 +7,7 @@ import AdminHeader from '@/components/layout/AdminHeader'
 import PixelCard from '@/components/ui/PixelCard'
 import StudentPicker from '@/components/admin/StudentPicker'
 import GroupEmblem from '@/components/ui/GroupEmblem'
-import { createGroup, assignStudentToGroup, unassignStudent } from '../actions'
+import { assignStudentToGroup, unassignStudent } from '../actions'
 
 const inputClass = `w-full bg-gray-900 border-2 border-black text-white
   font-pixel text-xs p-3 focus:outline-none focus:border-blue-500`
@@ -68,51 +68,6 @@ export default async function AdminGroupsPage() {
 
           {/* Forms */}
           <div className="space-y-6">
-            <PixelCard className="bg-gray-800">
-              <h2 className="font-pixel text-sm text-white mb-4">➕ NEW GROUP</h2>
-              <form action={createGroup} className="space-y-3">
-                <div>
-                  <label className="font-pixel text-xs text-gray-400 block mb-1">
-                    GROUP NAME
-                  </label>
-                  <input name="name" className={inputClass}
-                    placeholder="e.g. Crimson Dragons" required />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="font-pixel text-xs text-gray-400 block mb-1">
-                      EMBLEM (EMOJI)
-                    </label>
-                    <input name="emblem" className={inputClass}
-                      placeholder="🐉" defaultValue="🛡️" maxLength={4} />
-                  </div>
-                  <div>
-                    <label className="font-pixel text-xs text-gray-400 block mb-1">
-                      COLOR
-                    </label>
-                    <input name="color" type="color" defaultValue="#4CAF50"
-                      className="w-full h-10 bg-gray-900 border-2 border-black cursor-pointer" />
-                  </div>
-                </div>
-                <div>
-                  <label className="font-pixel text-xs text-gray-400 block mb-1">
-                    EMBLEM IMAGE (LOGO) — OPTIONAL
-                  </label>
-                  <input name="emblemImage" type="file" accept="image/*"
-                    className={`${inputClass} file:mr-3 file:border-0 file:bg-blue-600
-                      file:text-white file:font-pixel file:text-[8px] file:px-2 file:py-1`} />
-                  <p className="font-pixel text-[8px] text-gray-500 mt-1">
-                    IF SET, THE IMAGE IS USED AS THE LOGO (EMOJI IS THE FALLBACK).
-                  </p>
-                </div>
-                <button type="submit"
-                  className="pixel-btn w-full bg-blue-500 hover:bg-blue-400
-                    text-white font-pixel text-sm px-6 py-3 rounded-none">
-                  ⚡ CREATE GROUP
-                </button>
-              </form>
-            </PixelCard>
-
             <PixelCard className="bg-gray-800">
               <h2 className="font-pixel text-sm text-white mb-4">🎯 ASSIGN STUDENT</h2>
               <form action={assignStudentToGroup} className="space-y-3">
