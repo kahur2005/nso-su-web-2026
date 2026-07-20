@@ -1,47 +1,25 @@
 // app/(game)/map/clubs/page.tsx
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PixelCard from '@/components/ui/PixelCard'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import Link from 'next/link'
 
 /* ────────────────────────────────────────────────────────────────────────
- * EDIT CLUBS HERE
- *   - images:    carousel images (placeholder map.jpg for now)
- *   - instagram: full IG profile URL (placeholder '#' for now)
- *   - register:  Google Form URL the club provides (placeholder '#' for now)
+ * Shape returned by GET /api/clubs. Clubs are admin-managed rows in the
+ * `Club` table — `images` may be empty and every link field may be null.
  * ──────────────────────────────────────────────────────────────────────── */
 type Club = {
   id: string
   name: string
-  icon: string
+  iconUrl: string | null
   category: string
   description: string
   images: string[]
-  instagram: string
-  register: string
+  instagram: string | null
+  registrationUrl: string | null
 }
-
-const PLACEHOLDER_IMAGES = ['/images/map.jpg', '/images/map.jpg', '/images/map.jpg']
-
-const clubs: Club[] = [
-  { id: 'photography', name: 'Photography Society', icon: '📷', category: 'Arts', description: 'Capture campus life one frame at a time. Weekly photowalks, editing workshops, and an annual exhibition.', images: PLACEHOLDER_IMAGES, instagram: '#', register: '#' },
-  { id: 'robotics', name: 'Robotics Club', icon: '🤖', category: 'Technology', description: 'Build, code, and battle robots. Compete in national competitions and learn hands-on engineering.', images: PLACEHOLDER_IMAGES, instagram: '#', register: '#' },
-  { id: 'debate', name: 'Debate Union', icon: '🎙️', category: 'Academic', description: 'Sharpen your arguments and public speaking. Regular friendly debates and inter-varsity tournaments.', images: PLACEHOLDER_IMAGES, instagram: '#', register: '#' },
-  { id: 'football', name: 'Football Club', icon: '⚽', category: 'Sports', description: 'Train, play, and represent SU on the pitch. Open to all skill levels with weekly practice sessions.', images: PLACEHOLDER_IMAGES, instagram: '#', register: '#' },
-  { id: 'music', name: 'Music & Band Society', icon: '🎸', category: 'Music', description: 'Jam sessions, open mics, and live gigs. Whether you sing or shred, there is a stage for you.', images: PLACEHOLDER_IMAGES, instagram: '#', register: '#' },
-  { id: 'coding', name: 'Coding & Dev Club', icon: '💻', category: 'Technology', description: 'Hackathons, study jams, and side-project nights. From web to AI, build cool stuff with friends.', images: PLACEHOLDER_IMAGES, instagram: '#', register: '#' },
-  { id: 'art', name: 'Fine Arts Circle', icon: '🎨', category: 'Arts', description: 'Painting, sketching, and digital art meetups. Express yourself and showcase work in our gallery.', images: PLACEHOLDER_IMAGES, instagram: '#', register: '#' },
-  { id: 'volunteer', name: 'Volunteer Corps', icon: '🤝', category: 'Social', description: 'Give back through community drives, charity events, and campus sustainability projects.', images: PLACEHOLDER_IMAGES, instagram: '#', register: '#' },
-  { id: 'basketball', name: 'Basketball Club', icon: '🏀', category: 'Sports', description: 'Fast breaks and friendly rivalries. Casual pickup games and a competitive varsity squad.', images: PLACEHOLDER_IMAGES, instagram: '#', register: '#' },
-  { id: 'film', name: 'Film & Media Club', icon: '🎬', category: 'Arts', description: 'Write, shoot, and edit short films. Learn the craft and screen your work at our film night.', images: PLACEHOLDER_IMAGES, instagram: '#', register: '#' },
-  { id: 'entrepreneur', name: 'Entrepreneurship Hub', icon: '🚀', category: 'Academic', description: 'Turn ideas into startups. Pitch nights, mentorship, and networking with industry founders.', images: PLACEHOLDER_IMAGES, instagram: '#', register: '#' },
-  { id: 'gaming', name: 'E-Sports & Gaming', icon: '🎮', category: 'Technology', description: 'Compete in tournaments across popular titles. LAN parties, ranked nights, and a strong community.', images: PLACEHOLDER_IMAGES, instagram: '#', register: '#' },
-  { id: 'dance', name: 'Dance Crew', icon: '💃', category: 'Arts', description: 'From hip-hop to traditional, learn choreography and perform at campus events.', images: PLACEHOLDER_IMAGES, instagram: '#', register: '#' },
-  { id: 'nature', name: 'Nature & Hiking Club', icon: '🥾', category: 'Social', description: 'Explore trails, camp under the stars, and connect with the outdoors every weekend.', images: PLACEHOLDER_IMAGES, instagram: '#', register: '#' },
-  { id: 'language', name: 'Language Exchange', icon: '🗣️', category: 'Academic', description: 'Practise new languages with native speakers. Casual cafe meetups and culture nights.', images: PLACEHOLDER_IMAGES, instagram: '#', register: '#' },
-]
-/* ──────────────────────────────────────────────────────────────────────── */
 
 const categoryColor: Record<string, string> = {
   Arts: '#E91E63',
@@ -57,8 +35,10 @@ function ClubDetail({ club, onClose }: { club: Club; onClose: () => void }) {
   const color = categoryColor[club.category] || '#9E9E9E'
   const count = club.images.length
 
-  const prev = () => setSlide((s) => (s - 1 + count) % count)
-  const next = () => setSlide((s) => (s + 1) % count)
+  // `count` is 0 for a club with no uploaded images; the modulo below would be
+  // NaN, so bail out and let the carousel block render nothing instead.
+  const prev = () => count && setSlide((s) => (s - 1 + count) % count)
+  const next = () => count && setSlide((s) => (s + 1) % count)
 
   return (
     <div
@@ -75,7 +55,12 @@ function ClubDetail({ club, onClose }: { club: Club; onClose: () => void }) {
             <span className="w-12 h-12 border-2 border-black flex items-center
               justify-center text-2xl flex-shrink-0"
               style={{ backgroundColor: `${color}33`, boxShadow: '3px 3px 0 #000' }}>
-              {club.icon}
+              {club.iconUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={club.iconUrl} alt="" className="w-full h-full object-cover" />
+              ) : (
+                '🏛️'
+              )}
             </span>
             <div className="flex-1">
               <h2 className="font-pixel text-sm text-white">{club.name}</h2>
@@ -93,7 +78,8 @@ function ClubDetail({ club, onClose }: { club: Club; onClose: () => void }) {
             </button>
           </div>
 
-          {/* Image carousel */}
+          {/* Image carousel — hidden entirely when the club has no images */}
+          {count > 0 && (
           <div className="relative mb-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -129,6 +115,7 @@ function ClubDetail({ club, onClose }: { club: Club; onClose: () => void }) {
               </>
             )}
           </div>
+          )}
 
           {/* Description */}
           <p className="font-pixel text-xs text-gray-300 leading-relaxed mb-5">
@@ -138,7 +125,7 @@ function ClubDetail({ club, onClose }: { club: Club; onClose: () => void }) {
           {/* Action buttons */}
           <div className="flex gap-3">
             <a
-              href={club.instagram}
+              href={club.instagram ?? '#'}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 text-center font-pixel text-xs text-white py-2
@@ -148,7 +135,7 @@ function ClubDetail({ club, onClose }: { club: Club; onClose: () => void }) {
               📸 INSTAGRAM
             </a>
             <a
-              href={club.register}
+              href={club.registrationUrl ?? '#'}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 text-center font-pixel text-xs text-white bg-green-600
@@ -166,6 +153,16 @@ function ClubDetail({ club, onClose }: { club: Club; onClose: () => void }) {
 
 export default function UkmClubsPage() {
   const [selected, setSelected] = useState<Club | null>(null)
+  const [clubs, setClubs] = useState<Club[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/clubs')
+      .then((r) => r.json())
+      .then((d) => setClubs(d.clubs ?? []))
+      .catch(() => setClubs([]))
+      .finally(() => setLoading(false))
+  }, [])
 
   return (
     <PageWrapper>
@@ -189,6 +186,9 @@ export default function UkmClubsPage() {
         </p>
 
         {/* Glossary grid */}
+        {loading ? (
+          <LoadingSpinner />
+        ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {clubs.map((club) => {
             const color = categoryColor[club.category] || '#9E9E9E'
@@ -197,7 +197,14 @@ export default function UkmClubsPage() {
                 <PixelCard className="bg-gray-800 h-full cursor-pointer
                   transition-transform hover:scale-105">
                   <div className="flex flex-col items-center text-center py-2">
-                    <span className="text-3xl mb-2">{club.icon}</span>
+                    <span className="text-3xl mb-2">
+                      {club.iconUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={club.iconUrl} alt="" className="w-8 h-8 object-cover" />
+                      ) : (
+                        '🏛️'
+                      )}
+                    </span>
                     <p className="font-pixel text-[10px] text-white leading-tight">
                       {club.name}
                     </p>
@@ -210,6 +217,7 @@ export default function UkmClubsPage() {
             )
           })}
         </div>
+        )}
 
       </div>
 

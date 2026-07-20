@@ -5,62 +5,26 @@
 'use client'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PixelAvatar from '@/components/ui/PixelAvatar'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
 // lucide-react dropped brand glyphs; Camera matches the Figma icon closely.
 import { Camera } from 'lucide-react'
-import { useState } from 'react'
-import { DIVISIONS } from '@/lib/divisions'
+import { useEffect, useState } from 'react'
+import { DIVISIONS, type DivisionId } from '@/lib/divisions'
 
-/* ────────────────────────────────────────────────────────────────────────
- * MOCK DATA — placeholder until wired to the codex/scan system.
- * `isScanned` will come from the student's ScanLog; `funFact`, `imageUrl`,
- * and `instagramUrl` will come from the NPC/committee tables.
- * ──────────────────────────────────────────────────────────────────────── */
+/* Shape returned by GET /api/committee. `division` is null when the NPC row is
+ * unassigned or carries an id outside the six known divisions — such a member
+ * simply matches no bookmark. `funFact` is the locked placeholder text until
+ * this student has a ScanLog row for the member (`isScanned`). */
 interface CommitteeMember {
   id: string
   name: string
   role: string
+  division: string | null
   imageUrl: string | null
-  instagramUrl: string
+  instagram: string | null
   funFact: string
-  divisionId: string
   isScanned: boolean
-  /** placeholder pixel-avatar parts, used while imageUrl is null */
-  avatar: { skin: string; eyes: string; brow: string; hair?: string }
 }
-
-const ROLES: Record<string, string[]> = {
-  mainboard: ['Project Officer', 'Vice PO', 'Secretary', 'Treasurer', 'Advisor', 'Liaison'],
-  itlog: ['Division Head', 'Equipment', 'IT Support', 'Runner'],
-  pubdoc: ['Division Head', 'Copywriter', 'Photographer', 'Editor'],
-  event: ['Division Head', 'Stage Manager', 'Game Master', 'Crew'],
-  creative: ['Division Head', 'Designer', 'Videographer', 'Animator'],
-  groupleader: ['Head of Leaders', 'Group Leader', 'Group Leader', 'Group Leader'],
-}
-
-const SKINS = ['skin1', 'skin2', 'skin3']
-const EYES = ['eyes1', 'eyes3', 'eyes5', 'eyes8']
-const BROWS = ['brow1', 'brow2', 'brow4']
-const HAIRS = ['hairb1', 'hairb2', 'hairb1.2', undefined]
-
-const MEMBERS: CommitteeMember[] = DIVISIONS.flatMap((division, d) =>
-  ROLES[division.id].map((role, i) => ({
-    id: `${division.id}-${i + 1}`,
-    name: `Member ${i + 1}`,
-    role,
-    imageUrl: null,
-    instagramUrl: 'https://instagram.com',
-    funFact:
-      'Placeholder fun fact — scan this member’s QR to unlock the real one!',
-    divisionId: division.id,
-    isScanned: i % 3 === 0, // demo both states
-    avatar: {
-      skin: SKINS[(d + i) % SKINS.length],
-      eyes: EYES[(d * 2 + i) % EYES.length],
-      brow: BROWS[(d + i) % BROWS.length],
-      hair: HAIRS[(d + i * 3) % HAIRS.length],
-    },
-  }))
-)
 
 const PER_PAGE = 3
 
@@ -72,11 +36,21 @@ const OUTLINE_GOLD = {
 }
 
 export default function CommitteePage() {
-  const [activeDivision, setActiveDivision] = useState<string>(DIVISIONS[0].id)
+  const [activeDivision, setActiveDivision] = useState<DivisionId>(DIVISIONS[0].id)
   const [currentPage, setCurrentPage] = useState(0)
+  const [members, setMembers] = useState<CommitteeMember[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/committee')
+      .then((r) => r.json())
+      .then((d) => setMembers(d.members ?? []))
+      .catch(() => setMembers([]))
+      .finally(() => setLoading(false))
+  }, [])
 
   const active = DIVISIONS.find((d) => d.id === activeDivision)!
-  const divisionMembers = MEMBERS.filter((m) => m.divisionId === activeDivision)
+  const divisionMembers = members.filter((m) => m.division === activeDivision)
   const pageCount = Math.max(1, Math.ceil(divisionMembers.length / PER_PAGE))
   const pageMembers = divisionMembers.slice(
     currentPage * PER_PAGE,
@@ -85,7 +59,7 @@ export default function CommitteePage() {
   // Fun-fact progress for the division currently on screen.
   const collected = divisionMembers.filter((m) => m.isScanned).length
 
-  const selectDivision = (id: string) => {
+  const selectDivision = (id: DivisionId) => {
     setActiveDivision(id)
     setCurrentPage(0)
   }
@@ -194,7 +168,9 @@ export default function CommitteePage() {
 
             {/* Member cards */}
             <div className="mt-3 flex flex-col gap-5">
-              {pageMembers.map((member) => (
+              {loading ? (
+                <LoadingSpinner />
+              ) : pageMembers.map((member) => (
                 <article key={member.id} className="relative pt-[14px]">
                   <div className="committee-frame rounded-[3px] p-[7px]">
                     <div className="flex h-[104px] overflow-hidden rounded-[2px] border-2 border-[#2f1c10] bg-[#fdf6e3]">
@@ -208,10 +184,9 @@ export default function CommitteePage() {
                           />
                         ) : (
                           <PixelAvatar
-                            skin={member.avatar.skin}
-                            eyes={member.avatar.eyes}
-                            brow={member.avatar.brow}
-                            hair={member.avatar.hair}
+                            skin="skin1"
+                            eyes="eyes1"
+                            brow="brow1"
                             size={86}
                           />
                         )}
@@ -263,9 +238,9 @@ export default function CommitteePage() {
                     {member.role}
                   </div>
 
-                  {/* Instagram link (placeholder URL for now) */}
+                  {/* Instagram link — '#' when the member has none on file */}
                   <a
-                    href={member.instagramUrl}
+                    href={member.instagram ?? '#'}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={`${member.name} on Instagram`}
