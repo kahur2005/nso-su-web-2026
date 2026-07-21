@@ -1,239 +1,176 @@
 // app/(game)/quests/page.tsx
+// The student's quest board. Every active quest is shown with its instructions
+// whether or not it's been completed — a mission you can't read is a mission you
+// can't go and do. Completing one means finding its QR code and scanning it at
+// /scan; there is no in-app "complete" button by design.
 'use client'
 import { useState, useEffect } from 'react'
 import PageWrapper from '@/components/layout/PageWrapper'
-import PixelCard from '@/components/ui/PixelCard'
-import ProgressBar from '@/components/ui/ProgressBar'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import ProgressBar from '@/components/ui/ProgressBar'
+import Link from 'next/link'
 
-type QuestType = 'all' | 'main' | 'daily' | 'side' | 'hidden'
-type QuestStatus = 'pending' | 'in_progress' | 'completed' | 'locked'
+interface QuestAchievement {
+  name: string
+  description: string
+  imageUrl: string | null
+}
 
 interface Quest {
   id: string
   title: string
   description: string
-  type: string
   points: number
-  isActive: boolean
-  isHidden: boolean
-  deadline?: string
-  progress?: {
-    status: QuestStatus
-    completedAt?: string
-  }
+  achievement: QuestAchievement | null
+  isCompleted: boolean
+  completedAt: string | null
 }
 
-const statusConfig = {
-  pending: { label: 'PENDING', color: '#FFD700', icon: '⏳' },
-  in_progress: { label: 'IN PROGRESS', color: '#2196F3', icon: '🔄' },
-  completed: { label: 'COMPLETED', color: '#4CAF50', icon: '✅' },
-  locked: { label: 'LOCKED', color: '#9E9E9E', icon: '🔒' },
-}
-
-const typeConfig = {
-  main: { label: 'MAIN QUEST', color: '#FFD700', icon: '⭐', bg: 'bg-yellow-900/30' },
-  daily: { label: 'DAILY QUEST', color: '#2196F3', icon: '📋', bg: 'bg-blue-900/30' },
-  side: { label: 'SIDE QUEST', color: '#4CAF50', icon: '🗒️', bg: 'bg-green-900/30' },
-  hidden: { label: 'HIDDEN', color: '#9C27B0', icon: '🔮', bg: 'bg-purple-900/30' },
+/** Gold display text with the design's brown pixel outline. */
+const OUTLINE_GOLD = {
+  color: '#ffd23f',
+  textShadow:
+    '3px 3px 0 #4e342e, -3px 3px 0 #4e342e, 3px -3px 0 #4e342e, -3px -3px 0 #4e342e, 0 5px 0 #4e342e',
 }
 
 export default function QuestsPage() {
-  const [activeTab, setActiveTab] = useState<QuestType>('all')
   const [quests, setQuests] = useState<Quest[]>([])
   const [loading, setLoading] = useState(true)
-  const [expandedQuest, setExpandedQuest] = useState<string | null>(null)
+  const [showDone, setShowDone] = useState(true)
 
   useEffect(() => {
-    fetchQuests()
+    fetch('/api/quests')
+      .then((r) => r.json())
+      .then((d) => setQuests(d.quests ?? []))
+      .catch(() => setQuests([]))
+      .finally(() => setLoading(false))
   }, [])
 
-  async function fetchQuests() {
-    try {
-      const res = await fetch('/api/quests')
-      const data = await res.json()
-      setQuests(data.quests || [])
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const filteredQuests = activeTab === 'all'
-    ? quests
-    : quests.filter(q => q.type === activeTab)
-
-  const completedCount = quests.filter(q => q.progress?.status === 'completed').length
-  const totalActive = quests.filter(q => q.isActive && !q.isHidden).length
-
-  const tabs: { key: QuestType; label: string; icon: string }[] = [
-    { key: 'all', label: 'ALL', icon: '📜' },
-    { key: 'main', label: 'MAIN', icon: '⭐' },
-    { key: 'daily', label: 'DAILY', icon: '📋' },
-    { key: 'side', label: 'SIDE', icon: '🗒️' },
-    { key: 'hidden', label: 'HIDDEN', icon: '🔮' },
-  ]
-
-  if (loading) return <PageWrapper><LoadingSpinner text="LOADING QUESTS..." /></PageWrapper>
+  const completed = quests.filter((q) => q.isCompleted).length
+  const visible = showDone ? quests : quests.filter((q) => !q.isCompleted)
 
   return (
     <PageWrapper>
-      <div className="max-w-3xl mx-auto px-4 py-6">
+      <div className="mx-auto w-full max-w-md px-3 pb-4 pt-3 lg:max-w-lg">
+        <h1
+          className="text-center font-bytebounce text-[clamp(2.4rem,12vw,3.2rem)] leading-[0.85]"
+          style={OUTLINE_GOLD}
+        >
+          QUESTS
+        </h1>
+        <p
+          className="mt-1 text-center font-bytebounce text-[18px] leading-tight text-white"
+          style={{ textShadow: '2px 2px 0 #4e342e' }}
+        >
+          Find the code, scan it, claim the reward
+        </p>
 
-        {/* Header */}
-        <div className="text-center mb-6">
-          <h1 className="font-pixel text-2xl text-yellow-400"
-            style={{ textShadow: '3px 3px 0 #000' }}>
-            ⚔️ QUEST BOARD
-          </h1>
-          <ProgressBar
-            value={completedCount}
-            max={totalActive}
-            color="#FFD700"
-            label={`QUESTS COMPLETED`}
-          />
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-1 mb-6 overflow-x-auto pb-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`
-                flex-shrink-0 font-pixel text-xs py-2 px-3
-                border-2 border-black transition-all whitespace-nowrap
-                ${activeTab === tab.key
-                  ? 'bg-yellow-600 text-black border-yellow-800'
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
-                }
-              `}
-              style={{
-                boxShadow: activeTab === tab.key ? '3px 3px 0 #000' : 'none'
-              }}
-            >
-              {tab.icon} {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Quest List */}
-        <div className="space-y-4">
-          {/* Group by type */}
-          {['main', 'daily', 'side', 'hidden'].map((type) => {
-            const typeQuests = filteredQuests.filter(q => q.type === type)
-            if (typeQuests.length === 0 && activeTab !== 'all') return null
-            if (typeQuests.length === 0) return null
-            if (activeTab !== 'all' && activeTab !== type) return null
-
-            const config = typeConfig[type as keyof typeof typeConfig]
-
-            return (
-              <div key={type}>
-                {activeTab === 'all' && (
-                  <div className="flex items-center gap-2 mb-2">
-                    <span>{config.icon}</span>
-                    <h3 className="font-pixel text-xs" style={{ color: config.color }}>
-                      {config.label}S
-                    </h3>
-                    <div className="flex-1 h-px bg-gray-700" />
-                  </div>
+        {loading ? (
+          <div className="py-12">
+            <LoadingSpinner text="LOADING QUESTS..." />
+          </div>
+        ) : (
+          <>
+            {/* Overall progress */}
+            <div className="mt-4 rounded-md border-2 border-[#3a2418] bg-[#f5e7c6] px-3 py-2">
+              <div className="flex items-center justify-between font-bytebounce text-[17px] leading-none text-[#5d4330]">
+                <span>
+                  {completed}/{quests.length} completed
+                </span>
+                {quests.length > 0 && (
+                  <button
+                    onClick={() => setShowDone((v) => !v)}
+                    className="text-[15px] text-[#8a5a37] underline"
+                  >
+                    {showDone ? 'hide completed' : 'show all'}
+                  </button>
                 )}
-
-                {typeQuests.map((quest) => {
-                  const status = quest.progress?.status || 'pending'
-                  const statusCfg = statusConfig[status]
-                  const isExpanded = expandedQuest === quest.id
-                  const isLocked = !quest.isActive || quest.isHidden
-
-                  return (
-                    <PixelCard
-                      key={quest.id}
-                      className={`${config.bg} ${isLocked ? 'opacity-60' : 'cursor-pointer hover:opacity-90'} transition-opacity`}
-                      glowColor={status === 'completed' ? '#4CAF50' : undefined}
-                    >
-                      <button
-                        className="w-full text-left"
-                        onClick={() => !isLocked && setExpandedQuest(
-                          isExpanded ? null : quest.id
-                        )}
-                      >
-                        <div className="flex items-start gap-3">
-                          <span className="text-xl flex-shrink-0">
-                            {isLocked ? '🔒' : statusCfg.icon}
-                          </span>
-                          <div className="flex-1">
-                            <div className="flex justify-between items-start">
-                              <p className="font-pixel text-xs text-white">
-                                {isLocked ? '????? ?????' : quest.title}
-                              </p>
-                              <span className="font-pixel text-xs text-yellow-400 ml-2 flex-shrink-0">
-                                +{quest.points} PTS
-                              </span>
-                            </div>
-
-                            {!isLocked && (
-                              <p className="font-pixel text-xs text-gray-400 mt-1">
-                                {quest.description.substring(0, 60)}
-                                {quest.description.length > 60 ? '...' : ''}
-                              </p>
-                            )}
-
-                            <div className="flex items-center gap-3 mt-2">
-                              <span className="font-pixel text-xs"
-                                style={{ color: statusCfg.color }}>
-                                {statusCfg.label}
-                              </span>
-                              {quest.deadline && !isLocked && (
-                                <span className="font-pixel text-xs text-red-400">
-                                  ⏰ {new Date(quest.deadline).toLocaleDateString()}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </button>
-
-                      {/* Expanded Details */}
-                      {isExpanded && !isLocked && (
-                        <div className="mt-4 pt-4 border-t-2 border-gray-700">
-                          <p className="font-pixel text-xs text-gray-300 leading-relaxed">
-                            {quest.description}
-                          </p>
-                          {quest.deadline && (
-                            <p className="font-pixel text-xs text-red-400 mt-3">
-                              ⏰ DEADLINE: {new Date(quest.deadline).toLocaleString()}
-                            </p>
-                          )}
-                          <div className="mt-3 flex items-center gap-2">
-                            <span className="font-pixel text-xs px-2 py-1 border border-current"
-                              style={{ color: config.color }}>
-                              {config.icon} {config.label}
-                            </span>
-                            <span className="font-pixel text-xs text-yellow-400">
-                              REWARD: {quest.points} PTS
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </PixelCard>
-                  )
-                })}
               </div>
-            )
-          })}
+              <div className="mt-2">
+                <ProgressBar value={completed} max={quests.length || 1} />
+              </div>
+            </div>
 
-          {filteredQuests.length === 0 && (
-            <PixelCard className="bg-gray-800 text-center py-8">
-              <span className="text-4xl">📜</span>
-              <p className="font-pixel text-xs text-gray-400 mt-4">
-                NO QUESTS AVAILABLE
+            {quests.length === 0 && (
+              <p className="py-10 text-center font-bytebounce text-[18px] text-white">
+                No quests are active yet. Check back soon!
               </p>
-            </PixelCard>
-          )}
-        </div>
+            )}
 
+            <div className="mt-4 space-y-3">
+              {visible.map((quest) => (
+                <article
+                  key={quest.id}
+                  className={`relative rounded-md border-2 border-[#3a2418] px-3 py-3 ${
+                    quest.isCompleted ? 'bg-[#e0d3ae]' : 'bg-[#fdf6e3]'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <h2 className="min-w-0 flex-1 font-bytebounce text-[22px] uppercase leading-none text-[#3e2723]">
+                      {quest.title}
+                    </h2>
+                    <span className="flex-shrink-0 font-bytebounce text-[20px] leading-none text-[#b8860b]">
+                      +{quest.points}
+                    </span>
+                  </div>
+
+                  <p className="mt-1.5 font-bytebounce text-[16px] leading-tight text-[#5d4330]">
+                    {quest.description}
+                  </p>
+
+                  {quest.achievement && (
+                    <div className="mt-2 flex items-center gap-2 rounded border border-[#c9a97b] bg-[#f5e7c6] px-2 py-1.5">
+                      {quest.achievement.imageUrl ? (
+                        <img
+                          src={quest.achievement.imageUrl}
+                          alt=""
+                          className="h-7 w-7 flex-shrink-0 object-contain"
+                        />
+                      ) : (
+                        <span className="text-lg leading-none">🏅</span>
+                      )}
+                      <p className="min-w-0 flex-1 truncate font-bytebounce text-[15px] leading-none text-[#8a5a37]">
+                        Grants “{quest.achievement.name}”
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="mt-2.5 flex items-center justify-between">
+                    {quest.isCompleted ? (
+                      <span className="font-bytebounce text-[16px] leading-none text-[#4a7c2f]">
+                        ✅ Completed
+                        {quest.completedAt &&
+                          ` · ${new Date(quest.completedAt).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                          })}`}
+                      </span>
+                    ) : (
+                      <span className="font-bytebounce text-[16px] leading-none text-[#a58962]">
+                        Not completed yet
+                      </span>
+                    )}
+
+                    {!quest.isCompleted && (
+                      <Link
+                        href="/scan"
+                        className="rounded border-2 border-[#3a2418] bg-[#8a5a37] px-2 py-1 font-bytebounce text-[15px] leading-none text-[#ffd23f] active:translate-y-0.5"
+                      >
+                        Scan QR
+                      </Link>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            {visible.length === 0 && quests.length > 0 && (
+              <p className="py-10 text-center font-bytebounce text-[18px] text-white">
+                Every quest done. Nice work!
+              </p>
+            )}
+          </>
+        )}
       </div>
     </PageWrapper>
   )

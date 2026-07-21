@@ -63,14 +63,30 @@ async function getProfileData(studentId: string) {
   return { student, globalRank, totalNPCs: totalNPCs ?? 0 }
 }
 
-const achievements = [
-  { icon: '🥇', name: 'First Blood', desc: 'First scan' },
-  { icon: '📚', name: 'Lore Master', desc: 'All fun facts' },
-  { icon: '🗺️', name: 'Explorer', desc: 'Full campus' },
-  { icon: '⚔️', name: 'Quest Hero', desc: 'All quests done' },
-  { icon: '👑', name: 'Guild Champ', desc: 'Group #1' },
-  { icon: '⭐', name: 'Overachiever', desc: '500+ pts' },
-]
+/* Achievements come from the Achievement table now, not a hardcoded list
+ * matched by name string. Every badge an admin has created is shown; the ones
+ * this student has unlocked (by completing a quest that grants them) render
+ * their art, the rest render locked. */
+async function getAchievements(studentInternalId: string) {
+  const [{ data: all }, { data: mine }] = await Promise.all([
+    supabase
+      .from('Achievement')
+      .select('id, name, description, imageUrl')
+      .order('createdAt', { ascending: true }),
+    supabase
+      .from('StudentAchievement')
+      .select('achievementId, unlockedAt')
+      .eq('studentId', studentInternalId),
+  ])
+
+  const unlockedAt = new Map((mine ?? []).map((r: any) => [r.achievementId, r.unlockedAt]))
+
+  return (all ?? []).map((a: any) => ({
+    ...a,
+    unlocked: unlockedAt.has(a.id),
+    unlockedAt: unlockedAt.get(a.id) ?? null,
+  }))
+}
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions)
@@ -80,6 +96,9 @@ export default async function ProfilePage() {
     await getProfileData((session.user as any).studentId)
 
   if (!student) redirect('/login')
+
+  const achievements = await getAchievements(student.id)
+  const unlockedCount = achievements.filter((a) => a.unlocked).length
 
   const { level, into, span } = levelProgress(student.xp)
   const completedQuests = student.questProgress.length
@@ -172,32 +191,53 @@ export default async function ProfilePage() {
 
         {/* Achievements */}
         <div className="mb-6">
-          <h3 className="font-pixel text-sm text-yellow-400 pixel-text-shadow mb-3">🏅 ACHIEVEMENTS</h3>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-            {achievements.map((ach, i) => {
-              const unlocked = student.achievements.some(
-                (a: any) => a.achievement.name === ach.name
-              )
-              return (
+          <h3 className="font-pixel text-sm text-yellow-400 pixel-text-shadow mb-3">
+            🏅 ACHIEVEMENTS {achievements.length > 0 && `(${unlockedCount}/${achievements.length})`}
+          </h3>
+          {achievements.length === 0 ? (
+            <p className="font-pixel text-[10px] text-gray-400">
+              No achievements available yet.
+            </p>
+          ) : (
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+              {achievements.map((ach) => (
                 <div
-                  key={i}
+                  key={ach.id}
                   className={`
                     pixel-card text-center py-3 px-2 border-2 border-black
-                    ${unlocked ? 'bg-yellow-900/50 border-yellow-600' : 'bg-gray-900 opacity-40'}
+                    ${ach.unlocked ? 'bg-yellow-900/50 border-yellow-600' : 'bg-gray-900 opacity-40'}
                   `}
-                  title={ach.desc}
+                  title={
+                    ach.unlocked
+                      ? ach.description
+                      : 'Locked — complete the quest that grants this badge'
+                  }
                 >
-                  <div className="text-2xl mb-1">
-                    {unlocked ? ach.icon : '🔒'}
+                  <div className="mb-1 flex h-8 items-center justify-center">
+                    {ach.unlocked ? (
+                      ach.imageUrl ? (
+                        <img
+                          src={ach.imageUrl}
+                          alt=""
+                          className="h-8 w-8 object-contain"
+                        />
+                      ) : (
+                        <span className="text-2xl">🏅</span>
+                      )
+                    ) : (
+                      <span className="text-2xl">🔒</span>
+                    )}
                   </div>
-                  <p className="font-pixel text-[8px] leading-tight"
-                    style={{ color: unlocked ? '#FFD700' : '#666' }}>
+                  <p
+                    className="font-pixel text-[8px] leading-tight"
+                    style={{ color: ach.unlocked ? '#FFD700' : '#666' }}
+                  >
                     {ach.name}
                   </p>
                 </div>
-              )
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Recent Activity */}
