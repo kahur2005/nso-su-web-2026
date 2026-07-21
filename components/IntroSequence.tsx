@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 
 const STORAGE_KEY = 'nso-intro-done'
 const TOTAL_MS = 2800
 
 export default function IntroSequence() {
+  const pathname = usePathname()
   const [phase, setPhase] = useState<'idle' | 'logo' | 'text' | 'blink' | 'fadeout' | 'done'>('idle')
 
   useEffect(() => {
@@ -37,6 +39,10 @@ export default function IntroSequence() {
 
     return () => [t1, t2, t3, t4, t5].forEach(clearTimeout)
   }, [])
+
+  // Placed after all hook calls (rules of hooks): the admin panel has its
+  // own light ERP design system and should never see the pixel splash.
+  if (pathname.startsWith('/admin')) return null
 
   if (phase === 'done') return null
 

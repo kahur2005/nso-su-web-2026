@@ -63,21 +63,21 @@ export default function StudentPicker({
 
       {open && matches.length > 0 && (
         <ul className="absolute z-30 left-0 right-0 mt-1 max-h-60 overflow-auto
-          bg-gray-900 border-2 border-black" style={{ boxShadow: '3px 3px 0 #000' }}>
+          bg-white border border-slate-200 rounded-md shadow-lg">
           {matches.map((s) => (
             <li key={s.studentId}>
               <button
                 type="button"
                 onClick={() => choose(s)}
-                className="w-full text-left px-3 py-2 hover:bg-gray-800
-                  border-b border-gray-800 last:border-0"
+                className="w-full text-left px-3 py-2 hover:bg-slate-50
+                  border-b border-slate-100 last:border-0"
               >
-                <span className="font-pixel text-xs text-white block truncate">
+                <span className="text-sm text-slate-800 block truncate">
                   {s.name}
                 </span>
-                <span className="font-pixel text-[8px] text-gray-400">
+                <span className="text-xs text-slate-500">
                   {s.studentId}
-                  {s.groupName ? ` · ${s.groupName}` : ' · UNASSIGNED'}
+                  {s.groupName ? ` · ${s.groupName}` : ' · Unassigned'}
                 </span>
               </button>
             </li>
@@ -86,14 +86,15 @@ export default function StudentPicker({
       )}
 
       {open && query.trim() && matches.length === 0 && (
-        <div className="absolute z-30 left-0 right-0 mt-1 bg-gray-900 border-2 border-black p-3">
-          <p className="font-pixel text-[8px] text-gray-500">NO PLAYER FOUND</p>
+        <div className="absolute z-30 left-0 right-0 mt-1 bg-white border border-slate-200
+          rounded-md shadow-lg p-3">
+          <p className="text-xs text-slate-500">No player found</p>
         </div>
       )}
 
       {selected && (
-        <p className="font-pixel text-[8px] text-green-400 mt-1">
-          ✓ {selected.name} ({selected.studentId})
+        <p className="text-xs text-emerald-600 mt-1">
+          Selected: {selected.name} ({selected.studentId})
         </p>
       )}
     </div>

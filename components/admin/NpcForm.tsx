@@ -1,12 +1,13 @@
-// app/admin/npc/NpcForm.tsx
+// components/admin/NpcForm.tsx
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import PixelCard from '@/components/ui/PixelCard'
-import PixelButton from '@/components/ui/PixelButton'
+import { DIVISIONS } from '@/lib/divisions'
 
-const inputClass = `w-full bg-gray-900 border-2 border-black text-white
-  font-pixel text-xs p-3 focus:outline-none focus:border-green-500`
+const inputClass = `w-full bg-white border border-slate-300 rounded-md text-slate-800
+  text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400`
+
+const labelClass = 'text-xs font-medium text-slate-500 block mb-1'
 
 export default function NpcForm() {
   const router = useRouter()
@@ -17,6 +18,8 @@ export default function NpcForm() {
   const [form, setForm] = useState({
     committeeName: '',
     role: '',
+    division: '',
+    instagram: '',
     funFact: '',
     points: 10,
   })
@@ -78,7 +81,7 @@ export default function NpcForm() {
       const data = await res.json()
 
       if (!res.ok || !data.success) {
-        setError(data.error || 'FAILED TO CREATE NPC')
+        setError(data.error || 'Failed to create NPC')
         return
       }
 
@@ -86,24 +89,22 @@ export default function NpcForm() {
       const labeled = await composeLabeledQr(data.qrCode, data.npc.committeeName, generatedAt)
       setGeneratedQr(labeled)
       setGeneratedName(data.npc.committeeName)
-      setForm({ committeeName: '', role: '', funFact: '', points: 10 })
+      setForm({ committeeName: '', role: '', division: '', instagram: '', funFact: '', points: 10 })
       router.refresh()
     } catch {
-      setError('CONNECTION ERROR')
+      setError('Connection error')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <PixelCard className="bg-gray-800">
-      <h2 className="font-pixel text-sm text-white mb-4">➕ NEW NPC</h2>
+    <div className="border border-slate-200 rounded-lg bg-white p-5">
+      <h2 className="text-sm font-semibold text-slate-800 mb-4">New committee member</h2>
 
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
-          <label className="font-pixel text-xs text-gray-400 block mb-1">
-            COMMITTEE NAME
-          </label>
+          <label className={labelClass}>Committee name</label>
           <input
             className={inputClass}
             value={form.committeeName}
@@ -114,9 +115,7 @@ export default function NpcForm() {
         </div>
 
         <div>
-          <label className="font-pixel text-xs text-gray-400 block mb-1">
-            ROLE
-          </label>
+          <label className={labelClass}>Role</label>
           <input
             className={inputClass}
             value={form.role}
@@ -127,9 +126,32 @@ export default function NpcForm() {
         </div>
 
         <div>
-          <label className="font-pixel text-xs text-gray-400 block mb-1">
-            FUN FACT
-          </label>
+          <label className={labelClass}>Division</label>
+          <select
+            className={inputClass}
+            value={form.division}
+            onChange={(e) => setForm({ ...form, division: e.target.value })}
+            required
+          >
+            <option value="" disabled>Select a division</option>
+            {DIVISIONS.map((d) => (
+              <option key={d.id} value={d.id}>{d.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className={labelClass}>Instagram</label>
+          <input
+            className={inputClass}
+            value={form.instagram}
+            onChange={(e) => setForm({ ...form, instagram: e.target.value })}
+            placeholder="@handle or instagram.com/handle"
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>Fun fact</label>
           <textarea
             className={inputClass}
             rows={3}
@@ -141,9 +163,7 @@ export default function NpcForm() {
         </div>
 
         <div>
-          <label className="font-pixel text-xs text-gray-400 block mb-1">
-            POINTS
-          </label>
+          <label className={labelClass}>Points</label>
           <input
             type="number"
             min={1}
@@ -155,38 +175,48 @@ export default function NpcForm() {
         </div>
 
         {error && (
-          <div className="p-3 bg-red-900 border-2 border-red-500">
-            <p className="font-pixel text-xs text-red-300">❌ {error}</p>
+          <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-sm text-red-700">{error}</p>
           </div>
         )}
 
-        <PixelButton type="submit" color="green" fullWidth disabled={loading}>
-          {loading ? '⏳ GENERATING...' : '⚡ CREATE & GENERATE QR'}
-        </PixelButton>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full text-sm font-medium text-white bg-slate-900 hover:bg-slate-800
+            disabled:opacity-50 rounded-md px-4 py-2 transition-colors"
+        >
+          {loading ? 'Generating...' : 'Create & generate QR'}
+        </button>
       </form>
 
       {/* Freshly generated QR */}
       {generatedQr && (
-        <div className="mt-4 p-4 bg-gray-900 border-2 border-green-500 text-center">
-          <p className="font-pixel text-xs text-green-400 mb-3">
-            ✅ NPC CREATED! QR CODE READY:
+        <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-md text-center">
+          <p className="text-sm text-slate-700 mb-3">
+            NPC created — QR code ready
           </p>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={generatedQr}
             alt={`Generated QR code for ${generatedName}`}
-            className="mx-auto border-4 border-black bg-white max-w-[240px] w-full"
+            className="mx-auto border border-slate-300 rounded-md bg-white max-w-[240px] w-full"
           />
           <div className="mt-4">
-            <PixelButton type="button" color="blue" fullWidth onClick={downloadQr}>
-              ⬇ DOWNLOAD QR
-            </PixelButton>
+            <button
+              type="button"
+              onClick={downloadQr}
+              className="w-full text-sm font-medium text-slate-700 bg-white border border-slate-300
+                hover:bg-slate-50 rounded-md px-4 py-2 transition-colors"
+            >
+              Download QR
+            </button>
           </div>
-          <p className="font-pixel text-[8px] text-gray-400 mt-3">
-            NAME & TIME ARE PRINTED ON THE IMAGE — OR FIND IT IN THE LIST BELOW
+          <p className="text-xs text-slate-500 mt-3">
+            Name & time are printed on the image — or find it in the list below
           </p>
         </div>
       )}
-    </PixelCard>
+    </div>
   )
 }
