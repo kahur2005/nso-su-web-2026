@@ -68,37 +68,21 @@ body {
   );
 }
 
-/* ── Committee scroll (/map/committee, Figma node 338:91) ──────────────────
-   scroll.png is sliced into three parts so the parchment can grow with its
-   content: scroll-top.png (roll + drips), scroll-mid.png (a 40px repeating
-   strip that carries the left/right borders), scroll-bottom.png. */
-.scroll-body {
-  background-image: url('/images/map/scroll-mid.png');
+/* ── Committee scroll (/map/committee, Figma node 1259:2) ─────────────────
+   The committee art (card frame, division ribbons) is pixel art exported at its
+   native resolution, so it must never be smoothed on upscale. */
+.committee-pixel {
+  image-rendering: pixelated;
+}
+
+/* The committee parchment tiles vertically between its two fixed rolls, so the
+   scroll grows to fit however many member cards the current page holds. The
+   strip is a single repeated row of the same 420px-wide export as the rolls,
+   which keeps the left/right parchment borders continuous. */
+.committee-scroll-strip {
+  background-image: url('/images/committee/scroll-mid.png');
   background-repeat: repeat-y;
   background-size: 100% auto;
-}
-
-/* Dark wooden frame around each committee member card. */
-.committee-frame {
-  background: linear-gradient(
-    180deg,
-    #8a5a37 0%, #8a5a37 8%,
-    #6f4526 8%, #6f4526 55%,
-    #5c3720 55%, #5c3720 88%,
-    #46281a 88%, #46281a 100%
-  );
-  box-shadow: 0 0 0 3px #2f1c10, 3px 3px 0 3px #2f1c1055;
-}
-
-/* Division banner: gold edge stripes over the division colour, dark outline.
-   Colour comes from the inline `background-color` set per division. */
-.committee-banner {
-  box-shadow:
-    inset 0 5px 0 #ffd83d,
-    inset 0 -5px 0 #ffd83d,
-    inset 0 8px 0 #f57c00,
-    inset 0 -8px 0 #f57c00,
-    0 0 0 4px #3a2418;
 }
 
 /* Pixel Border */
