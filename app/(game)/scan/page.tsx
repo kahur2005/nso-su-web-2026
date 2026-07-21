@@ -10,14 +10,25 @@ import RecentScansPopup from './RecentScansPopup'
 
 const ACCENT = '#4CAF50'
 
+/* One scanner handles two kinds of code — a committee member's fun fact and a
+ * quest — so the payload is a union tagged by `kind`. Fun-fact codes printed
+ * before quests existed produce no `kind`, and the API defaults them to 'npc'. */
 interface ScanResult {
   success: boolean
+  kind?: 'npc' | 'quest'
+  // npc
   npcName?: string
   npcRole?: string
   funFact?: string
+  // quest
+  questTitle?: string
+  questDescription?: string
+  achievement?: { name: string; description: string; imageUrl: string | null } | null
+  // both
   pointsAwarded?: number
   error?: string
   alreadyCollected?: boolean
+  alreadyCompleted?: boolean
 }
 
 interface RecentScan {
@@ -329,25 +340,75 @@ export default function ScanPage() {
                   borderColor: ACCENT,
                   boxShadow: `0 0 30px ${ACCENT}40, 6px 6px 0 #000`
                 }}>
-                {/* NPC Info */}
-                <div className="mb-4">
-                  <div className="w-20 h-20 mx-auto bg-gray-700 border-4 border-black
-                    flex items-center justify-center text-3xl mb-3"
-                    style={{ boxShadow: '4px 4px 0 #000' }}>
-                    👤
-                  </div>
-                  <p className="font-pixel text-xs text-gray-400">
-                    💬 {result.npcName} ({result.npcRole}) SAYS:
-                  </p>
-                </div>
+                {result.kind === 'quest' ? (
+                  <>
+                    {/* Quest header */}
+                    <div className="mb-4">
+                      <div className="w-20 h-20 mx-auto bg-gray-700 border-4 border-black
+                        flex items-center justify-center text-3xl mb-3"
+                        style={{ boxShadow: '4px 4px 0 #000' }}>
+                        ⚔️
+                      </div>
+                      <p className="font-pixel text-xs text-gray-400">QUEST COMPLETE!</p>
+                    </div>
 
-                {/* Fun Fact */}
-                <div className="p-4 bg-gray-900 border-2 border-gray-700 mb-4"
-                  style={{ borderColor: ACCENT }}>
-                  <p className="font-pixel text-xs text-white leading-relaxed">
-                    &ldquo;{result.funFact}&rdquo;
-                  </p>
-                </div>
+                    <div className="p-4 bg-gray-900 border-2 mb-4" style={{ borderColor: ACCENT }}>
+                      <p className="font-pixel text-sm text-yellow-400 leading-relaxed">
+                        {result.questTitle}
+                      </p>
+                      {result.questDescription && (
+                        <p className="font-pixel text-[10px] text-gray-400 mt-2 leading-relaxed">
+                          {result.questDescription}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Achievement, when this quest grants one */}
+                    {result.achievement && (
+                      <div className="p-4 bg-yellow-900/40 border-2 border-yellow-600 mb-4 flex items-center gap-3">
+                        {result.achievement.imageUrl ? (
+                          <img
+                            src={result.achievement.imageUrl}
+                            alt=""
+                            className="h-12 w-12 flex-shrink-0 object-contain"
+                          />
+                        ) : (
+                          <span className="text-3xl">🏅</span>
+                        )}
+                        <div className="min-w-0 text-left">
+                          <p className="font-pixel text-[10px] text-yellow-300">
+                            ACHIEVEMENT UNLOCKED
+                          </p>
+                          <p className="font-pixel text-xs text-white mt-1">
+                            {result.achievement.name}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {/* NPC Info */}
+                    <div className="mb-4">
+                      <div className="w-20 h-20 mx-auto bg-gray-700 border-4 border-black
+                        flex items-center justify-center text-3xl mb-3"
+                        style={{ boxShadow: '4px 4px 0 #000' }}>
+                        👤
+                      </div>
+                      <p className="font-pixel text-xs text-gray-400">
+                        💬 {result.npcName} ({result.npcRole}) SAYS:
+                      </p>
+                    </div>
+
+                    {/* Fun Fact */}
+                    <div className="p-4 bg-gray-900 border-2 border-gray-700 mb-4"
+                      style={{ borderColor: ACCENT }}>
+                      <p className="font-pixel text-xs text-white leading-relaxed">
+                        &ldquo;{result.funFact}&rdquo;
+                      </p>
+                    </div>
+                  </>
+                )}
 
                 {/* Points */}
                 <div className="flex items-center justify-center mb-6">
@@ -363,11 +424,11 @@ export default function ScanPage() {
                     SCAN AGAIN
                   </PixelButton>
                   <PixelButton
-                    onClick={() => router.push('/codex')}
+                    onClick={() => router.push(result.kind === 'quest' ? '/quests' : '/codex')}
                     color="blue"
                     fullWidth
                   >
-                    VIEW CODEX
+                    {result.kind === 'quest' ? 'VIEW QUESTS' : 'VIEW CODEX'}
                   </PixelButton>
                 </div>
               </div>
@@ -378,7 +439,9 @@ export default function ScanPage() {
                   <p className="font-pixel text-sm text-red-300 mt-4">
                     {result.alreadyCollected
                       ? 'ALREADY COLLECTED!'
-                      : 'SCAN FAILED!'
+                      : result.alreadyCompleted
+                        ? 'QUEST ALREADY DONE!'
+                        : 'SCAN FAILED!'
                     }
                   </p>
                   <p className="font-pixel text-xs text-gray-400 mt-2">
