@@ -6,6 +6,7 @@ import { authOptions } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import { revalidatePath } from 'next/cache'
 import { uploadImage } from '@/lib/storage'
+import { isDivisionId } from '@/lib/divisions'
 
 async function requireAdmin() {
   const session = await getServerSession(authOptions)
@@ -223,4 +224,47 @@ export async function deleteClub(formData: FormData) {
 
   revalidatePath('/admin/clubs')
   revalidatePath('/map/clubs')
+}
+
+// --- Committee (stored as NPC rows; see docs plan 2) ---
+
+export async function createCommitteeMember(formData: FormData) {
+  await requireAdmin()
+
+  const committeeName = String(formData.get('name') || '').trim()
+  const role = String(formData.get('role') || '').trim()
+  const division = String(formData.get('division') || '')
+  const funFact = String(formData.get('funFact') || '').trim()
+  const instagram = String(formData.get('instagram') || '').trim() || null
+
+  if (!committeeName || !role || !funFact || !isDivisionId(division)) return
+
+  const image = formData.get('image')
+  const avatarUrl =
+    image instanceof File && image.size > 0
+      ? await uploadImage('committee-photos', image)
+      : null
+
+  await supabase.from('NPC').insert({
+    committeeName, role, division, funFact, instagram, avatarUrl,
+  })
+
+  revalidatePath('/admin/committee')
+  revalidatePath('/admin/qr')
+  revalidatePath('/map/committee')
+}
+
+export async function deleteCommitteeMember(formData: FormData) {
+  await requireAdmin()
+
+  const id = String(formData.get('id') || '')
+  if (!id) return
+
+  // ScanLog references NPC; delete the logs first or the FK blocks this.
+  await supabase.from('ScanLog').delete().eq('npcId', id)
+  await supabase.from('NPC').delete().eq('id', id)
+
+  revalidatePath('/admin/committee')
+  revalidatePath('/admin/qr')
+  revalidatePath('/map/committee')
 }
