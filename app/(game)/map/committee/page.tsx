@@ -147,9 +147,19 @@ export default function CommitteePage() {
           {/* Parchment, drawn behind the content: fixed top roll, a strip that
               tiles to whatever height the content needs, fixed bottom roll. */}
           <div aria-hidden className="absolute inset-0 flex flex-col">
-            <img src="/images/committee/scroll-top.png" alt="" className="committee-pixel w-full" />
-            <div className="committee-scroll-strip -my-px flex-1" />
-            <img src="/images/committee/scroll-bottom.png" alt="" className="committee-pixel w-full" />
+            <img src="/images/committee/scroll-top.png" alt="" className="w-full" />
+            {/* The parchment strip tiles to fill whatever height the cards
+                need. Inlined rather than a globals.css class so the scroll can
+                never render as an empty gap if the stylesheet is stale. */}
+            <div
+              className="-my-px flex-1"
+              style={{
+                backgroundImage: 'url(/images/committee/scroll-mid.png)',
+                backgroundRepeat: 'repeat-y',
+                backgroundSize: '100% auto',
+              }}
+            />
+            <img src="/images/committee/scroll-bottom.png" alt="" className="w-full" />
           </div>
 
           {/* Division bookmark buttons. Anchored by their LEFT edge to the
@@ -182,7 +192,7 @@ export default function CommitteePage() {
                   <img
                     src={`/images/committee/bookmark-${division.id}.png`}
                     alt=""
-                    className="committee-pixel h-full w-full"
+                    className="h-full w-full"
                   />
                 </button>
               )
@@ -197,7 +207,7 @@ export default function CommitteePage() {
                 src={`/images/committee/banner-${active.id}.png`}
                 alt=""
                 aria-hidden
-                className="committee-pixel block w-full"
+                className="block w-full"
               />
               <h2
                 className="absolute inset-x-0 -translate-y-1/2 truncate px-[14%] text-center font-bytebounce text-[clamp(17px,5.5vw,25px)] uppercase leading-none tracking-[1px]"
@@ -232,7 +242,7 @@ export default function CommitteePage() {
                         src="/images/committee/card-frame.png"
                         alt=""
                         aria-hidden
-                        className="committee-pixel absolute inset-0 h-full w-full"
+                        className="absolute inset-0 h-full w-full"
                       />
 
                       {/* Fun fact — hidden until this member's QR is scanned */}
@@ -252,14 +262,14 @@ export default function CommitteePage() {
                         src={`/images/committee/plaque-${active.id}.png`}
                         alt=""
                         aria-hidden
-                        className="committee-pixel absolute"
+                        className="absolute"
                         style={CARD_PLAQUE}
                       />
                       <img
                         src="/images/committee/division-pill.png"
                         alt=""
                         aria-hidden
-                        className="committee-pixel absolute"
+                        className="absolute"
                         style={CARD_PILL}
                       />
                       <div
@@ -278,7 +288,7 @@ export default function CommitteePage() {
                       <img
                         src={portrait}
                         alt={member.name}
-                        className="committee-pixel absolute object-cover object-top"
+                        className="absolute object-cover object-top"
                         style={CARD_PORTRAIT}
                       />
 
@@ -292,11 +302,11 @@ export default function CommitteePage() {
                           className="absolute transition-transform hover:scale-110 active:scale-95"
                           style={CARD_IG}
                         >
-                          <img src="/images/committee/ig-button.png" alt="" className="committee-pixel h-full w-full" />
+                          <img src="/images/committee/ig-button.png" alt="" className="h-full w-full" />
                         </a>
                       ) : (
                         <span aria-hidden className="absolute opacity-45" style={CARD_IG}>
-                          <img src="/images/committee/ig-button.png" alt="" className="committee-pixel h-full w-full" />
+                          <img src="/images/committee/ig-button.png" alt="" className="h-full w-full" />
                         </span>
                       )}
                     </article>
@@ -314,7 +324,7 @@ export default function CommitteePage() {
                   aria-label="Previous page"
                   className="w-[5.3%] transition-transform active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-30"
                 >
-                  <img src="/images/committee/page-prev.png" alt="" className="committee-pixel w-full" />
+                  <img src="/images/committee/page-prev.png" alt="" className="w-full" />
                 </button>
                 <span className="font-bytebounce text-[20px] leading-none text-[#6b4a2d]">
                   {currentPage + 1}/{pageCount}
@@ -325,7 +335,7 @@ export default function CommitteePage() {
                   aria-label="Next page"
                   className="w-[5.3%] transition-transform active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-30"
                 >
-                  <img src="/images/committee/page-next.png" alt="" className="committee-pixel w-full" />
+                  <img src="/images/committee/page-next.png" alt="" className="w-full" />
                 </button>
               </div>
               <p className="mt-[2%] text-center font-bytebounce text-[17px] leading-none text-[#8a7355]">
