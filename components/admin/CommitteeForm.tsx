@@ -1,12 +1,10 @@
 // components/admin/CommitteeForm.tsx
 'use client'
-// createCommitteeMember takes only FormData (no prevState), so this uses the
-// same "build FormData from the form, call the action inside useTransition"
-// pattern as PointsAdjustModal rather than useActionState (which expects a
-// (prevState, formData) signature the action doesn't have).
-import { useRef, useState, useTransition } from 'react'
+import { useActionState, useState } from 'react'
 import { DIVISIONS } from '@/lib/divisions'
-import { createCommitteeMember } from '@/app/admin/actions'
+import { createCommitteeMember, type CommitteeFormState } from '@/app/admin/actions'
+
+const initialState: CommitteeFormState = { warning: null }
 
 const inputClass = `w-full bg-white border border-slate-300 rounded-md text-slate-800
   text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400`
@@ -14,25 +12,14 @@ const inputClass = `w-full bg-white border border-slate-300 rounded-md text-slat
 const labelClass = 'text-xs font-medium text-slate-500 block mb-1'
 
 export default function CommitteeForm() {
-  const formRef = useRef<HTMLFormElement>(null)
-  const [isPending, startTransition] = useTransition()
+  const [state, formAction, pending] = useActionState(createCommitteeMember, initialState)
   const [fileName, setFileName] = useState('')
-
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    const formData = new FormData(e.currentTarget)
-    startTransition(async () => {
-      await createCommitteeMember(formData)
-      formRef.current?.reset()
-      setFileName('')
-    })
-  }
 
   return (
     <div className="border border-slate-200 rounded-lg bg-white p-5 h-fit">
       <h2 className="text-sm font-medium text-slate-900 mb-3">New committee member</h2>
 
-      <form ref={formRef} onSubmit={handleSubmit} className="space-y-3">
+      <form action={formAction} className="space-y-3">
         <div>
           <label className={labelClass}>Name</label>
           <input
@@ -103,13 +90,19 @@ export default function CommitteeForm() {
           New members have no QR code until one is generated in QR &amp; Fun Facts.
         </p>
 
+        {state?.warning && (
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
+            <p className="text-sm text-amber-700" aria-live="polite">{state.warning}</p>
+          </div>
+        )}
+
         <button
           type="submit"
-          disabled={isPending}
+          disabled={pending}
           className="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white
             text-sm font-medium rounded-md px-4 py-2 transition-colors"
         >
-          {isPending ? 'Adding...' : 'Add member'}
+          {pending ? 'Adding...' : 'Add member'}
         </button>
       </form>
     </div>

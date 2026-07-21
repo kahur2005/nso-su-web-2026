@@ -228,7 +228,14 @@ export async function deleteClub(formData: FormData) {
 
 // --- Committee (stored as NPC rows; see docs plan 2) ---
 
-export async function createCommitteeMember(formData: FormData) {
+export type CommitteeFormState = { warning: string | null }
+
+// Signature required by React's `useActionState`: previous state first, then
+// FormData (see node_modules/next/dist/docs/01-app/02-guides/forms.md:194).
+export async function createCommitteeMember(
+  _prevState: CommitteeFormState,
+  formData: FormData
+): Promise<CommitteeFormState> {
   await requireAdmin()
 
   const committeeName = String(formData.get('name') || '').trim()
@@ -237,7 +244,9 @@ export async function createCommitteeMember(formData: FormData) {
   const funFact = String(formData.get('funFact') || '').trim()
   const instagram = String(formData.get('instagram') || '').trim() || null
 
-  if (!committeeName || !role || !funFact || !isDivisionId(division)) return
+  if (!committeeName || !role || !funFact || !isDivisionId(division)) {
+    return { warning: 'Please fill in name, role, fun fact, and a valid division.' }
+  }
 
   const image = formData.get('image')
   const avatarUrl =
@@ -252,6 +261,8 @@ export async function createCommitteeMember(formData: FormData) {
   revalidatePath('/admin/committee')
   revalidatePath('/admin/qr')
   revalidatePath('/map/committee')
+
+  return { warning: null }
 }
 
 export async function deleteCommitteeMember(formData: FormData) {
