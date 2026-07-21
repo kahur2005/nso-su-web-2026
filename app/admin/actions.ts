@@ -170,7 +170,14 @@ export async function toggleNpcActive(npcId: string) {
 
 // --- Clubs ---
 
-export async function createClub(formData: FormData) {
+export type ClubFormState = { warning: string | null }
+
+// Signature required by React's `useActionState`: previous state first, then
+// FormData (see node_modules/next/dist/docs/01-app/02-guides/forms.md:194).
+export async function createClub(
+  _prevState: ClubFormState,
+  formData: FormData
+): Promise<ClubFormState> {
   await requireAdmin()
 
   const name = String(formData.get('name') || '').trim()
@@ -179,7 +186,7 @@ export async function createClub(formData: FormData) {
   const instagram = String(formData.get('instagram') || '').trim() || null
   const registrationUrl = String(formData.get('registrationUrl') || '').trim() || null
 
-  if (!name || !category || !description) return
+  if (!name || !category || !description) return { warning: null }
 
   // Unlimited carousel images; upload in parallel. uploadImage() never throws —
   // a failed upload just returns null, so we track which ones dropped and
@@ -202,6 +209,8 @@ export async function createClub(formData: FormData) {
   if (failedCount > 0) {
     return { warning: `${failedCount} of ${files.length} image(s) failed to upload and were skipped.` }
   }
+
+  return { warning: null }
 }
 
 export async function deleteClub(formData: FormData) {
