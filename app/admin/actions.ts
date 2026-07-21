@@ -17,47 +17,8 @@ async function requireAdmin() {
 }
 
 // --- Quests ---
-
-export async function createQuest(formData: FormData) {
-  await requireAdmin()
-
-  const title = String(formData.get('title') || '').trim()
-  const description = String(formData.get('description') || '').trim()
-  const type = String(formData.get('type') || 'side')
-  const points = parseInt(String(formData.get('points') || '0'), 10)
-  const deadline = String(formData.get('deadline') || '')
-
-  if (!title || !description || !points) return
-
-  await supabase.from('Quest').insert({
-    title,
-    description,
-    type,
-    points,
-    isHidden: type === 'hidden',
-    deadline: deadline ? new Date(deadline).toISOString() : null,
-  })
-
-  revalidatePath('/admin/quests')
-}
-
-export async function toggleQuestActive(questId: string) {
-  await requireAdmin()
-
-  const { data: quest } = await supabase
-    .from('Quest')
-    .select('isActive')
-    .eq('id', questId)
-    .maybeSingle()
-  if (!quest) return
-
-  await supabase
-    .from('Quest')
-    .update({ isActive: !quest.isActive })
-    .eq('id', questId)
-
-  revalidatePath('/admin/quests')
-}
+// Quest writes moved to app/admin/quests/actions.ts when quests became
+// QR-completed; achievements live in app/admin/achievements/actions.ts.
 
 // --- Groups ---
 

@@ -19,16 +19,26 @@ export default async function AdminGroupsPage() {
     redirect('/dashboard')
   }
 
+  /* Pull each member's points rather than just a count: the stored
+   * `Group.totalPoints` is a denormalised counter that only `scan_npc` and
+   * `adjust_points` maintain, so it misses any points a student already had
+   * when they were assigned to the group — see app/api/leaderboard/route.ts.
+   * Totalling the roster here is correct whatever order things happened in. */
   const { data: rawGroups } = await supabase
     .from('Group')
-    .select('*, members:Student(count)')
-    .order('totalPoints', { ascending: false })
-    .order('name', { ascending: true })
+    .select('*, members:Student(points)')
 
-  const groups = (rawGroups ?? []).map((g: any) => {
-    const { members, ...rest } = g
-    return { ...rest, _count: { members: members?.[0]?.count ?? 0 } }
-  })
+  const groups = (rawGroups ?? [])
+    .map((g: any) => {
+      const { members, ...rest } = g
+      const roster = members ?? []
+      return {
+        ...rest,
+        totalPoints: roster.reduce((sum: number, m: any) => sum + (m.points ?? 0), 0),
+        _count: { members: roster.length },
+      }
+    })
+    .sort((a: any, b: any) => b.totalPoints - a.totalPoints || a.name.localeCompare(b.name))
 
   const { count: unassignedCount } = await supabase
     .from('Student')

@@ -20,11 +20,24 @@ async function getDashboardData(studentId: string) {
     .eq('studentId', studentId)
     .maybeSingle()
 
-  const { data: topGroups } = await supabase
+  /* Derive each group's total from its members rather than reading the stored
+   * `totalPoints`, which desyncs whenever a student joins or leaves a group
+   * after earning points — see the note in app/api/leaderboard/route.ts.
+   * Fetch all groups, total them, then take the top 4. */
+  const { data: allGroups } = await supabase
     .from('Group')
-    .select('*')
-    .order('totalPoints', { ascending: false })
-    .limit(4)
+    .select('*, members:Student(points)')
+
+  const topGroups = (allGroups ?? [])
+    .map((g: any) => ({
+      ...g,
+      totalPoints: (g.members ?? []).reduce(
+        (sum: number, m: any) => sum + (m.points ?? 0),
+        0
+      ),
+    }))
+    .sort((a: any, b: any) => b.totalPoints - a.totalPoints)
+    .slice(0, 4)
 
   const { data: activeQuests } = await supabase
     .from('Quest')

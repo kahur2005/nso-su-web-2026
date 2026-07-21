@@ -1,9 +1,18 @@
 // app/api/qr/scan/route.ts
+// Single entry point for every QR a student can scan. Verifies the signed token
+// once, resolves the student, then dispatches to the handler for that kind of
+// code. The per-kind logic lives in lib/scan/* so this file stays a dispatcher.
+//
+// Dispatch is on the presence of `questId`, not on the `kind` claim: fun-fact
+// QRs printed before quests existed carry no discriminator, and those printouts
+// have to keep working.
 import jwt from 'jsonwebtoken'
 import { supabase } from '@/lib/supabase'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { NextResponse } from 'next/server'
+import { completeNpcScan } from '@/lib/scan/npc'
+import { completeQuestScan } from '@/lib/scan/quest'
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions)
@@ -15,52 +24,9 @@ export async function POST(request: Request) {
   const sessionStudentId = (session.user as any).studentId
 
   try {
-    // Verify JWT
     const decoded = jwt.verify(token, process.env.QR_SECRET_KEY!) as any
-    const { npcId, points } = decoded
 
-    // Reject a deactivated committee member's QR, and reject a superseded
-    // token. Soft-deleting a member (isActive = false, see
-    // deactivateCommitteeMember in app/admin/actions.ts) only hides them from
-    // /map/committee, and regenerating a member's QR (see GenerateQrButton)
-    // only overwrites the NPC's stored qrToken — neither actually revokes the
-    // still-valid, still-unexpired JWT a student may be holding. The
-    // scan_npc Postgres function does NOT check isActive or qrToken itself,
-    // so this route is the only gate for both. If a second caller of
-    // scan_npc is ever added, it must repeat these checks.
-    const { data: npc, error: npcError } = await supabase
-      .from('NPC')
-      .select('isActive, qrToken')
-      .eq('id', npcId)
-      .maybeSingle()
-
-    if (npcError) {
-      console.error(npcError)
-      return NextResponse.json(
-        { success: false, error: 'Server error' },
-        { status: 500 }
-      )
-    }
-    if (!npc) {
-      return NextResponse.json({ success: false, error: 'Invalid QR Code!' }, { status: 404 })
-    }
-    if (!npc.isActive) {
-      return NextResponse.json(
-        { success: false, error: 'This code is no longer active.' },
-        { status: 410 }
-      )
-    }
-    // A null qrToken means no QR has ever been generated for this NPC, so no
-    // presented token can be valid. A non-matching token means this NPC's QR
-    // has since been regenerated and this printout is superseded.
-    if (!npc.qrToken || npc.qrToken !== token) {
-      return NextResponse.json(
-        { success: false, error: 'This QR code has been replaced. Please scan the current code.' },
-        { status: 410 }
-      )
-    }
-
-    // Get student (resolve public studentId -> internal id)
+    // Resolve the public studentId to the internal row id both RPCs expect.
     const { data: student } = await supabase
       .from('Student')
       .select('id')
@@ -71,24 +37,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Student not found' })
     }
 
-    // Atomically record the scan and award points (duplicate check + NPC
-    // lookup happen inside the RPC). Returns the response payload as JSON.
-    const { data: result, error } = await supabase.rpc('scan_npc', {
-      p_student_id: student.id,
-      p_npc_id: npcId,
-      p_points: points,
-    })
+    const outcome = decoded.questId
+      ? await completeQuestScan(student.id, decoded.questId, token)
+      : await completeNpcScan(student.id, decoded.npcId, decoded.points, token)
 
-    if (error) {
-      console.error(error)
-      return NextResponse.json(
-        { success: false, error: 'Server error' },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json(result)
-
+    return NextResponse.json(outcome.body, { status: outcome.status ?? 200 })
   } catch (error: any) {
     if (error.name === 'JsonWebTokenError') {
       return NextResponse.json({ success: false, error: 'Invalid QR Code!' })
