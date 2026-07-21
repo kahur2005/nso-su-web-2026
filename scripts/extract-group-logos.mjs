@@ -1,4 +1,4 @@
-// Extracts the 15 group logos embedded in public/images/group/group-logo.svg.
+// Extracts the 15 group logos embedded in REFERENCE/group-logo.svg.
 //
 // The file is not vector art: it is 15 <rect>s filled with <pattern>s, each of
 // which <use>s an <image> holding a base64 PNG. Critically the <rect>s are NOT
@@ -11,7 +11,9 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 
-const SVG = 'public/images/group/group-logo.svg'
+// Source art lives in REFERENCE/, not public/ -- it is a 1.1MB design asset that
+// should not be served to browsers. Only the extracted PNGs belong in public/.
+const SVG = 'REFERENCE/group-logo.svg'
 const OUT = 'public/images/group'
 
 // Top-to-bottom order of the strip, as supplied by the design owner.
