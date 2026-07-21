@@ -19,14 +19,18 @@ export async function POST(request: Request) {
     const decoded = jwt.verify(token, process.env.QR_SECRET_KEY!) as any
     const { npcId, points } = decoded
 
-    // Reject a deactivated committee member's QR. Soft-deleting a member
-    // (isActive = false, see deactivateCommitteeMember in app/admin/actions.ts)
-    // only hides them from /map/committee — the scan_npc Postgres function
-    // does NOT check isActive itself, so this route is the only gate. If a
-    // second caller of scan_npc is ever added, it must repeat this check.
+    // Reject a deactivated committee member's QR, and reject a superseded
+    // token. Soft-deleting a member (isActive = false, see
+    // deactivateCommitteeMember in app/admin/actions.ts) only hides them from
+    // /map/committee, and regenerating a member's QR (see GenerateQrButton)
+    // only overwrites the NPC's stored qrToken — neither actually revokes the
+    // still-valid, still-unexpired JWT a student may be holding. The
+    // scan_npc Postgres function does NOT check isActive or qrToken itself,
+    // so this route is the only gate for both. If a second caller of
+    // scan_npc is ever added, it must repeat these checks.
     const { data: npc, error: npcError } = await supabase
       .from('NPC')
-      .select('isActive')
+      .select('isActive, qrToken')
       .eq('id', npcId)
       .maybeSingle()
 
@@ -43,6 +47,15 @@ export async function POST(request: Request) {
     if (!npc.isActive) {
       return NextResponse.json(
         { success: false, error: 'This code is no longer active.' },
+        { status: 410 }
+      )
+    }
+    // A null qrToken means no QR has ever been generated for this NPC, so no
+    // presented token can be valid. A non-matching token means this NPC's QR
+    // has since been regenerated and this printout is superseded.
+    if (!npc.qrToken || npc.qrToken !== token) {
+      return NextResponse.json(
+        { success: false, error: 'This QR code has been replaced. Please scan the current code.' },
         { status: 410 }
       )
     }
