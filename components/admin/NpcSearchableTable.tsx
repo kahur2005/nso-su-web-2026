@@ -3,8 +3,10 @@
 // SearchableList's filter/render callbacks are functions, which cannot cross
 // the server -> client boundary as props. This wrapper owns those callbacks
 // client-side and receives the plain NPC array from the server page instead.
+import { useState } from 'react'
 import SearchableList from '@/components/admin/SearchableList'
 import DataTable from '@/components/admin/DataTable'
+import QrPreviewModal from '@/components/admin/QrPreviewModal'
 import { divisionName } from '@/lib/divisions'
 import { toggleNpcActive } from '@/app/admin/actions'
 
@@ -21,7 +23,12 @@ export interface NpcRow {
 }
 
 export default function NpcSearchableTable({ npcs }: { npcs: NpcRow[] }) {
+  // The QR being previewed, or null. Held here rather than per-row so only one
+  // modal is ever mounted.
+  const [preview, setPreview] = useState<{ name: string; qrCode: string } | null>(null)
+
   return (
+    <>
     <SearchableList
       items={npcs}
       placeholder="Search by name, role, division, or fun fact..."
@@ -53,7 +60,19 @@ export default function NpcSearchableTable({ npcs }: { npcs: NpcRow[] }) {
               <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">{npc.scanCount}</td>
               <td className="px-4 py-2.5">
                 {npc.qrCode ? (
-                  <a href={npc.qrCode} target="_blank" rel="noopener noreferrer">
+                  // Opens a modal rather than linking to the data: URL --
+                  // browsers block top-level navigation to data: URLs, so an
+                  // anchor here just opens a blank tab.
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPreview({ name: npc.committeeName, qrCode: npc.qrCode! })
+                    }
+                    title={`View QR for ${npc.committeeName}`}
+                    aria-label={`View QR code for ${npc.committeeName}`}
+                    className="block rounded hover:ring-2 hover:ring-slate-300 focus:outline-none
+                      focus:ring-2 focus:ring-slate-400"
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={npc.qrCode}
@@ -62,7 +81,7 @@ export default function NpcSearchableTable({ npcs }: { npcs: NpcRow[] }) {
                       width={40}
                       height={40}
                     />
-                  </a>
+                  </button>
                 ) : (
                   <span className="text-xs text-slate-400">None</span>
                 )}
@@ -86,5 +105,14 @@ export default function NpcSearchableTable({ npcs }: { npcs: NpcRow[] }) {
         </DataTable>
       )}
     />
+
+    {preview && (
+      <QrPreviewModal
+        name={preview.name}
+        qrCode={preview.qrCode}
+        onClose={() => setPreview(null)}
+      />
+    )}
+    </>
   )
 }
