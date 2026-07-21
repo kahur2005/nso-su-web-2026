@@ -25,7 +25,8 @@ export default async function AdminCommitteePage() {
         <h1 className="text-lg font-semibold text-slate-900">Committee</h1>
         <p className="text-sm text-slate-500 mt-1">
           Manage the committee roster shown at /map/committee, grouped by division.
-          A member added here has no QR code until one is generated in QR &amp; Fun Facts.
+          A member added here has no QR code until you generate one — use the
+          &quot;Generate QR&quot; action on their row, or QR &amp; Fun Facts.
         </p>
       </div>
 

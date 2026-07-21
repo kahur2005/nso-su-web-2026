@@ -110,7 +110,8 @@ export default function CommitteeForm() {
         </div>
 
         <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
-          New members have no QR code until one is generated in QR &amp; Fun Facts.
+          New members have no QR code until you generate one — use the &quot;Generate
+          QR&quot; action on their row below, or QR &amp; Fun Facts.
         </p>
 
         {state?.warning && (

@@ -7,6 +7,7 @@
 // view) rather than a flat table (QR-centric view).
 import SearchableList from '@/components/admin/SearchableList'
 import DeactivateCommitteeButton from '@/components/admin/DeactivateCommitteeButton'
+import GenerateQrButton from '@/components/admin/GenerateQrButton'
 import { DIVISIONS, divisionName } from '@/lib/divisions'
 
 export interface CommitteeRow {
@@ -64,6 +65,8 @@ function MemberRow({ member }: { member: CommitteeRow }) {
       >
         {member.isActive ? 'Active' : 'Inactive'}
       </span>
+
+      <GenerateQrButton npcId={member.id} name={member.committeeName} hasQr={Boolean(member.qrCode)} />
 
       <DeactivateCommitteeButton id={member.id} name={member.committeeName} isActive={member.isActive} />
     </li>

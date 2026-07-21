@@ -48,7 +48,9 @@ app/
 │   ├── groups/                 ← Manage groups + assign students
 │   ├── points/                 ← Manually adjust student points
 │   ├── announcements/          ← Push announcements to students
-│   ├── npc/                    ← Toggle NPC availability
+│   ├── qr/                     ← Create committee members (NPCs) + generate/print QR codes
+│   ├── committee/              ← Committee roster by division (same NPC table as qr/)
+│   ├── clubs/                  ← Manage club listings
 │   └── actions.ts              ← All admin server actions  ← add new admin logic here
 ├── layout.tsx                  ← Root layout (fonts, auth provider, intro sequence)
 └── globals.css                 ← Design tokens, animations, pixel utilities
@@ -108,12 +110,14 @@ All require `session.user.isAdmin === true`. Unauthorized users are redirected t
 | URL | Purpose |
 |---|---|
 | `/admin/dashboard` | Admin overview |
+| `/admin/qr` | Create committee members (NPCs) & generate/print their QR codes |
+| `/admin/committee` | Committee roster by division (same `NPC` table as `/admin/qr`); soft-deactivate members |
 | `/admin/quests` | Create & manage quests |
 | `/admin/quests/onboarding` | Step-by-step quest upload guide |
 | `/admin/groups` | Create groups, assign students |
 | `/admin/points` | Manually add/subtract student points |
 | `/admin/announcements` | Broadcast announcements |
-| `/admin/npc` | Toggle NPC active state |
+| `/admin/clubs` | Manage club listings |
 
 ---
 

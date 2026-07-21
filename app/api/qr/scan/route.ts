@@ -19,6 +19,34 @@ export async function POST(request: Request) {
     const decoded = jwt.verify(token, process.env.QR_SECRET_KEY!) as any
     const { npcId, points } = decoded
 
+    // Reject a deactivated committee member's QR. Soft-deleting a member
+    // (isActive = false, see deactivateCommitteeMember in app/admin/actions.ts)
+    // only hides them from /map/committee — the scan_npc Postgres function
+    // does NOT check isActive itself, so this route is the only gate. If a
+    // second caller of scan_npc is ever added, it must repeat this check.
+    const { data: npc, error: npcError } = await supabase
+      .from('NPC')
+      .select('isActive')
+      .eq('id', npcId)
+      .maybeSingle()
+
+    if (npcError) {
+      console.error(npcError)
+      return NextResponse.json(
+        { success: false, error: 'Server error' },
+        { status: 500 }
+      )
+    }
+    if (!npc) {
+      return NextResponse.json({ success: false, error: 'Invalid QR Code!' }, { status: 404 })
+    }
+    if (!npc.isActive) {
+      return NextResponse.json(
+        { success: false, error: 'This code is no longer active.' },
+        { status: 410 }
+      )
+    }
+
     // Get student (resolve public studentId -> internal id)
     const { data: student } = await supabase
       .from('Student')
