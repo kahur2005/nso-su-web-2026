@@ -68,22 +68,9 @@ body {
   );
 }
 
-/* ── Committee scroll (/map/committee, Figma node 1259:2) ─────────────────
-   The committee art (card frame, division ribbons) is pixel art exported at its
-   native resolution, so it must never be smoothed on upscale. */
-.committee-pixel {
-  image-rendering: pixelated;
-}
-
-/* The committee parchment tiles vertically between its two fixed rolls, so the
-   scroll grows to fit however many member cards the current page holds. The
-   strip is a single repeated row of the same 420px-wide export as the rolls,
-   which keeps the left/right parchment borders continuous. */
-.committee-scroll-strip {
-  background-image: url('/images/committee/scroll-mid.png');
-  background-repeat: repeat-y;
-  background-size: 100% auto;
-}
+/* /map/committee needs no rules here: its sprites rely on the global
+   `image-rendering: pixelated` above, and the parchment strip carries its own
+   inline background. */
 
 /* Pixel Border */
 .pixel-border {
