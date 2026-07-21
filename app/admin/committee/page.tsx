@@ -14,7 +14,7 @@ export default async function AdminCommitteePage() {
 
   const { data: membersData } = await supabase
     .from('NPC')
-    .select('id, committeeName, role, division, funFact, avatarUrl, qrCode')
+    .select('id, committeeName, role, division, funFact, avatarUrl, qrCode, isActive')
     .order('committeeName', { ascending: true })
 
   const members = membersData ?? []

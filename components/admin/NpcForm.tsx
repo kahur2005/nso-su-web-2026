@@ -131,8 +131,9 @@ export default function NpcForm() {
             className={inputClass}
             value={form.division}
             onChange={(e) => setForm({ ...form, division: e.target.value })}
+            required
           >
-            <option value="">Unassigned</option>
+            <option value="" disabled>Select a division</option>
             {DIVISIONS.map((d) => (
               <option key={d.id} value={d.id}>{d.name}</option>
             ))}
@@ -145,7 +146,7 @@ export default function NpcForm() {
             className={inputClass}
             value={form.instagram}
             onChange={(e) => setForm({ ...form, instagram: e.target.value })}
-            placeholder="e.g. @budisantoso"
+            placeholder="@handle or instagram.com/handle"
           />
         </div>
 

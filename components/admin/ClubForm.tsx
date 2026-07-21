@@ -10,12 +10,36 @@ const inputClass = `w-full bg-white border border-slate-300 rounded-md text-slat
 
 const labelClass = 'text-xs font-medium text-slate-500 block mb-1'
 
+const MAX_FILE_BYTES = 5 * 1024 * 1024 // 5MB per file
+const MAX_FILES = 12
+
 export default function ClubForm() {
   const [state, formAction, pending] = useActionState(createClub, initialState)
   const [fileNames, setFileNames] = useState<string[]>([])
+  const [fileError, setFileError] = useState<string | null>(null)
 
   function handleFilesChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setFileNames(Array.from(e.target.files ?? []).map((f) => f.name))
+    const files = Array.from(e.target.files ?? [])
+
+    if (files.length > MAX_FILES) {
+      setFileError(`You selected ${files.length} images — the carousel is capped at ${MAX_FILES}. Please reselect.`)
+      setFileNames([])
+      e.target.value = ''
+      return
+    }
+
+    const oversized = files.filter((f) => f.size > MAX_FILE_BYTES)
+    if (oversized.length > 0) {
+      setFileError(
+        `${oversized.length} image(s) are over 5MB and won't be accepted: ${oversized.map((f) => f.name).join(', ')}`
+      )
+      setFileNames([])
+      e.target.value = ''
+      return
+    }
+
+    setFileError(null)
+    setFileNames(files.map((f) => f.name))
   }
 
   return (
@@ -86,9 +110,12 @@ export default function ClubForm() {
           />
           <p className="text-xs text-slate-500 mt-1">
             {fileNames.length === 0
-              ? 'No images selected — the club will be created with an empty carousel.'
+              ? `No images selected — the club will be created with an empty carousel. Up to ${MAX_FILES} images, 5MB each.`
               : `${fileNames.length} image(s) selected: ${fileNames.join(', ')}`}
           </p>
+          {fileError && (
+            <p className="text-xs text-red-600 mt-1" aria-live="polite">{fileError}</p>
+          )}
         </div>
 
         {state?.warning && (
@@ -99,7 +126,7 @@ export default function ClubForm() {
 
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || Boolean(fileError)}
           className="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white
             text-sm font-medium rounded-md px-4 py-2 transition-colors"
         >

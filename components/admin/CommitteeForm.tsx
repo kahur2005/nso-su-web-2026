@@ -11,9 +11,29 @@ const inputClass = `w-full bg-white border border-slate-300 rounded-md text-slat
 
 const labelClass = 'text-xs font-medium text-slate-500 block mb-1'
 
+const MAX_FILE_BYTES = 5 * 1024 * 1024 // 5MB
+
 export default function CommitteeForm() {
   const [state, formAction, pending] = useActionState(createCommitteeMember, initialState)
   const [fileName, setFileName] = useState('')
+  const [fileError, setFileError] = useState<string | null>(null)
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) {
+      setFileName('')
+      setFileError(null)
+      return
+    }
+    if (file.size > MAX_FILE_BYTES) {
+      setFileError(`"${file.name}" is over 5MB. Please choose a smaller photo.`)
+      setFileName('')
+      e.target.value = ''
+      return
+    }
+    setFileError(null)
+    setFileName(file.name)
+  }
 
   return (
     <div className="border border-slate-200 rounded-lg bg-white p-5 h-fit">
@@ -66,7 +86,7 @@ export default function CommitteeForm() {
           <input
             name="instagram"
             className={inputClass}
-            placeholder="https://instagram.com/..."
+            placeholder="@handle or instagram.com/handle"
           />
         </div>
 
@@ -76,14 +96,17 @@ export default function CommitteeForm() {
             type="file"
             name="image"
             accept="image/*"
-            onChange={(e) => setFileName(e.target.files?.[0]?.name ?? '')}
+            onChange={handleFileChange}
             className="w-full text-sm text-slate-600 file:mr-3 file:py-2 file:px-3
               file:rounded-md file:border file:border-slate-300 file:bg-white
               file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-50"
           />
           <p className="text-xs text-slate-500 mt-1">
-            {fileName || 'No photo selected — a placeholder will show until one is uploaded.'}
+            {fileName || 'No photo selected — a placeholder will show until one is uploaded. Max 5MB.'}
           </p>
+          {fileError && (
+            <p className="text-xs text-red-600 mt-1" aria-live="polite">{fileError}</p>
+          )}
         </div>
 
         <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
@@ -98,7 +121,7 @@ export default function CommitteeForm() {
 
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || Boolean(fileError)}
           className="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white
             text-sm font-medium rounded-md px-4 py-2 transition-colors"
         >

@@ -6,7 +6,7 @@
 // Same shape as NpcSearchableTable, but grouped by division (roster-centric
 // view) rather than a flat table (QR-centric view).
 import SearchableList from '@/components/admin/SearchableList'
-import DeleteCommitteeButton from '@/components/admin/DeleteCommitteeButton'
+import DeactivateCommitteeButton from '@/components/admin/DeactivateCommitteeButton'
 import { DIVISIONS, divisionName } from '@/lib/divisions'
 
 export interface CommitteeRow {
@@ -17,6 +17,7 @@ export interface CommitteeRow {
   funFact: string
   avatarUrl: string | null
   qrCode: string | null
+  isActive: boolean
 }
 
 function MemberRow({ member }: { member: CommitteeRow }) {
@@ -54,7 +55,17 @@ function MemberRow({ member }: { member: CommitteeRow }) {
         {member.qrCode ? 'QR ready' : 'No QR'}
       </span>
 
-      <DeleteCommitteeButton id={member.id} name={member.committeeName} />
+      <span
+        className={`text-xs font-medium px-2 py-0.5 rounded-full border flex-shrink-0 whitespace-nowrap
+          ${member.isActive
+            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+            : 'bg-slate-100 text-slate-500 border-slate-200'
+          }`}
+      >
+        {member.isActive ? 'Active' : 'Inactive'}
+      </span>
+
+      <DeactivateCommitteeButton id={member.id} name={member.committeeName} isActive={member.isActive} />
     </li>
   )
 }

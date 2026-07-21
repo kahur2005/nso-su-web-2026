@@ -6,6 +6,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import { isDivisionId } from '@/lib/divisions'
+import { normalizeInstagram } from '@/lib/instagram'
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions)
@@ -15,10 +16,12 @@ export async function POST(request: Request) {
 
   const { committeeName, role, division, instagram, funFact, points } = await request.json()
 
-  // division is nullable on NPC -- allow it to be absent/empty, but reject
-  // anything present that isn't one of the known division ids.
-  if (division && !isDivisionId(division)) {
-    return NextResponse.json({ error: 'Invalid division' }, { status: 400 })
+  // division is required: /(game)/map/committee filters members by
+  // `m.division === activeDivision`, so a null-division member would be
+  // invisible to students. Reject a missing/empty value the same way an
+  // invalid one is already rejected.
+  if (!division || !isDivisionId(division)) {
+    return NextResponse.json({ error: 'Division is required' }, { status: 400 })
   }
 
   // Create NPC
@@ -27,8 +30,8 @@ export async function POST(request: Request) {
     .insert({
       committeeName,
       role,
-      division: division || null,
-      instagram: instagram || null,
+      division,
+      instagram: normalizeInstagram(instagram),
       funFact,
       points,
     })

@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { revalidatePath } from 'next/cache'
 import { uploadImage } from '@/lib/storage'
 import { isDivisionId } from '@/lib/divisions'
+import { normalizeInstagram } from '@/lib/instagram'
 
 async function requireAdmin() {
   const session = await getServerSession(authOptions)
@@ -166,7 +167,12 @@ export async function toggleNpcActive(npcId: string) {
     .update({ isActive: !npc.isActive })
     .eq('id', npcId)
 
+  // Reachable from both /admin/qr and /admin/committee (used there to
+  // reactivate a deactivated member), and it always affects student-facing
+  // visibility on /map/committee.
   revalidatePath('/admin/qr')
+  revalidatePath('/admin/committee')
+  revalidatePath('/map/committee')
 }
 
 // --- Clubs ---
@@ -242,7 +248,7 @@ export async function createCommitteeMember(
   const role = String(formData.get('role') || '').trim()
   const division = String(formData.get('division') || '')
   const funFact = String(formData.get('funFact') || '').trim()
-  const instagram = String(formData.get('instagram') || '').trim() || null
+  const instagram = normalizeInstagram(String(formData.get('instagram') || ''))
 
   if (!committeeName || !role || !funFact || !isDivisionId(division)) {
     return { warning: 'Please fill in name, role, fun fact, and a valid division.' }
@@ -265,15 +271,20 @@ export async function createCommitteeMember(
   return { warning: null }
 }
 
-export async function deleteCommitteeMember(formData: FormData) {
+// Soft delete: hard-deleting the NPC (and its ScanLog rows, to satisfy the FK)
+// would destroy the audit trail behind students' points/xp/funFactsCollected
+// and, if the member were ever re-added, would let the ScanLog unique
+// constraint award the same student a second time for the same person.
+// Deactivating instead just hides the member from /map/committee (filtered
+// via app/api/committee/route.ts .eq('isActive', true)) while preserving
+// everything.
+export async function deactivateCommitteeMember(formData: FormData) {
   await requireAdmin()
 
   const id = String(formData.get('id') || '')
   if (!id) return
 
-  // ScanLog references NPC; delete the logs first or the FK blocks this.
-  await supabase.from('ScanLog').delete().eq('npcId', id)
-  await supabase.from('NPC').delete().eq('id', id)
+  await supabase.from('NPC').update({ isActive: false }).eq('id', id)
 
   revalidatePath('/admin/committee')
   revalidatePath('/admin/qr')
