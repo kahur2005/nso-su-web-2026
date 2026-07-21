@@ -107,17 +107,29 @@ create table "PointAdjustment" (
 );
 create index "PointAdjustment_studentId_idx" on "PointAdjustment" ("studentId");
 
+-- A quest is a mission completed by scanning its printed QR code. One code is
+-- shared by every student; QuestProgress's unique (studentId, questId) is the
+-- duplicate guard, exactly as ScanLog is for fun facts.
+--
+-- "type"/"isHidden"/"deadline" are retired: every quest is QR-completed now.
+-- They are kept nullable rather than dropped so the change stays reversible.
 create table "Quest" (
-  "id"          text primary key default gen_random_uuid()::text,
-  "title"       text not null,
-  "description" text not null,
-  "type"        text not null,
-  "points"      integer not null,
-  "isActive"    boolean not null default false,
-  "isHidden"    boolean not null default false,
-  "deadline"    timestamptz,
-  "createdAt"   timestamptz not null default now()
+  "id"            text primary key default gen_random_uuid()::text,
+  "title"         text not null,
+  "description"   text not null,
+  "points"        integer not null,
+  "isActive"      boolean not null default false,
+  "isDeleted"     boolean not null default false,  -- soft delete, keeps history
+  "qrToken"       text,                            -- current token; older prints are refused
+  "qrCode"        text,                            -- data-URL PNG
+  -- FK added after "Achievement" is created, further down.
+  "achievementId" text,
+  "createdAt"     timestamptz not null default now(),
+  "type"          text,        -- retired
+  "isHidden"      boolean not null default false,  -- retired
+  "deadline"      timestamptz  -- retired
 );
+create index "Quest_achievementId_idx" on "Quest" ("achievementId");
 
 create table "QuestProgress" (
   "id"          text primary key default gen_random_uuid()::text,
@@ -128,13 +140,25 @@ create table "QuestProgress" (
   unique ("studentId", "questId")
 );
 
+-- A badge. Only ever unlocked by completing a Quest whose achievementId points
+-- here, so an achievement no quest references cannot be earned.
+-- "icon"/"condition" are retired in favour of "imageUrl" (uploaded art).
 create table "Achievement" (
   "id"          text primary key default gen_random_uuid()::text,
   "name"        text not null,
   "description" text not null,
-  "icon"        text not null,
-  "condition"   text not null
+  "imageUrl"    text,
+  "createdAt"   timestamptz not null default now(),
+  "icon"        text,      -- retired
+  "condition"   text       -- retired
 );
+
+-- Declared here rather than inline on "Quest" because that table is created
+-- first. `on delete set null` so deleting a badge never cascades away the
+-- quests that granted it — they simply stop granting anything.
+alter table "Quest"
+  add constraint "Quest_achievementId_fkey"
+  foreign key ("achievementId") references "Achievement"("id") on delete set null;
 
 create table "StudentAchievement" (
   "id"            text primary key default gen_random_uuid()::text,
@@ -185,6 +209,14 @@ create trigger "Student_set_updated_at"
 -- Progressive level from total XP. The step to the next level doubles each
 -- time (10, 20, 40, 80, ...), so reaching level L costs 10*(2^(L-1)-1) XP.
 -- Keep this in sync with lib/leveling.ts.
+--
+-- ⚠️ DRIFT (verified 2026-07-21): this function does NOT exist in the live
+-- database, and the live scan_npc / adjust_points do not call it — they omit
+-- the "level" write the definitions below show. Nothing in the app reads
+-- Student."level" (every screen derives it from xp via levelProgress()), so
+-- the column is stale in production and complete_quest deliberately does not
+-- write it either. Run this file on a fresh database and you get the "level"
+-- maintenance the live project never had.
 -- ---------------------------------------------------------------------------
 create or replace function level_from_xp(p_xp integer)
 returns integer
@@ -296,6 +328,79 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
+-- RPC: complete_quest — the quest counterpart of scan_npc.
+--
+-- Points come from the Quest row, never from the caller or the QR's JWT: a code
+-- printed before the points were edited must not keep paying the old amount.
+--
+-- Does NOT touch "Group"."totalPoints" (every surface sums member points
+-- instead) or "Student"."level" (nothing reads it; see the drift note above).
+-- ---------------------------------------------------------------------------
+create or replace function complete_quest(
+  p_student_id text,   -- Student.id (internal)
+  p_quest_id   text
+)
+returns jsonb
+language plpgsql
+as $$
+declare
+  v_quest       "Quest"%rowtype;
+  v_achievement "Achievement"%rowtype;
+begin
+  if exists (
+    select 1 from "QuestProgress"
+    where "studentId" = p_student_id and "questId" = p_quest_id
+  ) then
+    return jsonb_build_object(
+      'success', false,
+      'alreadyCompleted', true,
+      'error', 'You already completed this quest!'
+    );
+  end if;
+
+  select * into v_quest from "Quest" where "id" = p_quest_id;
+  if not found then
+    return jsonb_build_object('success', false, 'error', 'Invalid QR Code!');
+  end if;
+  if v_quest."isDeleted" or not v_quest."isActive" then
+    return jsonb_build_object('success', false, 'error', 'This quest is not active.');
+  end if;
+
+  insert into "QuestProgress" ("studentId", "questId", "status", "completedAt")
+    values (p_student_id, p_quest_id, 'completed', now());
+
+  update "Student"
+    set "points" = "points" + v_quest."points",
+        "xp"     = "xp" + v_quest."points"
+    where "id" = p_student_id;
+
+  if v_quest."achievementId" is not null then
+    insert into "StudentAchievement" ("studentId", "achievementId")
+      values (p_student_id, v_quest."achievementId")
+      on conflict ("studentId", "achievementId") do nothing;
+
+    select * into v_achievement
+      from "Achievement" where "id" = v_quest."achievementId";
+  end if;
+
+  return jsonb_build_object(
+    'success', true,
+    'questTitle', v_quest."title",
+    'questDescription', v_quest."description",
+    'pointsAwarded', v_quest."points",
+    'achievement', case
+      when v_achievement."id" is null then null
+      else jsonb_build_object(
+        'name', v_achievement."name",
+        'description', v_achievement."description",
+        'imageUrl', v_achievement."imageUrl"
+      )
+    end
+  );
+end;
+$$;
+
 -- Row Level Security: lock every table to the anon/public role. The app only
 -- ever connects with the service_role key (see lib/supabase.ts), which bypasses
 -- RLS, so this is pure defense-in-depth — no policies are needed.
