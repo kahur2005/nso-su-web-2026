@@ -1,18 +1,15 @@
 // app/(game)/map/guidebook/page.tsx
-// Figma guidebook: parchment scroll + sticky-note tab selection on the right,
-// 3-page system per subchapter with prev/next sprites, font-bytebounce throughout.
+// Figma guidebook: parchment scroll + permanent sticky-note bookmark tabs on the right,
+// rendering content on a yellow sticky-note sheet with 3-page pagination per chapter.
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import PageWrapper from '@/components/layout/PageWrapper'
 
-/* ── Content ──────────────────────────────────────────────────────────────
- * Each entry: 3 pages of content. Add real copy here when ready.
- * ──────────────────────────────────────────────────────────────────────── */
 type GuideEntry = {
   icon: string
   title: string
-  noteColor: string     // sticky-note background color
+  noteColor: string     // sticky-note tab background color
   pages: string[][]     // pages[pageIndex] = array of paragraphs
 }
 
@@ -105,8 +102,6 @@ export default function GuideBookPage() {
   const router = useRouter()
   const [activeIdx, setActiveIdx] = useState(0)
   const [pageIdx, setPageIdx] = useState(0)
-  // Which sticky notes have been dismissed
-  const [dismissed, setDismiss] = useState<Set<number>>(new Set())
 
   const active = guide[activeIdx]
   const totalPages = active.pages.length
@@ -115,20 +110,6 @@ export default function GuideBookPage() {
   const selectChapter = (idx: number) => {
     setActiveIdx(idx)
     setPageIdx(0)
-  }
-
-  const dismiss = (idx: number, e: React.MouseEvent) => {
-    e.stopPropagation()
-    setDismiss((prev) => {
-      const next = new Set(prev)
-      next.add(idx)
-      return next
-    })
-    // If dismissing the active chapter, pick the next visible one
-    if (idx === activeIdx) {
-      const next = guide.findIndex((_, i) => i !== idx && !dismissed.has(i))
-      if (next !== -1) selectChapter(next)
-    }
   }
 
   return (
@@ -178,94 +159,90 @@ export default function GuideBookPage() {
             <img src="/images/committee/scroll-bottom.png" alt="" className="w-full" />
           </div>
 
-          {/* Sticky notes on the right edge (same approach as division bookmarks) */}
+          {/* Permanent sticky-note bookmark tabs on the right edge (like committee bookmarks) */}
           <div
-            className="absolute left-[86%] top-[14%] z-20 flex flex-col gap-[8px]"
+            className="absolute left-[86.6%] top-[16%] z-20 flex flex-col gap-[10px]"
             role="tablist"
             aria-label="Guide book chapters"
           >
             {guide.map((entry, idx) => {
-              if (dismissed.has(idx)) return null
               const isActive = idx === activeIdx
               return (
-                <div key={idx} className="relative">
-                  <button
-                    role="tab"
-                    aria-selected={isActive}
-                    aria-label={entry.title}
-                    onClick={() => selectChapter(idx)}
-                    className={`flex items-center justify-center text-lg rounded-l-sm border-2 border-r-0 border-[#b08a5e] transition-all duration-150 ${
-                      isActive
-                        ? 'w-[52px] h-[38px] brightness-110'
-                        : 'w-[38px] h-[38px] brightness-90 hover:w-[45px] hover:brightness-100'
-                    }`}
-                    style={{ backgroundColor: entry.noteColor, boxShadow: '-2px 0 0 #b08a5e' }}
-                  >
-                    {entry.icon}
-                  </button>
-                  {/* Dismiss ✕ button */}
-                  <button
-                    onClick={(e) => dismiss(idx, e)}
-                    aria-label={`Dismiss ${entry.title}`}
-                    className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#7d3a2e] border border-[#3e2723] text-white flex items-center justify-center leading-none hover:bg-[#a04040] transition-colors"
-                    style={{ fontSize: '9px' }}
-                  >
-                    ✕
-                  </button>
-                </div>
+                <button
+                  key={idx}
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-label={entry.title}
+                  title={entry.title}
+                  onClick={() => selectChapter(idx)}
+                  className={`flex items-center justify-center text-xl rounded-l border-2 border-r-0 border-[#3e2723] transition-all duration-150 ${
+                    isActive
+                      ? 'w-[52px] h-[40px] brightness-110 shadow-[-3px_2px_0_#3e2723]'
+                      : 'w-[36px] h-[40px] brightness-90 hover:w-[44px] hover:brightness-100'
+                  }`}
+                  style={{ backgroundColor: entry.noteColor }}
+                >
+                  {entry.icon}
+                </button>
               )
             })}
           </div>
 
-          {/* Scroll content */}
+          {/* Scroll content inside a yellow sticky-note card container */}
           <div className="relative" style={{ paddingTop: '16%', paddingBottom: '15%' }}>
-            <div className="px-[14%]">
-              {/* Chapter title */}
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-2xl">{active.icon}</span>
-                <h2
-                  className="font-bytebounce text-[clamp(17px,5.5vw,22px)] leading-tight text-[#3e2723]"
-                >
-                  {active.title}
-                </h2>
-              </div>
+            <div className="mx-[12%]">
+              
+              {/* Yellow sticky note paper card */}
+              <div
+                className="rounded-lg border-2 border-[#3e2723] p-5 shadow-[4px_4px_0_#3e2723] transition-colors"
+                style={{ backgroundColor: active.noteColor }}
+              >
+                {/* Chapter title */}
+                <div className="flex items-center gap-2 mb-3 border-b-2 border-[#3e2723]/30 pb-2">
+                  <span className="text-2xl">{active.icon}</span>
+                  <h2 className="font-bytebounce text-[clamp(18px,5.5vw,23px)] leading-tight text-[#3e2723]">
+                    {active.title}
+                  </h2>
+                </div>
 
-              {/* Page content */}
-              <div className="space-y-3 min-h-[140px]">
-                {pageContent.map((para, i) => (
-                  <p
-                    key={i}
-                    className="font-bytebounce text-[14px] leading-snug text-[#5d4330]"
+                {/* Page content */}
+                <div className="space-y-3 min-h-[130px]">
+                  {pageContent.map((para, i) => (
+                    <p
+                      key={i}
+                      className="font-bytebounce text-[15px] leading-snug text-[#2a170e]"
+                    >
+                      {para}
+                    </p>
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                <div className="flex items-center justify-center gap-4 mt-4 pt-2 border-t border-[#3e2723]/20">
+                  <button
+                    onClick={() => setPageIdx((p) => Math.max(0, p - 1))}
+                    disabled={pageIdx === 0}
+                    aria-label="Previous page"
+                    className="w-[8%] min-w-[28px] transition-transform active:translate-y-0.5 disabled:opacity-30"
                   >
-                    {para}
-                  </p>
-                ))}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/images/committee/page-prev.png" alt="" className="w-full" />
+                  </button>
+                  <span className="font-bytebounce text-[18px] leading-none text-[#3e2723]">
+                    {pageIdx + 1}/{totalPages}
+                  </span>
+                  <button
+                    onClick={() => setPageIdx((p) => Math.min(totalPages - 1, p + 1))}
+                    disabled={pageIdx >= totalPages - 1}
+                    aria-label="Next page"
+                    className="w-[8%] min-w-[28px] transition-transform active:translate-y-0.5 disabled:opacity-30"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/images/committee/page-next.png" alt="" className="w-full" />
+                  </button>
+                </div>
               </div>
 
-              {/* Pagination */}
-              <div className="flex items-center justify-center gap-4 mt-5">
-                <button
-                  onClick={() => setPageIdx((p) => Math.max(0, p - 1))}
-                  disabled={pageIdx === 0}
-                  aria-label="Previous page"
-                  className="w-[8%] min-w-[28px] transition-transform active:translate-y-0.5 disabled:opacity-30"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/images/committee/page-prev.png" alt="" className="w-full" />
-                </button>
-                <span className="font-bytebounce text-[18px] leading-none text-[#6b4a2d]">
-                  {pageIdx + 1}/{totalPages}
-                </span>
-                <button
-                  onClick={() => setPageIdx((p) => Math.min(totalPages - 1, p + 1))}
-                  disabled={pageIdx >= totalPages - 1}
-                  aria-label="Next page"
-                  className="w-[8%] min-w-[28px] transition-transform active:translate-y-0.5 disabled:opacity-30"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/images/committee/page-next.png" alt="" className="w-full" />
-                </button>
-              </div>
             </div>
           </div>
         </div>
