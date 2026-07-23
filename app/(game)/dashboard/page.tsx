@@ -1,14 +1,12 @@
 // app/(game)/dashboard/page.tsx
+// Figma: full-screen pixel-art village dashboard with wood-plank name banner,
+// 2×2 quick-tile grid, points + fun-facts counter, and active quest rows.
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import PageWrapper from '@/components/layout/PageWrapper'
-import PixelCard from '@/components/ui/PixelCard'
-import ProgressBar from '@/components/ui/ProgressBar'
-import GroupEmblem from '@/components/ui/GroupEmblem'
 import PixelAvatar from '@/components/ui/PixelAvatar'
-import Timeline from '@/components/dashboard/Timeline'
 import DashboardIntro from '@/components/dashboard/DashboardIntro'
 import { levelProgress } from '@/lib/leveling'
 import Link from 'next/link'
@@ -19,25 +17,6 @@ async function getDashboardData(studentId: string) {
     .select('*, group:Group(*)')
     .eq('studentId', studentId)
     .maybeSingle()
-
-  /* Derive each group's total from its members rather than reading the stored
-   * `totalPoints`, which desyncs whenever a student joins or leaves a group
-   * after earning points — see the note in app/api/leaderboard/route.ts.
-   * Fetch all groups, total them, then take the top 4. */
-  const { data: allGroups } = await supabase
-    .from('Group')
-    .select('*, members:Student(points)')
-
-  const topGroups = (allGroups ?? [])
-    .map((g: any) => ({
-      ...g,
-      totalPoints: (g.members ?? []).reduce(
-        (sum: number, m: any) => sum + (m.points ?? 0),
-        0
-      ),
-    }))
-    .sort((a: any, b: any) => b.totalPoints - a.totalPoints)
-    .slice(0, 4)
 
   const { data: activeQuests } = await supabase
     .from('Quest')
@@ -51,7 +30,7 @@ async function getDashboardData(studentId: string) {
     .select('*')
     .eq('isActive', true)
     .order('createdAt', { ascending: false })
-    .limit(3)
+    .limit(1)
 
   const { count: totalNPCs } = await supabase
     .from('NPC')
@@ -60,239 +39,187 @@ async function getDashboardData(studentId: string) {
 
   return {
     student,
-    topGroups: topGroups ?? [],
     activeQuests: activeQuests ?? [],
     announcements: announcements ?? [],
     totalNPCs: totalNPCs ?? 0,
   }
 }
 
+/* ── Quick-action tiles (Figma 2×2 grid) ──────────────────────────────── */
+const quickTiles = [
+  { href: '/map/guidebook', img: '/images/map/tile-guidebook.png', label: 'Guidebook' },
+  { href: '/map/timeline',  img: '/images/map/tile-timeline.png',  label: 'Timeline'  },
+  { href: '/map',           img: '/images/map/tile-map.png',       label: 'Map'       },
+  { href: '/map/clubs',     img: '/images/map/tile-clubs.png',     label: 'Food'      },
+]
+
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
   if (!session) redirect('/login')
 
-  const { student, topGroups, activeQuests, announcements, totalNPCs } =
+  const { student, activeQuests, announcements, totalNPCs } =
     await getDashboardData((session.user as any).studentId)
 
   if (!student) redirect('/login')
 
-  const groupRank = topGroups.findIndex(g => g.id === student.groupId) + 1
-  const { level, into, span } = levelProgress(student.xp)
+  const { level } = levelProgress(student.xp)
+  const latestAnn = announcements[0]
 
   return (
     <PageWrapper>
       <DashboardIntro show={!student.hasSeenIntro} />
-      <div className="max-w-6xl mx-auto px-4 py-6">
 
-        {/* Welcome Banner */}
-        <div className="rpg-dialog bg-gray-800 p-4 mb-6" data-tour="profile">
-          <div className="flex items-center gap-4">
-            <PixelAvatar
-              skin={student.avatarSkin ?? 'skin1'}
-              hair={student.avatarHair ?? undefined}
-              eyes={student.avatarEyes ?? undefined}
-              brow={student.avatarBrows ?? undefined}
-              size={64}
-              className="border-4 border-black"
-            />
-            <div className="flex-1">
-              <p className="font-pixel text-xs text-gray-400">WELCOME BACK, PLAYER</p>
-              <h2 className="font-pixel text-lg text-white mt-1">
-                {student.name.split(' ')[0].toUpperCase()}!
-              </h2>
-              <div className="flex gap-4 mt-2 flex-wrap">
-                <span className="font-pixel text-xs flex items-center gap-1"
-                  style={{ color: student.group?.color || '#4CAF50' }}>
-                  <GroupEmblem emblem={student.group?.emblem} emblemUrl={student.group?.emblemUrl} size={16} />
-                  {student.group?.name || 'UNASSIGNED'}
-                </span>
-                <span className="font-pixel text-xs text-yellow-400">
-                  ⭐ {student.points} PTS
-                </span>
-                {groupRank > 0 && (
-                  <span className="font-pixel text-xs text-blue-400">
-                    RANK #{groupRank}
-                  </span>
-                )}
+      {/* ── Full-screen village background (overrides PageWrapper sky-bg) ── */}
+      <div
+        className="fixed inset-0 -z-10 bg-cover bg-bottom"
+        style={{ backgroundImage: 'url(/images/scan/bg.png)' }}
+      />
+
+      {/* ── Announcement ticker ── */}
+      {latestAnn && (
+        <div className="sticky top-0 z-30 flex items-center gap-2 bg-[#f6e8a8]/90 backdrop-blur-sm border-b-2 border-[#c8a84b] px-4 py-1.5">
+          <span className="text-base">🪙</span>
+          <p className="font-bytebounce text-[15px] text-[#4e342e] leading-tight truncate">
+            {latestAnn.title}
+          </p>
+        </div>
+      )}
+
+      {/* ── Main content ── */}
+      <div className="mx-auto max-w-md px-3 pt-3 pb-28 flex flex-col gap-3 lg:max-w-lg">
+
+        {/* ── Player name banner (wood plank) ── */}
+        <Link
+          href="/profile"
+          className="block w-full relative transition-transform active:translate-y-0.5"
+          aria-label="View your profile"
+        >
+          <div className="wood-plank px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <PixelAvatar
+                skin={student.avatarSkin ?? 'skin1'}
+                hair={student.avatarHair ?? undefined}
+                eyes={student.avatarEyes ?? undefined}
+                brow={student.avatarBrows ?? undefined}
+                size={44}
+                className="border-2 border-[#3e2723] shrink-0"
+              />
+              <div>
+                <p className="font-bytebounce text-[22px] leading-tight text-[#fff3d9]"
+                  style={{ textShadow: '2px 2px 0 #3e2723' }}>
+                  {student.name.split(' ')[0]}
+                </p>
+                <p className="font-bytebounce text-[13px] leading-none text-[#e0b391]"
+                  style={{ textShadow: '1px 1px 0 #3e2723' }}>
+                  {student.group?.name ?? 'UNASSIGNED'} · LVL {level}
+                </p>
               </div>
             </div>
+            {/* Arrow sprite */}
+            <span className="font-bytebounce text-[24px] text-[#ffd23f]"
+              style={{ textShadow: '2px 2px 0 #3e2723' }}>
+              ▶
+            </span>
           </div>
+        </Link>
 
-          {/* XP Bar */}
-          <div className="mt-4" data-tour="xp">
-            <ProgressBar
-              value={into}
-              max={span}
-              color="#FFD700"
-              label={`LVL ${level} · ${into}/${span} XP`}
-            />
-          </div>
-        </div>
-
-        {/* Announcements */}
-        {announcements.length > 0 && (
-          <div className="mb-6">
-            <h3 className="font-pixel text-sm text-yellow-400 pixel-text-shadow mb-3">
-              📢 ANNOUNCEMENTS
-            </h3>
-            <div className="space-y-2">
-              {announcements.map((ann) => (
-                <div key={ann.id}
-                  className="rpg-dialog bg-blue-900/50 border-blue-500 p-3">
-                  <p className="font-pixel text-xs text-blue-300">
-                    🔔 {ann.title}
-                  </p>
-                  <p className="font-pixel text-xs text-gray-300 mt-1">
-                    {ann.content}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Quick Actions Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6" data-tour="actions">
-          {[
-            { href: '/scan', icon: '📱', label: 'SCAN QR', color: '#4CAF50', bg: 'bg-green-900/50' },
-            { href: '/quests', icon: '⚔️', label: 'QUESTS', color: '#FFD700', bg: 'bg-yellow-900/50' },
-            { href: '/codex', icon: '📖', label: 'CODEX', color: '#9C27B0', bg: 'bg-purple-900/50' },
-            { href: '/map', icon: '🗺️', label: 'MAP', color: '#2196F3', bg: 'bg-blue-900/50' },
-          ].map((action) => (
-            <Link key={action.href} href={action.href}>
-              <PixelCard
-                className={`${action.bg} hover:scale-105 transition-transform cursor-pointer`}
-                glowColor={action.color}
+        {/* ── 2×2 tiles + Points counter ── */}
+        <div className="flex gap-2">
+          {/* Left: 2×2 grid */}
+          <div className="grid grid-cols-2 gap-2 flex-1">
+            {quickTiles.map((tile) => (
+              <Link
+                key={tile.href}
+                href={tile.href}
+                aria-label={tile.label}
+                className="block transition-transform duration-100 hover:scale-[1.04] hover:brightness-110 active:scale-[0.97]"
               >
-                <div className="text-center py-2">
-                  <div className="text-3xl mb-2 float inline-block">
-                    {action.icon}
+                <img src={tile.img} alt={tile.label} className="w-full rounded" />
+              </Link>
+            ))}
+          </div>
+
+          {/* Right: Points + Fun Facts */}
+          <div className="wood-plank flex flex-col items-center justify-center gap-1 px-3 py-3 w-[110px] shrink-0">
+            <p className="font-bytebounce text-[13px] leading-snug text-center text-[#fff3d9]"
+              style={{ textShadow: '1.5px 1.5px 0 #3e2723' }}>
+              You have<br />collected :
+            </p>
+            <p className="font-bytebounce text-[46px] leading-none text-[#3e2723]">
+              {student.points}
+            </p>
+            <p className="font-bytebounce text-[16px] leading-none text-[#3e2723]">
+              Points
+            </p>
+            <div className="w-full h-[2px] bg-[#7d5a3d] my-1 rounded" />
+            <p className="font-bytebounce text-[20px] leading-none text-[#3e2723]">
+              {student.funFactsCollected}/{totalNPCs}
+            </p>
+            <p className="font-bytebounce text-[13px] leading-snug text-center text-[#3e2723]">
+              Fun Facts
+            </p>
+          </div>
+        </div>
+
+        {/* ── Active Quests section ── */}
+        <div className="flex flex-col gap-2">
+          {/* Section header — wood banner with icon */}
+          <div className="wood-plank px-4 py-2.5 flex items-center gap-3">
+            <span
+              className="font-bytebounce text-[22px] leading-none"
+              style={{ textShadow: '2px 2px 0 #3e2723' }}
+            >
+              📜
+            </span>
+            <h2
+              className="font-bytebounce text-[26px] leading-none text-[#ffd23f]"
+              style={{ textShadow: '2.5px 2.5px 0 #3e2723' }}
+            >
+              Active Quests
+            </h2>
+          </div>
+
+          {/* Quest rows */}
+          {activeQuests.length === 0 ? (
+            <div className="wood-plank px-4 py-4 text-center">
+              <p className="font-bytebounce text-[16px] text-[#e0b391]"
+                style={{ textShadow: '1px 1px 0 #3e2723' }}>
+                No active quests right now
+              </p>
+            </div>
+          ) : (
+            activeQuests.map((quest) => (
+              <Link
+                key={quest.id}
+                href="/quests"
+                className="block transition-transform active:translate-y-0.5"
+              >
+                <div className="wood-plank px-4 py-3 flex items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className="font-bytebounce text-[18px] leading-tight text-[#fff3d9] truncate"
+                      style={{ textShadow: '1.5px 1.5px 0 #3e2723' }}
+                    >
+                      {quest.title}
+                    </p>
+                    <p
+                      className="font-bytebounce text-[13px] leading-tight text-[#e0b391] truncate"
+                      style={{ textShadow: '1px 1px 0 #3e2723' }}
+                    >
+                      {quest.description?.substring(0, 45)}
+                    </p>
                   </div>
-                  <p className="font-pixel text-xs" style={{ color: action.color }}>
-                    {action.label}
-                  </p>
+                  <span
+                    className="font-bytebounce text-[20px] text-[#ffd23f] shrink-0"
+                    style={{ textShadow: '1.5px 1.5px 0 #3e2723' }}
+                  >
+                    ▶
+                  </span>
                 </div>
-              </PixelCard>
-            </Link>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Active Quests */}
-          <div data-tour="quests">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="font-pixel text-sm text-yellow-400 pixel-text-shadow">⚔️ ACTIVE QUESTS</h3>
-              <Link href="/quests"
-                className="font-pixel text-xs text-green-400 hover:text-green-300">
-                VIEW ALL →
               </Link>
-            </div>
-            <div className="space-y-3">
-              {activeQuests.map((quest) => (
-                <PixelCard key={quest.id} className="bg-gray-800">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="font-pixel text-xs text-white">
-                        {quest.type === 'daily' ? '📋' : '⭐'} {quest.title}
-                      </p>
-                      <p className="font-pixel text-xs text-gray-400 mt-1">
-                        {quest.description.substring(0, 40)}...
-                      </p>
-                    </div>
-                    <div className="text-right ml-3">
-                      <span className="font-pixel text-xs text-yellow-400">
-                        +{quest.points}
-                      </span>
-                      <br />
-                      <span className="font-pixel text-xs text-gray-500">
-                        PTS
-                      </span>
-                    </div>
-                  </div>
-                </PixelCard>
-              ))}
-              {activeQuests.length === 0 && (
-                <PixelCard className="bg-gray-800">
-                  <p className="font-pixel text-xs text-gray-400 text-center py-4">
-                    NO ACTIVE QUESTS
-                  </p>
-                </PixelCard>
-              )}
-            </div>
-          </div>
-
-          {/* Leaderboard Widget */}
-          <div data-tour="leaderboard">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="font-pixel text-sm text-yellow-400 pixel-text-shadow">🏆 LEADERBOARD</h3>
-              <Link href="/leaderboard"
-                className="font-pixel text-xs text-green-400 hover:text-green-300">
-                VIEW ALL →
-              </Link>
-            </div>
-            <div className="space-y-2">
-              {topGroups.map((group, index) => (
-                <PixelCard
-                  key={group.id}
-                  className={`${group.id === student.groupId
-                    ? 'bg-yellow-900/30 border-yellow-600'
-                    : 'bg-gray-800'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    {index < 3 ? (
-                      <img
-                        src={`/images/trophy_${index + 1}.png`}
-                        alt={`Rank ${index + 1}`}
-                        className="w-8 h-8 object-contain flex-shrink-0"
-                        style={{ imageRendering: 'pixelated' }}
-                      />
-                    ) : (
-                      <span className="font-pixel text-sm w-8 text-center text-white">
-                        #{index + 1}
-                      </span>
-                    )}
-                    <GroupEmblem emblem={group.emblem} emblemUrl={group.emblemUrl} size={24} />
-                    <div className="flex-1">
-                      <p className="font-pixel text-xs text-white">{group.name}</p>
-                      <ProgressBar
-                        value={group.totalPoints}
-                        max={topGroups[0]?.totalPoints || 1}
-                        color={group.color}
-                        showText={false}
-                      />
-                    </div>
-                    <span className="font-pixel text-xs text-yellow-400">
-                      {group.totalPoints}
-                    </span>
-                  </div>
-                </PixelCard>
-              ))}
-            </div>
-          </div>
+            ))
+          )}
         </div>
-
-        {/* Codex Progress */}
-        <div className="mt-6" data-tour="codex">
-          <PixelCard className="bg-gray-800">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="font-pixel text-sm text-yellow-400 pixel-text-shadow">📖 CODEX PROGRESS</h3>
-              <Link href="/codex"
-                className="font-pixel text-xs text-green-400">
-                OPEN →
-              </Link>
-            </div>
-            <ProgressBar
-              value={student.funFactsCollected}
-              max={totalNPCs}
-              color="#9C27B0"
-              label="FUN FACTS COLLECTED"
-            />
-          </PixelCard>
-        </div>
-
-        {/* Event Timeline */}
-        <Timeline />
 
       </div>
     </PageWrapper>
