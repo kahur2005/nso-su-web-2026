@@ -18,7 +18,7 @@
 import PageWrapper from '@/components/layout/PageWrapper'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { DIVISIONS, type DivisionId } from '@/lib/divisions'
 
 /* Shape returned by GET /api/committee. `division` is null when the NPC row is
@@ -88,8 +88,12 @@ export default function CommitteePage() {
   const [currentPage, setCurrentPage] = useState(0)
   const [members, setMembers] = useState<CommitteeMember[]>([])
   const [loading, setLoading] = useState(true)
+  const fetchedRef = useRef(false)
 
   useEffect(() => {
+    if (fetchedRef.current) return
+    fetchedRef.current = true
+
     fetch('/api/committee')
       .then((r) => r.json())
       .then((d) => setMembers(d.members ?? []))
