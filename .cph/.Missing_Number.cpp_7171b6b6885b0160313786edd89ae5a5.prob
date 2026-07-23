@@ -1,0 +1,1 @@
+{"name":"Missing Number","url":"https://cses.fi/problemset/task/1083","interactive":false,"memoryLimit":512,"timeLimit":1000,"group":"CSES - CSES Problem Set","tests":[{"id":1784701228793,"input":"5\n2 3 1 5\n","output":"4\n"}],"srcPath":"/home/albertsu/Lab/AIREPO/nso-su-web-2026/Missing_Number.cpp"}

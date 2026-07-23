@@ -1,15 +1,11 @@
 // app/(game)/map/clubs/page.tsx
+// UKM CLUBS page — parchment tiles grid matching Figma pixel art reference.
 'use client'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import PageWrapper from '@/components/layout/PageWrapper'
-import PixelCard from '@/components/ui/PixelCard'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import Link from 'next/link'
 
-/* ────────────────────────────────────────────────────────────────────────
- * Shape returned by GET /api/clubs. Clubs are admin-managed rows in the
- * `Club` table — `images` may be empty and every link field may be null.
- * ──────────────────────────────────────────────────────────────────────── */
 type Club = {
   id: string
   name: string
@@ -21,137 +17,124 @@ type Club = {
   registrationUrl: string | null
 }
 
-const categoryColor: Record<string, string> = {
-  Arts: '#E91E63',
-  Technology: '#9C27B0',
-  Academic: '#2196F3',
-  Sports: '#4CAF50',
-  Music: '#FF9800',
-  Social: '#FFD700',
+/* Local fallback icon mapping based on club name */
+const CLUB_ICONS: Record<string, string> = {
+  'archery': '/images/clubs/archery 2.png',
+  'badminton': '/images/clubs/raket 2.png',
+  'basketball': '/images/clubs/basketball 1.png',
+  'futsal': '/images/clubs/soccer 1.png',
+  'e-sports': '/images/clubs/game 1.png',
+  'serafvoce': '/images/clubs/notes 1.png',
+  'stadium': '/images/clubs/cactus 2.png',
+  'summer': '/images/clubs/gitar 1.png',
+  'cactus': '/images/clubs/cactus 2.png',
+  'ldk syamil': '/images/clubs/raket 2.png',
+  'creative house': '/images/clubs/cactus 2.png',
+  'japanese': '/images/clubs/nihon 1.png',
+  'imeche': '/images/clubs/cactus 2.png',
+  'devstub': '/images/clubs/devstub 1.png',
+  'apssu': '/images/clubs/appsu 1.png',
+  'sounds': '/images/clubs/sounds 2.png',
+  'business': '/images/clubs/cactus 2.png',
+  'young investor': '/images/clubs/stock 1.png',
+  'ieom': '/images/clubs/cactus 2.png',
 }
 
-function ClubDetail({ club, onClose }: { club: Club; onClose: () => void }) {
-  const [slide, setSlide] = useState(0)
-  const color = categoryColor[club.category] || '#9E9E9E'
-  const count = club.images.length
+function getClubIcon(club: Club): string {
+  if (club.iconUrl) return club.iconUrl
+  const key = club.name.toLowerCase().trim()
+  return CLUB_ICONS[key] ?? '/images/clubs/cactus 2.png'
+}
 
-  // `count` is 0 for a club with no uploaded images; the modulo below would be
-  // NaN, so bail out and let the carousel block render nothing instead.
-  const prev = () => count && setSlide((s) => (s - 1 + count) % count)
-  const next = () => count && setSlide((s) => (s + 1) % count)
+/* Default mock data matching the Figma list if DB has no records */
+const DEFAULT_CLUBS: Club[] = [
+  { id: '1', name: 'Archery', iconUrl: null, category: 'Sports', description: 'Master precision and focus with the SU Archery Club.', images: [], instagram: null, registrationUrl: null },
+  { id: '2', name: 'Badminton', iconUrl: null, category: 'Sports', description: 'High energy smash & rally on the courts.', images: [], instagram: null, registrationUrl: null },
+  { id: '3', name: 'Basketball', iconUrl: null, category: 'Sports', description: 'Hoop, dribble, and dominate the court.', images: [], instagram: null, registrationUrl: null },
+  { id: '4', name: 'Futsal', iconUrl: null, category: 'Sports', description: 'Fast-paced indoor soccer team.', images: [], instagram: null, registrationUrl: null },
+  { id: '5', name: 'E-Sports', iconUrl: null, category: 'Gaming', description: 'Competitive gaming, tournaments, and streaming.', images: [], instagram: null, registrationUrl: null },
+  { id: '6', name: 'SerafVoce', iconUrl: null, category: 'Music', description: 'Sampoerna University choir and vocal ensemble.', images: [], instagram: null, registrationUrl: null },
+  { id: '7', name: 'STADIUM', iconUrl: null, category: 'Social', description: 'Student fellowship and community service.', images: [], instagram: null, registrationUrl: null },
+  { id: '8', name: 'SUMMER', iconUrl: null, category: 'Music', description: 'SU Music Movement & live band performances.', images: [], instagram: null, registrationUrl: null },
+  { id: '9', name: 'Cactus', iconUrl: null, category: 'Arts', description: 'Creative design, visual arts & photography.', images: [], instagram: null, registrationUrl: null },
+  { id: '10', name: 'LDK Syamil', iconUrl: null, category: 'Social', description: 'Islamic student association & community.', images: [], instagram: null, registrationUrl: null },
+  { id: '11', name: 'Creative House', iconUrl: null, category: 'Arts', description: 'Digital media creation, branding & video.', images: [], instagram: null, registrationUrl: null },
+  { id: '12', name: 'Japanese', iconUrl: null, category: 'Culture', description: 'Anime, language, cosplay, and Japanese culture.', images: [], instagram: null, registrationUrl: null },
+  { id: '13', name: 'IMechE', iconUrl: null, category: 'Academic', description: 'Institution of Mechanical Engineers student chapter.', images: [], instagram: null, registrationUrl: null },
+  { id: '14', name: 'DevStuB', iconUrl: null, category: 'Technology', description: 'Developer Student Club & software engineering.', images: [], instagram: null, registrationUrl: null },
+  { id: '15', name: 'APSSU', iconUrl: null, category: 'Academic', description: 'Association of Psychology Students SU.', images: [], instagram: null, registrationUrl: null },
+  { id: '16', name: 'SOUNDS', iconUrl: null, category: 'Music', description: 'Sound engineering, DJing, and audio production.', images: [], instagram: null, registrationUrl: null },
+  { id: '17', name: 'Business', iconUrl: null, category: 'Academic', description: 'Entrepreneurship, case competitions & startups.', images: [], instagram: null, registrationUrl: null },
+  { id: '18', name: 'Young Investor', iconUrl: null, category: 'Academic', description: 'Capital market investment & stock trading club.', images: [], instagram: null, registrationUrl: null },
+  { id: '19', name: 'IEOM', iconUrl: null, category: 'Academic', description: 'Industrial Engineering and Operations Management.', images: [], instagram: null, registrationUrl: null },
+]
 
+function ClubDetailModal({ club, onClose }: { club: Club; onClose: () => void }) {
+  const icon = getClubIcon(club)
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-sm rounded border-2 border-[#b08a5e] bg-[#f5e7c6] p-5 shadow-2xl relative"
         onClick={(e) => e.stopPropagation()}
       >
-        <PixelCard className="bg-gray-900" glowColor={color}>
-          {/* Title row */}
-          <div className="flex items-center gap-3 mb-4">
-            <span className="w-12 h-12 border-2 border-black flex items-center
-              justify-center text-2xl flex-shrink-0"
-              style={{ backgroundColor: `${color}33`, boxShadow: '3px 3px 0 #000' }}>
-              {club.iconUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={club.iconUrl} alt="" className="w-full h-full object-cover" />
-              ) : (
-                '🏛️'
-              )}
-            </span>
-            <div className="flex-1">
-              <h2 className="font-pixel text-sm text-white">{club.name}</h2>
-              <p className="font-pixel text-[8px] mt-1" style={{ color }}>
-                {club.category.toUpperCase()}
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="font-pixel text-xs text-gray-400 hover:text-red-400
-                border-2 border-black bg-gray-700 px-2 py-1"
-              style={{ boxShadow: '2px 2px 0 #000' }}
-            >
-              ✖
-            </button>
-          </div>
+        <button
+          onClick={onClose}
+          className="absolute right-3 top-3 font-bytebounce text-lg text-[#5d4330] hover:text-[#a04040]"
+        >
+          ✕
+        </button>
 
-          {/* Image carousel — hidden entirely when the club has no images */}
-          {count > 0 && (
-          <div className="relative mb-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={club.images[slide]}
-              alt={`${club.name} ${slide + 1}`}
-              className="w-full h-48 object-cover border-2 border-black"
-            />
-            {count > 1 && (
-              <>
-                <button
-                  onClick={prev}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 font-pixel
-                    text-sm text-white bg-black/70 border-2 border-black w-8 h-8"
-                >
-                  ‹
-                </button>
-                <button
-                  onClick={next}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 font-pixel
-                    text-sm text-white bg-black/70 border-2 border-black w-8 h-8"
-                >
-                  ›
-                </button>
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-                  {club.images.map((_, i) => (
-                    <span
-                      key={i}
-                      className="w-2 h-2 border border-black"
-                      style={{ backgroundColor: i === slide ? color : '#555' }}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-          )}
-
-          {/* Description */}
-          <p className="font-pixel text-xs text-gray-300 leading-relaxed mb-5">
-            {club.description}
+        <div className="flex flex-col items-center text-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={icon}
+            alt={club.name}
+            className="w-20 h-20 object-contain mb-3"
+            style={{ imageRendering: 'pixelated' }}
+          />
+          <h2 className="font-bytebounce text-[26px] text-[#3e2723] leading-tight">
+            {club.name}
+          </h2>
+          <span className="font-bytebounce text-[14px] text-[#8a5c2e] uppercase mt-0.5">
+            {club.category}
+          </span>
+          <p className="font-bytebounce text-[15px] text-[#5d4330] leading-snug mt-3">
+            {club.description || 'Join UKM clubs to connect with fellow students and develop your skills.'}
           </p>
 
-          {/* Action buttons */}
-          <div className="flex gap-3">
-            <a
-              href={club.instagram ?? '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 text-center font-pixel text-xs text-white py-2
-                border-2 border-black hover:opacity-90 transition-opacity"
-              style={{ background: 'linear-gradient(45deg,#f09433,#dc2743,#bc1888)', boxShadow: '3px 3px 0 #000' }}
-            >
-              📸 INSTAGRAM
-            </a>
-            <a
-              href={club.registrationUrl ?? '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 text-center font-pixel text-xs text-white bg-green-600
-                py-2 border-2 border-black hover:bg-green-500 transition-colors"
-              style={{ boxShadow: '3px 3px 0 #000' }}
-            >
-              📝 REGISTER
-            </a>
+          <div className="flex gap-2 w-full mt-5">
+            {club.instagram && (
+              <a
+                href={club.instagram.startsWith('http') ? club.instagram : `https://instagram.com/${club.instagram.replace('@', '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 wood-plank py-2.5 font-bytebounce text-[16px] text-[#fff3d9] text-center"
+              >
+                📸 Instagram
+              </a>
+            )}
+            {club.registrationUrl && (
+              <a
+                href={club.registrationUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 wood-plank py-2.5 font-bytebounce text-[16px] text-[#ffd23f] text-center"
+              >
+                📝 Register
+              </a>
+            )}
           </div>
-        </PixelCard>
+        </div>
       </div>
     </div>
   )
 }
 
 export default function UkmClubsPage() {
+  const router = useRouter()
   const [selected, setSelected] = useState<Club | null>(null)
   const [clubs, setClubs] = useState<Club[]>([])
   const [loading, setLoading] = useState(true)
@@ -159,69 +142,81 @@ export default function UkmClubsPage() {
   useEffect(() => {
     fetch('/api/clubs')
       .then((r) => r.json())
-      .then((d) => setClubs(d.clubs ?? []))
-      .catch(() => setClubs([]))
+      .then((d) => {
+        const fetched = d.clubs ?? []
+        setClubs(fetched.length > 0 ? fetched : DEFAULT_CLUBS)
+      })
+      .catch(() => setClubs(DEFAULT_CLUBS))
       .finally(() => setLoading(false))
   }, [])
 
   return (
     <PageWrapper>
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      {/* ── Forest background ── */}
+      <div
+        className="fixed inset-0 -z-10 bg-cover bg-bottom"
+        style={{ backgroundImage: 'url(/images/scan/bg.png)' }}
+      />
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <Link href="/map"
-            className="font-pixel text-xs text-green-400 hover:text-green-300">
-            ‹ BACK
-          </Link>
-          <h1 className="font-pixel text-lg text-yellow-400 text-center flex-1"
-            style={{ textShadow: '3px 3px 0 #000' }}>
-            🏰 UKM CLUBS
-          </h1>
-          <span className="w-12" />
-        </div>
+      <div className="relative mx-auto w-full max-w-md px-3 pb-28 pt-12 lg:max-w-lg">
 
-        <p className="font-pixel text-xs text-gray-400 text-center mb-6">
-          TAP A CLUB TO LEARN MORE & JOIN
-        </p>
+        {/* Back button sprite */}
+        <button
+          type="button"
+          onClick={() => router.push('/map')}
+          aria-label="Back to info station"
+          className="absolute left-2 top-0 z-20 w-[64px] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/login/back-button.png" alt="" className="w-full" />
+        </button>
 
-        {/* Glossary grid */}
+        {/* Cyan title matching Figma */}
+        <h1
+          className="text-center font-bytebounce text-[clamp(2.4rem,12vw,3.2rem)] leading-[0.85] text-[#43F6FF]"
+          style={{
+            textShadow:
+              '3px 3px 0 #3e2723, -3px 3px 0 #3e2723, 3px -3px 0 #3e2723, -3px -3px 0 #3e2723, 0 5px 0 #3e2723',
+          }}
+        >
+          UKM CLUBS
+        </h1>
+
         {loading ? (
-          <LoadingSpinner />
+          <div className="py-16">
+            <LoadingSpinner text="LOADING CLUBS..." />
+          </div>
         ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {clubs.map((club) => {
-            const color = categoryColor[club.category] || '#9E9E9E'
-            return (
-              <button key={club.id} onClick={() => setSelected(club)} className="text-left">
-                <PixelCard className="bg-gray-800 h-full cursor-pointer
-                  transition-transform hover:scale-105">
-                  <div className="flex flex-col items-center text-center py-2">
-                    <span className="text-3xl mb-2">
-                      {club.iconUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={club.iconUrl} alt="" className="w-8 h-8 object-cover" />
-                      ) : (
-                        '🏛️'
-                      )}
-                    </span>
-                    <p className="font-pixel text-[10px] text-white leading-tight">
-                      {club.name}
-                    </p>
-                    <p className="font-pixel text-[8px] mt-2" style={{ color }}>
-                      {club.category.toUpperCase()}
-                    </p>
-                  </div>
-                </PixelCard>
-              </button>
-            )
-          })}
-        </div>
+          /* 2-column parchment grid matching Figma screenshot */
+          <div className="mt-4 grid grid-cols-2 gap-2.5">
+            {clubs.map((club) => {
+              const icon = getClubIcon(club)
+              return (
+                <button
+                  key={club.id}
+                  onClick={() => setSelected(club)}
+                  className="rounded border-2 border-[#b08a5e] bg-[#fdf3e3] p-4 flex flex-col items-center justify-center transition-all hover:scale-[1.02] hover:brightness-105 active:scale-[0.97]"
+                  style={{ boxShadow: '2px 2px 0 #3e2723' }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={icon}
+                    alt={club.name}
+                    className="w-16 h-16 object-contain mb-2"
+                    style={{ imageRendering: 'pixelated' }}
+                  />
+                  <p className="font-bytebounce text-[20px] text-[#3e2723] leading-tight text-center">
+                    {club.name}
+                  </p>
+                </button>
+              )
+            })}
+          </div>
         )}
 
       </div>
 
-      {selected && <ClubDetail club={selected} onClose={() => setSelected(null)} />}
+      {selected && <ClubDetailModal club={selected} onClose={() => setSelected(null)} />}
     </PageWrapper>
   )
 }

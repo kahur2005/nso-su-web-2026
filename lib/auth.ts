@@ -37,9 +37,9 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }: any) {
+    async jwt({ token, user }) {
       // `user` is only present at sign-in; refresh the cached claims then.
-      if (user?.studentId) {
+      if (user && 'studentId' in user && typeof user.studentId === 'string') {
         token.studentId = user.studentId
         const { data: student } = await supabase
           .from('Student')
@@ -52,9 +52,11 @@ export const authOptions: NextAuthOptions = {
       return token
     },
     async session({ session, token }) {
-      (session.user as any).studentId = token.studentId
-      ;(session.user as any).isAdmin = token.isAdmin
-      ;(session.user as any).points = token.points
+      if (session.user) {
+        session.user.studentId = (token.studentId as string) ?? ''
+        session.user.isAdmin = (token.isAdmin as boolean) ?? false
+        session.user.points = (token.points as number) ?? 0
+      }
       return session
     },
   },

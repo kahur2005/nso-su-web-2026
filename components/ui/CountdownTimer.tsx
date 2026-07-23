@@ -7,6 +7,19 @@ interface CountdownTimerProps {
   label?: string
 }
 
+function TimeBox({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="flex flex-col items-center">
+      <div className="pixel-card bg-gray-900 border-2 border-white px-3 py-2 min-w-[60px] text-center">
+        <span className="text-yellow-400 text-lg font-pixel">
+          {String(value).padStart(2, '0')}
+        </span>
+      </div>
+      <span className="text-xs text-gray-400 mt-1 font-pixel">{label}</span>
+    </div>
+  )
+}
+
 export default function CountdownTimer({ 
   targetDate,
   label = "EVENT STARTS IN"
@@ -33,17 +46,6 @@ export default function CountdownTimer({
 
     return () => clearInterval(timer)
   }, [targetDate])
-
-  const TimeBox = ({ value, label }: { value: number; label: string }) => (
-    <div className="flex flex-col items-center">
-      <div className="pixel-card bg-gray-900 border-2 border-white px-3 py-2 min-w-[60px] text-center">
-        <span className="text-yellow-400 text-lg font-pixel">
-          {String(value).padStart(2, '0')}
-        </span>
-      </div>
-      <span className="text-xs text-gray-400 mt-1 font-pixel">{label}</span>
-    </div>
-  )
 
   return (
     <div className="text-center">
