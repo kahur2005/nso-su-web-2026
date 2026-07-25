@@ -10,29 +10,33 @@ import ParallaxBg from "@/components/layout/ParallaxBg";
 import Link from "next/link";
 
 async function getDashboardData(studentId: string) {
-  const { data: student } = await supabase
-    .from("Student")
-    .select("*, group:Group(*)")
-    .eq("studentId", studentId)
-    .maybeSingle();
-
-  const { data: activeQuests } = await supabase
-    .from("Quest")
-    .select("*")
-    .eq("isActive", true)
-    .eq("isHidden", false)
-    .limit(3);
-
-  const { data: announcements } = await supabase
-    .from("Announcement")
-    .select("*")
-    .eq("isActive", true)
-    .order("createdAt", { ascending: false });
-
-  const { count: totalNPCs } = await supabase
-    .from("NPC")
-    .select("*", { count: "exact", head: true })
-    .eq("isActive", true);
+  const [
+    { data: student },
+    { data: activeQuests },
+    { data: announcements },
+    { count: totalNPCs },
+  ] = await Promise.all([
+    supabase
+      .from("Student")
+      .select("*, group:Group(*)")
+      .eq("studentId", studentId)
+      .maybeSingle(),
+    supabase
+      .from("Quest")
+      .select("*")
+      .eq("isActive", true)
+      .eq("isHidden", false)
+      .limit(3),
+    supabase
+      .from("Announcement")
+      .select("*")
+      .eq("isActive", true)
+      .order("createdAt", { ascending: false }),
+    supabase
+      .from("NPC")
+      .select("*", { count: "exact", head: true })
+      .eq("isActive", true),
+  ]);
 
   return {
     student,

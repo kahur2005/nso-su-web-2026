@@ -10,32 +10,36 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const studentId = (session.user as any).studentId
+  let studentDbId = session.user.id
+  if (!studentDbId && session.user.studentId) {
+    const { data: student } = await supabase
+      .from('Student')
+      .select('id')
+      .eq('studentId', session.user.studentId)
+      .maybeSingle()
+    studentDbId = student?.id ?? ''
+  }
 
-  const { data: student } = await supabase
-    .from('Student')
-    .select('id')
-    .eq('studentId', studentId)
-    .maybeSingle()
+  const [scanLogsRes, npcsRes] = await Promise.all([
+    studentDbId
+      ? supabase
+          .from('ScanLog')
+          .select('npcId, scannedAt')
+          .eq('studentId', studentDbId)
+      : Promise.resolve({ data: [], error: null }),
+    supabase
+      .from('NPC')
+      .select('*')
+      .eq('isActive', true)
+      .order('createdAt', { ascending: true }),
+  ])
 
-  const { data: scanLogs } = student
-    ? await supabase
-        .from('ScanLog')
-        .select('npcId, scannedAt')
-        .eq('studentId', student.id)
-    : { data: [] as any[] }
+  const scans = (scanLogsRes.data ?? []) as Array<{ npcId: string; scannedAt: string }>
+  const scanMap = new Map(scans.map((s) => [s.npcId, s.scannedAt]))
+  const allNPCs = npcsRes.data ?? []
 
-  const { data: allNPCs } = await supabase
-    .from('NPC')
-    .select('*')
-    .eq('isActive', true)
-    .order('createdAt', { ascending: true })
-
-  const scans = scanLogs ?? []
-  const collectedIds = new Set(scans.map((s: any) => s.npcId))
-
-  const entries = (allNPCs ?? []).map((npc: any, index: number) => {
-    const scanLog = scans.find((s: any) => s.npcId === npc.id)
+  const entries = allNPCs.map((npc, index) => {
+    const scannedAt = scanMap.get(npc.id)
     return {
       id: npc.id,
       npcId: npc.id,
@@ -44,8 +48,8 @@ export async function GET() {
       funFact: npc.funFact,
       points: npc.points,
       avatarUrl: npc.avatarUrl,
-      collected: collectedIds.has(npc.id),
-      collectedAt: scanLog?.scannedAt || null,
+      collected: scanMap.has(npc.id),
+      collectedAt: scannedAt || null,
       index: index + 1,
     }
   })

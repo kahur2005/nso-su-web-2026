@@ -11,6 +11,16 @@ import { NextResponse } from 'next/server'
 import { completeNpcScan } from '@/lib/scan/npc'
 import { completeQuestScan } from '@/lib/scan/quest'
 
+interface QrJwtPayload {
+  questId?: string
+  npcId?: string
+  points?: number
+  live?: boolean
+  jti?: string
+  validFrom?: string
+  validUntil?: string
+}
+
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions)
   if (!session) {
@@ -18,10 +28,9 @@ export async function POST(request: Request) {
   }
 
   const { token } = await request.json()
-  const sessionStudentId = (session.user as any).studentId
 
   try {
-    const decoded = jwt.verify(token, process.env.QR_SECRET_KEY!) as any
+    const decoded = jwt.verify(token, process.env.QR_SECRET_KEY!) as QrJwtPayload
 
     // ── Daily QR date-window check ──────────────────────────────────────────
     const now = Date.now()
@@ -58,28 +67,31 @@ export async function POST(request: Request) {
       }
     }
 
-    // Resolve the public studentId to the internal row id both RPCs expect.
-    const { data: student } = await supabase
-      .from('Student')
-      .select('id')
-      .eq('studentId', sessionStudentId)
-      .maybeSingle()
+    let studentInternalId = session.user.id
+    if (!studentInternalId && session.user.studentId) {
+      const { data: student } = await supabase
+        .from('Student')
+        .select('id')
+        .eq('studentId', session.user.studentId)
+        .maybeSingle()
+      studentInternalId = student?.id ?? ''
+    }
 
-    if (!student) {
+    if (!studentInternalId) {
       return NextResponse.json({ success: false, error: 'Student not found' })
     }
 
     const isDynamicToken = !!decoded.live || !!decoded.jti
     const outcome = decoded.questId
-      ? await completeQuestScan(student.id, decoded.questId, token)
-      : await completeNpcScan(student.id, decoded.npcId, decoded.points, token, isDynamicToken)
+      ? await completeQuestScan(studentInternalId, decoded.questId, token)
+      : await completeNpcScan(studentInternalId, decoded.npcId ?? '', decoded.points ?? 10, token, isDynamicToken)
 
     // Mark single-use token as consumed upon success
     if (outcome.body?.success && decoded.jti) {
       try {
         await supabase.from('SingleUseToken').insert({
           jti: decoded.jti,
-          scannedBy: student.id,
+          scannedBy: studentInternalId,
         })
       } catch {
         // Fallback if unmigrated
@@ -87,11 +99,12 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(outcome.body, { status: outcome.status ?? 200 })
-  } catch (error: any) {
-    if (error.name === 'JsonWebTokenError') {
+  } catch (error: unknown) {
+    const err = error as { name?: string }
+    if (err?.name === 'JsonWebTokenError') {
       return NextResponse.json({ success: false, error: 'Invalid QR Code!' })
     }
-    if (error.name === 'TokenExpiredError') {
+    if (err?.name === 'TokenExpiredError') {
       return NextResponse.json({ success: false, error: 'QR Code expired!' })
     }
     console.error(error)

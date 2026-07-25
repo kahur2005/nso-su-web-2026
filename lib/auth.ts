@@ -28,35 +28,41 @@ export const authOptions: NextAuthOptions = {
         if (!verifyPassword(credentials.password, student.password)) return null
 
         return {
-          id: student.studentId,
+          id: student.id,
           name: student.name,
           email: student.email,
           studentId: student.studentId,
+          isAdmin: Boolean(student.isAdmin),
+          points: student.points || 0,
+          role: student.isAdmin ? 'admin' : 'student',
+          groupId: student.groupId || null,
         }
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user && 'studentId' in user && typeof user.studentId === 'string') {
-        token.studentId = user.studentId
-      }
-      const targetStudentId = (token.studentId as string) || (user as any)?.studentId
-      if (targetStudentId) {
-        const { data: student } = await supabase
-          .from('Student')
-          .select('isAdmin, points, role, groupId')
-          .eq('studentId', targetStudentId)
-          .maybeSingle()
-        token.isAdmin = Boolean(student?.isAdmin || student?.role === 'admin')
-        token.points = student?.points || 0
-        token.role = student?.role || (token.isAdmin ? 'admin' : 'student')
-        token.groupId = student?.groupId || null
+      if (user) {
+        const u = user as {
+          id?: string
+          studentId?: string
+          isAdmin?: boolean
+          points?: number
+          role?: string
+          groupId?: string | null
+        }
+        token.id = u.id ?? token.id
+        token.studentId = u.studentId ?? token.studentId
+        token.isAdmin = u.isAdmin ?? token.isAdmin
+        token.points = u.points ?? token.points
+        token.role = u.role ?? token.role
+        token.groupId = u.groupId ?? token.groupId
       }
       return token
     },
     async session({ session, token }) {
       if (session.user) {
+        session.user.id = (token.id as string) ?? ''
         session.user.studentId = (token.studentId as string) ?? ''
         session.user.isAdmin = (token.isAdmin as boolean) ?? false
         session.user.points = (token.points as number) ?? 0

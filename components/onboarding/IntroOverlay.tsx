@@ -1,7 +1,6 @@
 // components/onboarding/IntroOverlay.tsx
 'use client'
 import { useEffect, useState, useCallback } from 'react'
-import PixelButton from '@/components/ui/PixelButton'
 
 export interface IntroStep {
   target: string // matches a `data-tour="<target>"` attribute on the page
@@ -21,6 +20,11 @@ const TOOLTIP_WIDTH = 300
 export default function IntroOverlay({ steps, open, onFinish }: IntroOverlayProps) {
   const [step, setStep] = useState(0)
   const [rect, setRect] = useState<DOMRect | null>(null)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const measure = useCallback(() => {
     const el = document.querySelector(`[data-tour="${steps[step]?.target}"]`)
@@ -46,7 +50,7 @@ export default function IntroOverlay({ steps, open, onFinish }: IntroOverlayProp
     }
   }, [open, step, steps, measure])
 
-  if (!open) return null
+  if (!open || !mounted) return null
 
   const last = step === steps.length - 1
   const current = steps[step]

@@ -149,36 +149,10 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
 
-  const [isLive, setIsLive] = useState(true)
-
   useEffect(() => {
     fetchData()
     const interval = setInterval(fetchData, 30000)
-
-    // Supabase Realtime channel to refetch scores instantly whenever a scan happens
-    let channel: any = null
-    try {
-      const { supabase } = require('@/lib/supabase')
-      channel = supabase
-        .channel('realtime:leaderboard')
-        .on(
-          'postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'ScanLog' },
-          () => {
-            fetchData()
-          }
-        )
-        .subscribe((status: string) => {
-          setIsLive(status === 'SUBSCRIBED')
-        })
-    } catch {
-      setIsLive(false)
-    }
-
-    return () => {
-      if (channel) channel.unsubscribe()
-      clearInterval(interval)
-    }
+    return () => clearInterval(interval)
   }, [])
 
   async function fetchData() {
@@ -229,7 +203,7 @@ export default function LeaderboardPage() {
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
           <span className="font-bytebounce text-[13px] text-[#86efac] tracking-wide" style={{ textShadow: '1px 1px 0 #14532d' }}>
-            {isLive ? 'LIVE REALTIME' : 'LIVE 30s'}
+            LIVE 30s
           </span>
         </div>
 

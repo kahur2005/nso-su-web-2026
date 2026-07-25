@@ -3,7 +3,7 @@
 // Collapsed state persists in localStorage so it survives navigation.
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { PanelLeftClose, PanelLeftOpen, LogOut } from 'lucide-react'
 import { ADMIN_NAV } from './ADMIN_NAV'
 
@@ -11,16 +11,16 @@ const STORAGE_KEY = 'admin-sidebar-collapsed'
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
-
-  // Read persisted state after mount so server and client markup agree.
-  useEffect(() => {
-    try {
-      setCollapsed(localStorage.getItem(STORAGE_KEY) === '1')
-    } catch (e) {
-      console.warn('localStorage is not accessible:', e)
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        return localStorage.getItem(STORAGE_KEY) === '1'
+      } catch (e) {
+        console.warn('localStorage is not accessible:', e)
+      }
     }
-  }, [])
+    return false
+  })
 
   function toggle() {
     setCollapsed((c) => {

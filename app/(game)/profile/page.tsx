@@ -34,12 +34,18 @@ function mascotSrc(name: string | undefined): string | null {
   return MASCOTS.has(key) ? `/images/group/${key}.png` : null
 }
 
-async function getProfileData(studentId: string) {
-  const { data: student } = await supabase
-    .from('Student')
-    .select('*, group:Group(*)')
-    .eq('studentId', studentId)
-    .maybeSingle()
+async function getProfileData(studentId: string, studentDbId?: string) {
+  const [{ data: student }, { count: totalNPCs }] = await Promise.all([
+    supabase
+      .from('Student')
+      .select('*, group:Group(*)')
+      .or(studentDbId ? `id.eq."${studentDbId}",studentId.eq."${studentId}"` : `studentId.eq."${studentId}"`)
+      .maybeSingle(),
+    supabase
+      .from('NPC')
+      .select('*', { count: 'exact', head: true })
+      .eq('isActive', true),
+  ])
 
   if (student) {
     const [scanLogs, questProgress] = await Promise.all([
@@ -58,11 +64,6 @@ async function getProfileData(studentId: string) {
     student.scanLogs = scanLogs.data ?? []
     student.questProgress = questProgress.data ?? []
   }
-
-  const { count: totalNPCs } = await supabase
-    .from('NPC')
-    .select('*', { count: 'exact', head: true })
-    .eq('isActive', true)
 
   return { student, totalNPCs: totalNPCs ?? 0 }
 }
@@ -106,7 +107,7 @@ export default async function ProfilePage() {
   if (!session) redirect('/login')
 
   const { student, totalNPCs } =
-    await getProfileData((session.user as any).studentId)
+    await getProfileData(session.user.studentId, session.user.id)
 
   if (!student) redirect('/login')
 

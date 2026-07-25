@@ -10,41 +10,60 @@ import { NextResponse } from 'next/server'
  * most-recent 10, so fetching deeper cannot change the result. */
 const FEED_LIMIT = 10
 
+interface RawStudentRef {
+  name: string
+  studentId: string
+  isAdmin: boolean
+}
+
+interface RawQuestItem {
+  id: string
+  completedAt: string
+  student: RawStudentRef | null
+  quest: { title: string; points: number } | null
+}
+
+interface RawScanItem {
+  id: string
+  scannedAt: string
+  pointsAwarded: number
+  student: RawStudentRef | null
+  npc: { committeeName: string } | null
+}
+
 export async function GET() {
   try {
-    // Quest completions with student + quest info
-    const { data: quests, error: qErr } = await supabase
-      .from('QuestProgress')
-      .select(`
-        id,
-        completedAt,
-        student:Student(name, studentId, isAdmin),
-        quest:Quest(title, points)
-      `)
-      .eq('status', 'completed')
-      .order('completedAt', { ascending: false })
-      .limit(FEED_LIMIT * 2)
+    const [questsRes, scansRes] = await Promise.all([
+      supabase
+        .from('QuestProgress')
+        .select(`
+          id,
+          completedAt,
+          student:Student(name, studentId, isAdmin),
+          quest:Quest(title, points)
+        `)
+        .eq('status', 'completed')
+        .order('completedAt', { ascending: false })
+        .limit(FEED_LIMIT * 2),
+      supabase
+        .from('ScanLog')
+        .select(`
+          id,
+          scannedAt,
+          pointsAwarded,
+          student:Student(name, studentId, isAdmin),
+          npc:NPC("committeeName")
+        `)
+        .order('scannedAt', { ascending: false })
+        .limit(FEED_LIMIT * 2),
+    ])
 
-    if (qErr) throw qErr
+    if (questsRes.error) throw questsRes.error
+    if (scansRes.error) console.error('leaderboard feed: scan log fetch failed:', scansRes.error)
 
-    const { data: scans, error: sErr } = await supabase
-      .from('ScanLog')
-      .select(`
-        id,
-        scannedAt,
-        pointsAwarded,
-        student:Student(name, studentId, isAdmin),
-        npc:NPC("committeeName")
-      `)
-      .order('scannedAt', { ascending: false })
-      .limit(FEED_LIMIT * 2)
-
-    if (sErr) console.error('leaderboard feed: scan log fetch failed:', sErr)
-
-    // Merge & sort by time (scans may fail if schema differs — degrade gracefully)
-    const questEvents = (quests ?? [])
-      .filter((q: any) => !q.student?.isAdmin)
-      .map((q: any) => ({
+    const questEvents = ((questsRes.data as unknown as RawQuestItem[]) ?? [])
+      .filter((q) => !q.student?.isAdmin)
+      .map((q) => ({
         id: `q-${q.id}`,
         type: 'quest',
         label: q.quest?.title ?? 'Quest',
@@ -55,11 +74,11 @@ export async function GET() {
         at: q.completedAt,
       }))
 
-    const scanEvents = sErr
+    const scanEvents = scansRes.error
       ? []
-      : (scans ?? [])
-          .filter((s: any) => !s.student?.isAdmin)
-          .map((s: any) => ({
+      : ((scansRes.data as unknown as RawScanItem[]) ?? [])
+          .filter((s) => !s.student?.isAdmin)
+          .map((s) => ({
             id: `s-${s.id}`,
             type: 'scan',
             label: s.npc?.committeeName ? `Scanned ${s.npc.committeeName}` : 'NPC Scan',

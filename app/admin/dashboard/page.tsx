@@ -15,7 +15,7 @@ async function getAdminStats() {
   todayStart.setHours(0, 0, 0, 0)
 
   const [
-    students, scans, npcs, quests, groups, announcements, today,
+    students, scans, npcs, quests, groups, announcements, today, genderRes,
   ] = await Promise.all([
     supabase.from('Student').select('*', { count: 'exact', head: true }).or('isAdmin.eq.false,isAdmin.is.null'),
     supabase.from('ScanLog').select('*', { count: 'exact', head: true }),
@@ -27,31 +27,27 @@ async function getAdminStats() {
       .from('ScanLog')
       .select('*', { count: 'exact', head: true })
       .gte('scannedAt', todayStart.toISOString()),
+    supabase.from('Student').select('gender, isAdmin'),
   ])
 
-  // Safely fetch gender counts for non-admin students
+  // Safely compute gender counts for non-admin students
   let genderCounts: { M: number; F: number; other: number; unspecified: number } = {
     M: 0,
     F: 0,
     other: 0,
     unspecified: 0,
   }
-  try {
-    const { data: genderData, error: genderErr } = await supabase.from('Student').select('gender, isAdmin')
-    if (!genderErr && genderData) {
-      genderCounts = genderData
-        .filter((s: any) => !s.isAdmin)
-        .reduce(
-          (acc: { M: number; F: number; other: number; unspecified: number }, s: any) => {
-            const g = (s.gender as 'M' | 'F' | 'other') || 'unspecified'
-            acc[g] = (acc[g] || 0) + 1
-            return acc
-          },
-          { M: 0, F: 0, other: 0, unspecified: 0 }
-        )
-    }
-  } catch {
-    // Unmigrated DB schema fallback
+  if (!genderRes.error && genderRes.data) {
+    genderCounts = genderRes.data
+      .filter((s: any) => !s.isAdmin)
+      .reduce(
+        (acc: { M: number; F: number; other: number; unspecified: number }, s: any) => {
+          const g = (s.gender as 'M' | 'F' | 'other') || 'unspecified'
+          acc[g] = (acc[g] || 0) + 1
+          return acc
+        },
+        { M: 0, F: 0, other: 0, unspecified: 0 }
+      )
   }
 
   return {

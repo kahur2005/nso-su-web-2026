@@ -56,6 +56,8 @@ create table "Student" (
   "hasSeenIntro"      boolean not null default false,
   "gender"            text,
   "avatarConfig"      jsonb,
+  "avatarSkin"        text,
+  "avatarHair"        text,
   "instagram"         text,
   "medicalNote"       text,
   "password"          text,
@@ -82,6 +84,7 @@ create table "NPC" (
   "createdAt"     timestamptz not null default now()
 );
 create index "NPC_division_idx" on "NPC" ("division");
+create index "NPC_isActive_idx" on "NPC" ("isActive");
 
 create table "ScanLog" (
   "id"            text primary key default gen_random_uuid()::text,
@@ -92,6 +95,8 @@ create table "ScanLog" (
   unique ("studentId", "npcId")
 );
 create index "ScanLog_studentId_idx" on "ScanLog" ("studentId");
+create index "ScanLog_npcId_idx" on "ScanLog" ("npcId");
+create index "ScanLog_scannedAt_idx" on "ScanLog" ("scannedAt" desc);
 
 -- Audit trail for admin-side manual point corrections (app/admin/points).
 -- Always attributed to the NPC the adjustment is standing in for (e.g. a
@@ -105,6 +110,7 @@ create table "PointAdjustment" (
   "createdAt" timestamptz not null default now()
 );
 create index "PointAdjustment_studentId_idx" on "PointAdjustment" ("studentId");
+create index "PointAdjustment_npcId_idx" on "PointAdjustment" ("npcId");
 
 -- A quest is a mission completed by scanning its printed QR code. One code is
 -- shared by every student; QuestProgress's unique (studentId, questId) is the
@@ -138,6 +144,8 @@ create table "QuestProgress" (
   "completedAt" timestamptz,
   unique ("studentId", "questId")
 );
+create index "QuestProgress_questId_idx" on "QuestProgress" ("questId");
+create index "QuestProgress_completedAt_idx" on "QuestProgress" ("completedAt" desc);
 
 -- A badge. Only ever unlocked by completing a Quest whose achievementId points
 -- here, so an achievement no quest references cannot be earned.
@@ -166,6 +174,7 @@ create table "StudentAchievement" (
   "unlockedAt"    timestamptz not null default now(),
   unique ("studentId", "achievementId")
 );
+create index "StudentAchievement_achievementId_idx" on "StudentAchievement" ("achievementId");
 
 create table "Announcement" (
   "id"        text primary key default gen_random_uuid()::text,
@@ -346,6 +355,7 @@ as $$
 declare
   v_quest       "Quest"%rowtype;
   v_achievement "Achievement"%rowtype;
+  v_group_id    text;
 begin
   if exists (
     select 1 from "QuestProgress"
@@ -372,7 +382,13 @@ begin
   update "Student"
     set "points" = "points" + v_quest."points",
         "xp"     = "xp" + v_quest."points"
-    where "id" = p_student_id;
+    where "id" = p_student_id
+    returning "groupId" into v_group_id;
+
+  if v_group_id is not null then
+    update "Group" set "totalPoints" = "totalPoints" + v_quest."points"
+      where "id" = v_group_id;
+  end if;
 
   if v_quest."achievementId" is not null then
     insert into "StudentAchievement" ("studentId", "achievementId")

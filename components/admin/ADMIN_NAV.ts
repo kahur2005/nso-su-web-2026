@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, QrCode, Smartphone, Users, Star, Megaphone, Building2, IdCard,
+  LayoutDashboard, Smartphone, Users, Star, Megaphone, Building2, IdCard,
   Swords, Award, BookOpen,
   type LucideIcon,
 } from 'lucide-react'

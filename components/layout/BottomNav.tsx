@@ -5,10 +5,9 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useSession } from 'next-auth/react'
-import { useEffect, useState } from 'react'
 import PixelAvatar from '@/components/ui/PixelAvatar'
-import { parseAvatarConfig, hairKey, type AvatarConfig } from '@/lib/avatar'
+import { parseAvatarConfig, hairKey } from '@/lib/avatar'
+import { useStudentAvatar } from '@/lib/hooks/useStudentAvatar'
 
 const LABEL_SHADOW = '2.4px 2.5px 0 #4e342e'
 
@@ -22,33 +21,7 @@ const items = [
 
 export default function BottomNav() {
   const pathname = usePathname()
-  const { data: session, status } = useSession()
-  const [avatarConfig, setAvatarConfig] = useState<AvatarConfig | null>(null)
-
-  useEffect(() => {
-    if (status !== 'authenticated') return
-    const studentId = (session?.user as { studentId?: string } | undefined)?.studentId
-    const cacheKey = `nav-avatar:${studentId ?? 'anon'}`
-    const cached = sessionStorage.getItem(cacheKey)
-    if (cached) {
-      try {
-        setAvatarConfig(JSON.parse(cached))
-        return
-      } catch {
-        sessionStorage.removeItem(cacheKey)
-      }
-    }
-    fetch('/api/me/avatar')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data?.avatar) {
-          setAvatarConfig(data.avatar)
-          sessionStorage.setItem(cacheKey, JSON.stringify(data.avatar))
-        }
-      })
-      .catch(() => {})
-  }, [status, session])
-
+  const avatarConfig = useStudentAvatar()
   const av = parseAvatarConfig(avatarConfig)
 
   return (

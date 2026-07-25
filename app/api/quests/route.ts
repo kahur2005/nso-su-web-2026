@@ -14,42 +14,46 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const studentId = (session.user as any).studentId
+  let studentDbId = session.user.id
+  if (!studentDbId && session.user.studentId) {
+    const { data: student } = await supabase
+      .from('Student')
+      .select('id')
+      .eq('studentId', session.user.studentId)
+      .maybeSingle()
+    studentDbId = student?.id ?? ''
+  }
 
-  const { data: student } = await supabase
-    .from('Student')
-    .select('id')
-    .eq('studentId', studentId)
-    .maybeSingle()
-
-  if (!student) {
+  if (!studentDbId) {
     return NextResponse.json({ error: 'Student not found' }, { status: 404 })
   }
 
-  // Fetch all active, non-deleted quests including time-gate fields.
-  const { data: quests, error } = await supabase
-    .from('Quest')
-    .select('id, title, description, points, availableFrom, availableUntil, achievement:Achievement(name, description, imageUrl)')
-    .eq('isDeleted', false)
-    .eq('isActive', true)
-    .order('createdAt', { ascending: false })
+  const [questsRes, progressRes] = await Promise.all([
+    supabase
+      .from('Quest')
+      .select('id, title, description, points, availableFrom, availableUntil, achievement:Achievement(name, description, imageUrl)')
+      .eq('isDeleted', false)
+      .eq('isActive', true)
+      .order('createdAt', { ascending: false }),
+    supabase
+      .from('QuestProgress')
+      .select('questId, completedAt')
+      .eq('studentId', studentDbId),
+  ])
 
-  if (error) {
-    console.error('quests: fetch failed:', error)
+  if (questsRes.error) {
+    console.error('quests: fetch failed:', questsRes.error)
     return NextResponse.json({ error: 'Failed to load quests' }, { status: 500 })
   }
-
-  const { data: progressRows, error: progressError } = await supabase
-    .from('QuestProgress')
-    .select('questId, completedAt')
-    .eq('studentId', student.id)
-
-  if (progressError) {
-    console.error('quests: progress fetch failed:', progressError)
+  if (progressRes.error) {
+    console.error('quests: progress fetch failed:', progressRes.error)
   }
 
+  const quests = questsRes.data ?? []
+  const progressRows = progressRes.data ?? []
+
   const completedAt = new Map(
-    (progressRows ?? []).map((p: any) => [p.questId, p.completedAt])
+    progressRows.map((p) => [p.questId, p.completedAt])
   )
 
   const now = new Date()
