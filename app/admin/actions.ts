@@ -36,6 +36,9 @@ export async function assignStudentToGroup(formData: FormData) {
     .eq('studentId', studentId)
 
   revalidatePath('/admin/groups')
+  revalidatePath('/leaderboard')
+  revalidatePath('/dashboard')
+  revalidatePath('/profile')
 }
 
 export async function unassignStudent(formData: FormData) {
@@ -50,6 +53,9 @@ export async function unassignStudent(formData: FormData) {
     .eq('studentId', studentId)
 
   revalidatePath('/admin/groups')
+  revalidatePath('/leaderboard')
+  revalidatePath('/dashboard')
+  revalidatePath('/profile')
 }
 
 // --- Points ---
