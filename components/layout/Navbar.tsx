@@ -17,11 +17,11 @@ const LOGO_SHADOW = '2px 2px 0 #3e2723'
 const EXIT_SHADOW  = '2px 2px 0 #3e2723'
 
 const navItems = [
-  { href: '/dashboard',   label: 'Home',     icon: '/images/nav/house.png',  iconW: 28 },
-  { href: '/info',        label: 'Info',     icon: '/images/nav/info.png',   iconW: 22 },
-  { href: '/scan',        label: 'QR Scan',  icon: 'qr'     as const,        iconW: 0  },
-  { href: '/leaderboard', label: 'Rankings', icon: '/images/nav/trophy.png', iconW: 30 },
-  { href: '/profile',     label: 'Me',       icon: 'avatar' as const,        iconW: 0  },
+  { href: '/dashboard', label: 'Home', icon: '/images/nav/house.png' },
+  { href: '/info', label: 'Info', icon: '/images/nav/info.png' },
+  { href: '/scan', label: 'QR Scan', icon: 'qr' as const },
+  { href: '/leaderboard', label: 'Rankings', icon: '/images/nav/trophy.png' },
+  { href: '/profile', label: 'Me', icon: 'avatar' as const },
 ]
 
 export default function Navbar() {
@@ -59,39 +59,8 @@ export default function Navbar() {
   const av = parseAvatarConfig(avatarConfig)
 
   return (
-    <header
-      className={`sticky top-0 z-40 transition-all duration-200 ${
-        scrolled
-          ? 'bg-[#4e342e]/80 backdrop-blur-sm shadow-[0_2px_0_#3e2723]'
-          : 'bg-transparent'
-      }`}
-    >
-      {/* ── 3-slice wood plank background (desktop only) ───────────────── */}
-      {/* Shown as a separate layer so the mobile top area stays transparent */}
-      <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden">
-        <div
-          className="absolute inset-y-0 left-[40px] right-[40px]"
-          style={{
-            backgroundImage: 'url(/images/nav/plank-mid.png)',
-            backgroundSize: '100% 100%',
-            imageRendering: 'pixelated',
-          }}
-        />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/images/nav/plank-left.png" alt="" aria-hidden
-          className="absolute left-0 inset-y-0 h-full w-[41px]"
-          style={{ imageRendering: 'pixelated' }}
-        />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/images/nav/plank-right.png" alt="" aria-hidden
-          className="absolute right-0 inset-y-0 h-full w-[41px]"
-          style={{ imageRendering: 'pixelated' }}
-        />
-      </div>
-
-      <div className="relative game-column py-2 md:py-3 flex items-center justify-between">
+    <header className="sticky top-0 z-40 w-full wood-plank rounded-none border-x-0 border-t-0 border-b-2 border-[#3e2723] shadow-md">
+      <div className="game-column py-1.5 md:py-2 flex items-center justify-between">
         {/* ── Logo ─────────────────────────────────────────────────────── */}
         <Link
           href="/dashboard"
@@ -102,7 +71,7 @@ export default function Navbar() {
         </Link>
 
         {/* ── Desktop nav items (hidden on mobile — BottomNav handles it) ── */}
-        <nav className="hidden md:flex items-center gap-0" aria-label="Main navigation">
+        <nav className="hidden md:flex items-center gap-1 md:gap-2" aria-label="Main navigation">
           {navItems.map((item) => {
             const active = pathname === item.href || pathname.startsWith(item.href + '/')
             return (
@@ -110,23 +79,23 @@ export default function Navbar() {
                 key={item.href}
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
-                className={`relative flex flex-col items-center gap-0.5 px-3 py-1 transition-all ${
-                  active ? 'brightness-110' : 'opacity-75 hover:opacity-100'
+                className={`relative flex flex-col items-center gap-1 px-2.5 py-1 transition-all ${
+                  active ? 'brightness-110' : 'opacity-80 hover:opacity-100'
                 }`}
               >
                 {/* Active underline dot */}
                 {active && (
-                  <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#ffd23f] shadow-[0_0_4px_#ffd23f]" />
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#ffd23f] shadow-[0_0_4px_#ffd23f]" />
                 )}
 
-                {/* Icon */}
-                <span className={`flex items-center justify-center h-7 transition-transform ${active ? 'scale-110' : ''}`}>
+                {/* Standardized Icon Box (32px x 32px) */}
+                <span className={`flex items-center justify-center h-8 w-8 transition-transform ${active ? 'scale-110' : ''}`}>
                   {item.icon === 'qr' ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src="/images/nav/qr-scan.png"
                       alt="" aria-hidden
-                      className="h-7 w-auto"
+                      className="h-8 w-auto object-contain"
                       style={{ imageRendering: 'pixelated' }}
                     />
                   ) : item.icon === 'avatar' ? (
@@ -138,25 +107,25 @@ export default function Navbar() {
                       eyes={av.eyes ?? undefined}
                       brow={av.brows ?? undefined}
                       mouth={av.mouth ?? undefined}
-                      size={28}
+                      size={32}
                     />
                   ) : (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={item.icon}
                       alt="" aria-hidden
-                      className="h-7 object-contain"
-                      style={{ width: item.iconW, imageRendering: 'pixelated' }}
+                      className="h-8 w-auto object-contain"
+                      style={{ imageRendering: 'pixelated' }}
                     />
                   )}
                 </span>
 
-                {/* Label */}
+                {/* Standardized Label */}
                 <span
-                  className={`font-bytebounce text-[14px] leading-none whitespace-nowrap ${
-                    active ? 'text-[#fff3d9]' : 'text-[#e0b391]'
+                  className={`font-bytebounce text-[16px] md:text-[17px] leading-none whitespace-nowrap ${
+                    active ? 'text-[#fff3d9] font-bold' : 'text-[#e0b391]'
                   }`}
-                  style={{ textShadow: '1.75px 1.3px 0 #4e342e' }}
+                  style={{ textShadow: '1.5px 1.5px 0 #4e342e' }}
                 >
                   {item.label}
                 </span>

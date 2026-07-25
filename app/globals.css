@@ -82,6 +82,22 @@ body {
   }
 }
 
+@media (min-width: 1024px) {
+  .game-column {
+    max-width: 720px;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .game-column {
+    max-width: 800px;
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+}
+
 /* Wooden plank (login banner + button) — rebuilt in CSS from the Figma
    sprite palette; the raw exports carry a stray white bottom edge row */
 .wood-plank {
