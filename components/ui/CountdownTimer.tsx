@@ -59,7 +59,7 @@ export default function CountdownTimer({
     <div className="text-center">
       <p
         className="font-bytebounce text-[16px] text-white mb-2"
-        style={{ textShadow: '1.5px 1.5px 0 #4e342e' }}
+        style={{ textShadow: '1.5px 1.5px 0 #4e342e', color: '#ffd23f' }}
       >
         {label}
       </p>
