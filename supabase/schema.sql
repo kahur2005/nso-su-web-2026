@@ -53,7 +53,6 @@ create table "Student" (
   "funFactsCollected" integer not null default 0,
   "groupId"           text references "Group"("id") on delete set null,
   "isAdmin"           boolean not null default false,
-  "hasSeenIntro"      boolean not null default false,
   "gender"            text,
   "avatarConfig"      jsonb,
   "avatarSkin"        text,

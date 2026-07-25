@@ -1,12 +1,14 @@
 // app/(game)/info/page.tsx
 // Info Station Parchment Hub — links to guidebook, committee, timeline, clubs, and map.
 import PageWrapper from '@/components/layout/PageWrapper'
+import PageIntro from '@/components/onboarding/PageIntro'
 import Link from 'next/link'
 
 interface InfoTile {
   href: string
   img: string
   label: string
+  tour: string
 }
 
 const tiles: InfoTile[] = [
@@ -14,32 +16,38 @@ const tiles: InfoTile[] = [
     href: '/info/guidebook',
     img: '/images/map/tile-guidebook.png',
     label: 'Guide Book — survival tips for SU life',
+    tour: 'info-guidebook',
   },
   {
     href: '/info/committee',
     img: '/images/map/tile-committee.png',
     label: "NSO'26 Committee — the team behind NSO26",
+    tour: 'info-committee',
   },
   {
     href: '/info/timeline',
     img: '/images/map/tile-timeline.png',
     label: 'Timeline — day-by-day event agenda',
+    tour: 'info-timeline',
   },
   {
     href: '/info/clubs',
     img: '/images/map/tile-clubs.png',
     label: 'UKM Clubs — explore student clubs',
+    tour: 'info-clubs',
   },
   {
     href: '/info/maps',
     img: '/images/map/tile-map.png',
     label: 'Map — campus zones & scan spots',
+    tour: 'info-maps',
   },
 ]
 
 export default function InfoHubPage() {
   return (
     <PageWrapper>
+      <PageIntro page="info" />
       <div className="mx-auto flex min-h-[calc(100dvh-11rem)] w-full max-w-md flex-col justify-center px-3 py-2 lg:max-w-lg">
         {/* Header */}
         <h1 className="text-center font-bytebounce text-[clamp(2.75rem,15vw,4rem)] leading-none text-[#d7a717]">
@@ -61,6 +69,7 @@ export default function InfoHubPage() {
                 key={tile.href}
                 href={tile.href}
                 aria-label={tile.label}
+                data-tour={tile.tour}
                 className="block transition-transform duration-100 hover:scale-[1.03] hover:brightness-110 active:scale-[0.98]"
               >
                 <img src={tile.img} alt="" className="w-full h-auto object-contain block" style={{ imageRendering: 'pixelated' }} />

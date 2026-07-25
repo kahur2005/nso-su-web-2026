@@ -14,6 +14,7 @@
 import { useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import PageWrapper from '@/components/layout/PageWrapper'
+import PageIntro from '@/components/onboarding/PageIntro'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import GroupEmblem from '@/components/ui/GroupEmblem'
 import PixelAvatar from '@/components/ui/PixelAvatar'
@@ -195,9 +196,10 @@ export default function LeaderboardPage() {
 
   return (
     <PageWrapper>
+      <PageIntro page="leaderboard" />
       <div className="game-column pt-3 sm:pt-5 pb-28 sm:pb-32 md:pb-12">
         {/* LIVE status indicator */}
-        <div className="mb-2 flex items-center justify-end gap-1.5 px-2">
+        <div className="mb-2 flex items-center justify-end gap-1.5 px-2" data-tour="lb-live">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -209,7 +211,7 @@ export default function LeaderboardPage() {
 
         {/* ── Current Leader billboard ─────────────────────────────────── */}
         {activeTab !== 'record' && (activeTab === 'groups' ? leaderGroup : leaderStudent) && (
-          <div className="relative mx-auto mb-4 w-[88%] max-w-[350px]">
+          <div className="relative mx-auto mb-4 w-[88%] max-w-[350px]" data-tour="lb-leader">
             <div className="relative aspect-[337/248]">
               {/* Wood panel, sliced left/mid/right exactly as in Figma */}
               <div aria-hidden className="absolute inset-0 flex">
@@ -276,7 +278,7 @@ export default function LeaderboardPage() {
         )}
 
         {/* ── Tabs ─────────────────────────────────────────────────────── */}
-        <div className="mb-1 flex gap-2">
+        <div className="mb-1 flex gap-2" data-tour="lb-tabs">
           {tabs.map((tab) => (
             <button
               key={tab.key}
@@ -318,7 +320,7 @@ export default function LeaderboardPage() {
               sits at y=144, i.e. 19.3% of the sprite width; scroll-bottom.png
               starts its roll 146px above its foot, i.e. 19.5%. Anything less
               than those and the content slides under a roll. */}
-          <div className="relative" style={{ paddingTop: '22%', paddingBottom: '22%' }}>
+          <div className="relative" style={{ paddingTop: '22%', paddingBottom: '22%' }} data-tour="lb-list">
             <h1 className="text-center font-bytebounce text-[clamp(34px,11vw,46px)] leading-none text-[#3e2723]">
               LEADERBOARD
             </h1>

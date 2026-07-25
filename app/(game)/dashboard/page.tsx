@@ -5,7 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import PageWrapper from "@/components/layout/PageWrapper";
-import DashboardIntro from "@/components/dashboard/DashboardIntro";
+import PageIntro from "@/components/onboarding/PageIntro";
 import ParallaxBg from "@/components/layout/ParallaxBg";
 import Link from "next/link";
 
@@ -90,7 +90,7 @@ export default async function DashboardPage() {
 
   return (
     <PageWrapper>
-      <DashboardIntro show={!student.hasSeenIntro} />
+      <PageIntro page="dashboard" />
 
       {/* ── Parallax village background ── */}
       <ParallaxBg src="/images/scan/bg.png" />
@@ -160,7 +160,7 @@ export default async function DashboardPage() {
           {/* Right Side Panel: You have collected : (larger points text & dynamic color) */}
           <div
             className="rounded-md border-2 border-[#3e2723] bg-[#fdf3e3] flex flex-col items-center justify-between p-3.5 w-[38%] shrink-0 shadow-[3px_3px_0_#3e2723] text-center"
-            data-tour="codex"
+            data-tour="stats"
           >
             <div>
               <p className="font-bytebounce text-[16px] sm:text-[18px] leading-tight text-[#5d3a1a] font-bold" style={{ textShadow: '1px 1px 0 #e6c896' }}>
@@ -248,7 +248,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* ── All Announcements ── */}
-        <div className="flex flex-col gap-2 mt-1">
+        <div className="flex flex-col gap-2 mt-1" data-tour="all-announcements">
           <div className="flex items-center justify-between px-1">
             <h2
               className="font-bytebounce text-[28px] sm:text-[32px] leading-none"

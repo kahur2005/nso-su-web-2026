@@ -7,6 +7,7 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import PageWrapper from '@/components/layout/PageWrapper'
+import PageIntro from '@/components/onboarding/PageIntro'
 import PixelAvatar from '@/components/ui/PixelAvatar'
 import { parseAvatarConfig, hairKey } from '@/lib/avatar'
 import { levelProgress } from '@/lib/leveling'
@@ -132,10 +133,12 @@ export default async function ProfilePage() {
         style={{ backgroundImage: 'url(/images/scan/bg.png)' }}
       />
 
+      <PageIntro page="profile" />
+
       <div className="game-column pt-3 sm:pt-5 pb-28 sm:pb-32 md:pb-12 flex flex-col gap-3.5 sm:gap-4 md:gap-5">
 
         {/* ── Player header banner (wood plank) ── */}
-        <div className="wood-plank px-4 py-3 flex items-center gap-4">
+        <div className="wood-plank px-4 py-3 flex items-center gap-4" data-tour="profile-header">
           <div className="shrink-0 border-2 border-[#3e2723]">
             <PixelAvatar
               skin={av.skin}
@@ -185,7 +188,7 @@ export default async function ProfilePage() {
         </div>
 
         {/* ── 2×2 stat cards (parchment) ── */}
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-2 gap-2.5" data-tour="profile-stats">
 
           {/* Total Points */}
           <div className="rounded border-2 border-[#b08a5e] bg-[#f5e7c6] px-3 py-3.5 flex flex-col items-center justify-center">
@@ -290,7 +293,7 @@ export default async function ProfilePage() {
         )}
 
         {/* ── Achievements section ── */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2" data-tour="profile-achievements">
           {/* Section header */}
           <div className="wood-plank px-4 py-2.5 flex items-center gap-3">
             <span className="text-[22px]">🏅</span>
@@ -365,18 +368,18 @@ export default async function ProfilePage() {
         </div>
 
         {/* ── Activity log ── */}
-        {student.scanLogs?.length > 0 && (
-          <div className="flex flex-col gap-2">
-            <div className="wood-plank px-4 py-2.5 flex items-center gap-3">
-              <span className="text-[22px]">📋</span>
-              <h2
-                className="font-bytebounce text-[26px] leading-none text-[#ffd23f]"
-                style={{ textShadow: '2.5px 2.5px 0 #3e2723' }}
-              >
-                Activity Log
-              </h2>
-            </div>
-            {student.scanLogs.map((log: any) => (
+        <div className="flex flex-col gap-2" data-tour="profile-activity">
+          <div className="wood-plank px-4 py-2.5 flex items-center gap-3">
+            <span className="text-[22px]">📋</span>
+            <h2
+              className="font-bytebounce text-[26px] leading-none text-[#ffd23f]"
+              style={{ textShadow: '2.5px 2.5px 0 #3e2723' }}
+            >
+              Activity Log
+            </h2>
+          </div>
+          {student.scanLogs?.length > 0 ? (
+            student.scanLogs.map((log: any) => (
               <div
                 key={log.id}
                 className="rounded border-2 border-[#3a2418] bg-[#fdf6e3] p-3.5 flex items-center justify-between gap-3"
@@ -396,9 +399,15 @@ export default async function ProfilePage() {
                   +{log.pointsAwarded}pts
                 </span>
               </div>
-            ))}
-          </div>
-        )}
+            ))
+          ) : (
+            <div className="rounded border-2 border-[#3a2418] bg-[#fdf6e3] p-3.5 text-center">
+              <p className="font-bytebounce text-[16px] text-[#8a5a37]">
+                No scans yet — go scan a committee member!
+              </p>
+            </div>
+          )}
+        </div>
 
       </div>
     </PageWrapper>

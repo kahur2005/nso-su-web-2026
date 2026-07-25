@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import PageWrapper from '@/components/layout/PageWrapper'
+import PageIntro from '@/components/onboarding/PageIntro'
 import PixelCard from '@/components/ui/PixelCard'
 import PixelButton from '@/components/ui/PixelButton'
 import WoodButton from '@/components/ui/WoodButton'
@@ -222,6 +223,7 @@ export default function ScanPage() {
 
   return (
     <PageWrapper>
+      <PageIntro page="scan" />
       {/* Forest artwork background (scan-page section of the grand design) */}
       <div
         className="fixed inset-0 -z-10"
@@ -266,7 +268,7 @@ export default function ScanPage() {
             </div>
 
             {/* Camera viewfinder */}
-            <div className="relative mx-auto w-full max-w-[250px]">
+            <div className="relative mx-auto w-full max-w-[250px]" data-tour="scan-camera">
               {/* Pixel corner decorations + scan line (only while camera live) */}
               {cameraOn && (
                 <>
@@ -300,7 +302,7 @@ export default function ScanPage() {
             </div>
 
             {/* Controls */}
-            <div className="mt-5 flex gap-4 justify-center">
+            <div className="mt-5 flex gap-4 justify-center" data-tour="scan-controls">
               <WoodButton onClick={flipCamera} className="h-[54px] flex-1 max-w-[130px]" textClassName="text-[34px]">
                 Flip
               </WoodButton>
@@ -459,7 +461,7 @@ export default function ScanPage() {
         )}
 
         {/* Stats — paper cards */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-2 gap-4 mb-4" data-tour="scan-stats">
           {[
             {
               label: "Today's scans",
@@ -490,13 +492,15 @@ export default function ScanPage() {
         </div>
 
         {/* Recent Scans — opens the receipt popup */}
-        <WoodButton
-          onClick={() => setShowRecent(true)}
-          className="h-[48px] w-full"
-          textClassName="text-[30px]"
-        >
-          Recent Scans
-        </WoodButton>
+        <div data-tour="scan-recent">
+          <WoodButton
+            onClick={() => setShowRecent(true)}
+            className="h-[48px] w-full"
+            textClassName="text-[30px]"
+          >
+            Recent Scans
+          </WoodButton>
+        </div>
       </div>
 
       {showRecent && (
