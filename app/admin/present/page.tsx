@@ -1,14 +1,13 @@
 // app/admin/present/page.tsx
-// Mobile Live 1-Time QR Presenter Page for Committee Members, Group Leaders, and Admins.
-// Displays a high-contrast auto-refreshing QR code (rotates every 30 seconds).
-// Uses stateless short-lived JWTs (valid for 60 seconds) so screenshot sharing
-// off-site is prevented, while keeping DB load at 0.
+// Live 1-Time QR Presenter Page for Committee Members, Group Leaders, and Admins.
+// Embedded cleanly within AdminShell with member search functionality.
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import PageWrapper from '@/components/layout/PageWrapper'
-import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import { Search, RefreshCw, Shield, QrCode as QrIcon } from 'lucide-react'
+import { divisionName } from '@/lib/divisions'
 
 interface NpcOption {
   id: string
@@ -16,12 +15,6 @@ interface NpcOption {
   role: string
   division: string | null
   points: number
-}
-
-const OUTLINE_GOLD = {
-  color: '#ffd23f',
-  textShadow:
-    '3px 3px 0 #4e342e, -3px 3px 0 #4e342e, 3px -3px 0 #4e342e, -3px -3px 0 #4e342e, 0 5px 0 #4e342e',
 }
 
 const ROTATION_INTERVAL_SEC = 30
@@ -32,6 +25,7 @@ export default function AdminPresenterPage() {
 
   const [npcs, setNpcs] = useState<NpcOption[]>([])
   const [selectedNpcId, setSelectedNpcId] = useState<string>('')
+  const [searchQuery, setSearchQuery] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(true)
 
   const [qrCode, setQrCode] = useState<string | null>(null)
@@ -72,6 +66,20 @@ export default function AdminPresenterPage() {
       .catch(() => setNpcs([]))
       .finally(() => setLoading(false))
   }, [])
+
+  // Filtered list based on search query
+  const filteredNpcs = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return npcs
+    return npcs.filter((n) => n.committeeName.toLowerCase().includes(q))
+  }, [npcs, searchQuery])
+
+  // Auto-select first matched option if active selection is filtered out
+  useEffect(() => {
+    if (filteredNpcs.length > 0 && !filteredNpcs.some((n) => n.id === selectedNpcId)) {
+      setSelectedNpcId(filteredNpcs[0].id)
+    }
+  }, [filteredNpcs, selectedNpcId])
 
   const fetchLiveQr = useCallback(async (npcId: string) => {
     if (!npcId) return
@@ -119,122 +127,137 @@ export default function AdminPresenterPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <PageWrapper>
-        <LoadingSpinner text="LOADING PRESENTER..." />
-      </PageWrapper>
+      <div className="flex items-center justify-center min-h-[400px] text-slate-500 text-sm">
+        <RefreshCw className="animate-spin mr-2" size={18} /> Loading presenter...
+      </div>
     )
   }
 
   if (!isAuthorized) {
     return (
-      <PageWrapper>
-        <div className="game-column py-12 text-center">
-          <h1 className="font-bytebounce text-[28px] text-[#ffd23f]" style={OUTLINE_GOLD}>
-            RESTRICTED ACCESS
-          </h1>
-          <p className="mt-2 font-bytebounce text-[18px] text-white">
-            Only Committee Members, Group Leaders, or Admins can access the QR Presenter.
-          </p>
-        </div>
-      </PageWrapper>
+      <div className="p-8 max-w-md mx-auto text-center border border-slate-200 bg-white rounded-xl shadow-sm">
+        <Shield className="mx-auto text-red-500 mb-2" size={32} />
+        <h1 className="text-lg font-semibold text-slate-900">Restricted Access</h1>
+        <p className="mt-1 text-sm text-slate-600">
+          Only Committee Members, Group Leaders, or Admins can access the Live QR Presenter.
+        </p>
+      </div>
     )
   }
 
   return (
-    <PageWrapper showNav={false}>
-      <div className="game-column min-h-dvh flex flex-col justify-between py-4 px-3">
-        {/* Header */}
-        <div>
-          <h1
-            className="text-center font-bytebounce text-[clamp(2.2rem,10vw,3rem)] leading-none"
-            style={OUTLINE_GOLD}
-          >
-            LIVE QR PRESENTER
-          </h1>
-          <p
-            className="mt-1 text-center font-bytebounce text-[16px] text-white"
-            style={{ textShadow: '1.5px 1.5px 0 #4e342e' }}
-          >
-            Show code for students in line to scan
-          </p>
-
-          {/* Committee member selector */}
-          <div className="mt-4 rounded-md border-2 border-[#3a2418] bg-[#fdf6e3] p-3">
-            <label className="block font-bytebounce text-[15px] text-[#5d4330] mb-1">
-              Select Committee Member Profile:
-            </label>
-            <select
-              value={selectedNpcId}
-              onChange={(e) => setSelectedNpcId(e.target.value)}
-              className="w-full rounded border-2 border-[#3a2418] bg-white px-3 py-2 font-bytebounce text-[18px] text-[#3e2723] focus:outline-none"
-            >
-              {npcs.map((npc) => (
-                <option key={npc.id} value={npc.id}>
-                  {npc.committeeName} ({npc.role})
-                </option>
-              ))}
-            </select>
+    <div className="max-w-2xl mx-auto space-y-6">
+      {/* Header Info */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2.5 rounded-lg bg-amber-50 text-amber-600 border border-amber-200">
+            <QrIcon size={22} />
+          </div>
+          <div>
+            <h1 className="text-lg font-semibold text-slate-900">Live QR Presenter</h1>
+            <p className="text-xs text-slate-500">
+              Display live auto-refreshing QR code for students in line to scan.
+            </p>
           </div>
         </div>
 
-        {/* Live QR Display Box */}
-        {selectedNpc && (
-          <div className="my-4 flex flex-col items-center justify-center rounded-lg border-4 border-[#3a2418] bg-[#f5e7c6] p-4 text-center shadow-lg">
-            <h2 className="font-bytebounce text-[24px] uppercase text-[#3e2723]">
-              {selectedNpc.committeeName}
-            </h2>
-            <p className="font-bytebounce text-[16px] text-[#8a5a37] mb-3">
-              {selectedNpc.role} · <span className="text-[#b8860b]">+{selectedNpc.points} pts</span>
-            </p>
+        {/* Member Search & Selector */}
+        <div className="space-y-3 pt-3 border-t border-slate-100">
+          <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+            Select Committee Member Profile
+          </label>
 
-            {/* QR Code Container */}
-            <div className="relative flex items-center justify-center rounded-md border-2 border-[#3a2418] bg-white p-2 w-[280px] h-[280px]">
-              {qrCode ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                  src={qrCode}
-                  alt={`1-Time QR Code for ${selectedNpc.committeeName}`}
-                  className="w-full h-full object-contain"
-                />
-              ) : (
-                <LoadingSpinner text="GENERATING QR..." />
-              )}
-            </div>
-
-            {/* Countdown Progress Bar */}
-            <div className="mt-4 w-full max-w-[280px]">
-              <div className="flex justify-between items-center font-bytebounce text-[15px] text-[#5d4330] mb-1">
-                <span>🔄 Auto-rotates every 30s</span>
-                <span className="font-bold text-[#b8860b]">{countdown}s</span>
-              </div>
-              <div className="h-2.5 w-full rounded-full border border-[#3a2418] bg-[#e0d3ae] overflow-hidden">
-                <div
-                  className="h-full bg-[#fbc94c] transition-all duration-1000 ease-linear"
-                  style={{ width: `${(countdown / ROTATION_INTERVAL_SEC) * 100}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Manual Refresh Button */}
-            <button
-              type="button"
-              onClick={() => fetchLiveQr(selectedNpcId)}
-              disabled={fetchingQr}
-              className="mt-3 rounded border-2 border-[#3a2418] bg-[#8a5a37] px-4 py-1.5 font-bytebounce text-[16px] text-[#ffd23f] active:translate-y-0.5 disabled:opacity-50"
-            >
-              {fetchingQr ? 'Refreshing...' : '⚡ Generate New Code Now'}
-            </button>
+          {/* Search Field */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <input
+              type="text"
+              placeholder="Search by member name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 bg-slate-50 focus:bg-white"
+            />
           </div>
-        )}
 
-        {/* Security badge */}
-        <p
-          className="text-center font-bytebounce text-[14px] text-[#e0b391]"
-          style={{ textShadow: '1px 1px 0 #4e342e' }}
-        >
-          🔒 Live rolling QR presenter · Prevents off-site screenshot sharing
-        </p>
+          {/* Member Dropdown */}
+          <select
+            value={selectedNpcId}
+            onChange={(e) => setSelectedNpcId(e.target.value)}
+            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-slate-900"
+          >
+            {filteredNpcs.length === 0 ? (
+              <option value="" disabled>No committee members match search</option>
+            ) : (
+              filteredNpcs.map((npc) => (
+                <option key={npc.id} value={npc.id}>
+                  {npc.committeeName} — {npc.role} ({divisionName(npc.division)})
+                </option>
+              ))
+            )}
+          </select>
+        </div>
       </div>
-    </PageWrapper>
+
+      {/* Live QR Presenter Card */}
+      {selectedNpc && (
+        <div className="bg-slate-900 text-white rounded-xl p-6 shadow-md border border-slate-800 flex flex-col items-center text-center">
+          <span className="text-xs font-semibold tracking-widest text-amber-400 uppercase bg-amber-900/50 px-3 py-1 rounded-full border border-amber-700/50 mb-2">
+            {divisionName(selectedNpc.division)}
+          </span>
+
+          <h2 className="text-2xl font-bold text-white">{selectedNpc.committeeName}</h2>
+          <p className="text-sm text-slate-400 mt-0.5 mb-5">
+            {selectedNpc.role} · <span className="text-amber-400 font-semibold">+{selectedNpc.points} pts</span>
+          </p>
+
+          {/* QR Display Container */}
+          <div className="relative flex items-center justify-center rounded-xl bg-white p-4 w-[280px] h-[280px] shadow-inner">
+            {qrCode ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={qrCode}
+                alt={`Live QR Code for ${selectedNpc.committeeName}`}
+                className="w-full h-full object-contain"
+              />
+            ) : (
+              <div className="flex flex-col items-center text-slate-400">
+                <RefreshCw className="animate-spin mb-2" size={24} />
+                <span className="text-xs font-medium">Generating QR...</span>
+              </div>
+            )}
+          </div>
+
+          {/* Rotation Progress Bar */}
+          <div className="mt-5 w-full max-w-[280px]">
+            <div className="flex justify-between items-center text-xs text-slate-400 mb-1.5 font-medium">
+              <span>🔄 Auto-rotates every 30s</span>
+              <span className="text-amber-400 font-bold">{countdown}s</span>
+            </div>
+            <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden border border-slate-700">
+              <div
+                className="h-full bg-amber-400 transition-all duration-1000 ease-linear"
+                style={{ width: `${(countdown / ROTATION_INTERVAL_SEC) * 100}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Manual Refresh Button */}
+          <button
+            type="button"
+            onClick={() => fetchLiveQr(selectedNpcId)}
+            disabled={fetchingQr}
+            className="mt-5 flex items-center gap-2 rounded-lg bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-semibold px-4 py-2 text-sm transition-colors disabled:opacity-50"
+          >
+            <RefreshCw size={16} className={fetchingQr ? 'animate-spin' : ''} />
+            {fetchingQr ? 'Refreshing...' : 'Generate New Code Now'}
+          </button>
+        </div>
+      )}
+
+      {/* Security note */}
+      <p className="text-center text-xs text-slate-500">
+        🔒 Rolling QR presenter with short-lived tokens prevents off-site screenshot sharing.
+      </p>
+    </div>
   )
 }
