@@ -200,6 +200,81 @@ body {
   text-shadow: 3px 3px 0px #000;
 }
 
+/* ── Standardized Retro Pixel Design System ────────────────────────────── */
+
+.pixel-title {
+  font-family: 'ByteBounce', 'Press Start 2P', monospace;
+  font-size: clamp(1.8rem, 6vw, 2.5rem);
+  line-height: 1;
+  color: #ffd23f;
+  text-shadow: 2.5px 2.5px 0 #3e2723, -2.5px 2.5px 0 #3e2723, 2.5px -2.5px 0 #3e2723, -2.5px -2.5px 0 #3e2723, 0 4px 0 #3e2723;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.pixel-subtitle {
+  font-family: 'ByteBounce', 'Press Start 2P', monospace;
+  font-size: clamp(14px, 3.5vw, 18px);
+  line-height: 1.25;
+  color: #ffffff;
+  text-shadow: 1.5px 1.5px 0 #4e342e;
+  text-align: center;
+}
+
+.pixel-heading {
+  font-family: 'ByteBounce', 'Press Start 2P', monospace;
+  font-size: clamp(20px, 4.5vw, 26px);
+  line-height: 1.1;
+  color: #ffd23f;
+  text-shadow: 2px 2px 0 #3e2723;
+}
+
+.pixel-body {
+  font-family: 'ByteBounce', 'Press Start 2P', monospace;
+  font-size: clamp(15px, 3.5vw, 18px);
+  line-height: 1.25;
+  color: #3e2723;
+}
+
+.pixel-subtext {
+  font-family: 'ByteBounce', 'Press Start 2P', monospace;
+  font-size: clamp(12px, 3vw, 15px);
+  line-height: 1.2;
+  color: #8a5a37;
+}
+
+.pixel-icon-sm {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.pixel-icon-md {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.pixel-icon-lg {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.pixel-icon-hero {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
 /* Blink Animation */
 @keyframes blink {
   0%, 100% { opacity: 1; }

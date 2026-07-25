@@ -140,7 +140,7 @@ export default async function DashboardPage() {
                 <img
                   src={tile.icon}
                   alt=""
-                  className="w-32 h-32 sm:w-16 sm:h-16 object-contain mb-1.5"
+                  className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 object-contain mb-1.5"
                   style={{ imageRendering: "pixelated" }}
                 />
                 <span
