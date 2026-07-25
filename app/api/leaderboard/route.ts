@@ -6,30 +6,19 @@ export async function GET() {
   try {
     // Groups ordered by score, with their member roster embedded (the
     // leaderboard's collapsible rows show each member's contribution and
-    // link their avatar to Instagram). _count keeps the shape the client
-    // had under Prisma.
+    // link their avatar to Instagram). Filter out admins from roster.
     const { data: rawGroups, error: groupsError } = await supabase
       .from('Group')
-      .select('*, members:Student(id, name, points, funFactsCollected, instagram, avatarConfig)')
+      .select('*, members:Student(id, name, points, funFactsCollected, instagram, avatarConfig, isAdmin)')
       .order('totalPoints', { ascending: false })
 
     if (groupsError) throw groupsError
 
-    /* `Group.totalPoints` is a denormalised counter that only `scan_npc` and
-     * `adjust_points` maintain, and only at the instant points change — so it
-     * silently desyncs whenever membership changes afterwards. Assigning a
-     * student who already has points never adds them to the group (the RPC saw
-     * a null groupId at scan time); unassigning never removes them; editing
-     * points in the Supabase Table Editor bypasses it entirely.
-     *
-     * The roster is already fetched here with every member's points, so derive
-     * the total instead. That is correct by construction, whatever order the
-     * points and the group assignment happened in. */
     const groups = (rawGroups ?? [])
       .map((g: any) => {
-        const members = [...(g.members ?? [])].sort(
-          (a: any, b: any) => (b.points ?? 0) - (a.points ?? 0)
-        )
+        const members = [...(g.members ?? [])]
+          .filter((m: any) => !m.isAdmin)
+          .sort((a: any, b: any) => (b.points ?? 0) - (a.points ?? 0))
         const totalPoints = members.reduce(
           (sum: number, m: any) => sum + (m.points ?? 0),
           0
@@ -39,17 +28,20 @@ export async function GET() {
       // Re-sort: the query ordered by the stale stored column.
       .sort((a: any, b: any) => b.totalPoints - a.totalPoints)
 
-    // The PLAYERS tab shows a top 10, and this route has no other consumer, so
-    // there is nothing to gain from fetching deeper.
-    const { data: topStudents, error: studentsError } = await supabase
+    // Fetch top 10 students, excluding admins
+    const { data: allStudents, error: studentsError } = await supabase
       .from('Student')
-      .select('id, name, studentId, points, funFactsCollected, avatarConfig, group:Group(name, emblem, emblemUrl, color)')
+      .select('id, name, studentId, points, funFactsCollected, avatarConfig, isAdmin, group:Group(name, emblem, emblemUrl, color)')
       .order('points', { ascending: false })
-      .limit(10)
+      .limit(30)
 
     if (studentsError) throw studentsError
 
-    return NextResponse.json({ groups, topStudents: topStudents ?? [] })
+    const topStudents = (allStudents ?? [])
+      .filter((s: any) => !s.isAdmin)
+      .slice(0, 10)
+
+    return NextResponse.json({ groups, topStudents })
   } catch (error) {
     console.error(error)
     return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 })
