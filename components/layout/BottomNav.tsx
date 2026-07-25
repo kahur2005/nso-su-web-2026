@@ -106,7 +106,9 @@ export default function BottomNav() {
                 >
                   <PixelAvatar
                     skin={av.skin}
+                    clothes={av.clothes ?? undefined}
                     hair={hairKey(av)}
+                    hijab={av.hijab ?? undefined}
                     eyes={av.eyes ?? undefined}
                     brow={av.brows ?? undefined}
                     mouth={av.mouth ?? undefined}
