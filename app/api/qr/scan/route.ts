@@ -1,11 +1,8 @@
 // app/api/qr/scan/route.ts
 // Single entry point for every QR a student can scan. Verifies the signed token
-// once, resolves the student, then dispatches to the handler for that kind of
-// code. The per-kind logic lives in lib/scan/* so this file stays a dispatcher.
-//
-// Dispatch is on the presence of `questId`, not on the `kind` claim: fun-fact
-// QRs printed before quests existed carry no discriminator, and those printouts
-// have to keep working.
+// once, checks optional date-window claims (validFrom / validUntil — for daily
+// QR codes), enforces single-use 1-time token nonces (jti), resolves the student,
+// then dispatches to the per-kind handler.
 import jwt from 'jsonwebtoken'
 import { supabase } from '@/lib/supabase'
 import { getServerSession } from 'next-auth'
@@ -26,6 +23,41 @@ export async function POST(request: Request) {
   try {
     const decoded = jwt.verify(token, process.env.QR_SECRET_KEY!) as any
 
+    // ── Daily QR date-window check ──────────────────────────────────────────
+    const now = Date.now()
+    if (decoded.validFrom && now < new Date(decoded.validFrom).getTime()) {
+      return NextResponse.json({
+        success: false,
+        error: `QR not active yet. Opens at ${new Date(decoded.validFrom).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+      })
+    }
+    if (decoded.validUntil && now > new Date(decoded.validUntil).getTime()) {
+      return NextResponse.json({
+        success: false,
+        error: 'This QR code has expired for today.',
+      })
+    }
+
+    // ── Single-use 1-time token check ───────────────────────────────────────
+    if (decoded.jti) {
+      try {
+        const { data: usedToken } = await supabase
+          .from('SingleUseToken')
+          .select('jti')
+          .eq('jti', decoded.jti)
+          .maybeSingle()
+
+        if (usedToken) {
+          return NextResponse.json({
+            success: false,
+            error: 'This single-use QR code has already been scanned by someone else!',
+          })
+        }
+      } catch {
+        // Fallback if table not created yet
+      }
+    }
+
     // Resolve the public studentId to the internal row id both RPCs expect.
     const { data: student } = await supabase
       .from('Student')
@@ -37,9 +69,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Student not found' })
     }
 
+    const isDynamicToken = !!decoded.live || !!decoded.jti
     const outcome = decoded.questId
       ? await completeQuestScan(student.id, decoded.questId, token)
-      : await completeNpcScan(student.id, decoded.npcId, decoded.points, token)
+      : await completeNpcScan(student.id, decoded.npcId, decoded.points, token, isDynamicToken)
+
+    // Mark single-use token as consumed upon success
+    if (outcome.body?.success && decoded.jti) {
+      try {
+        await supabase.from('SingleUseToken').insert({
+          jti: decoded.jti,
+          scannedBy: student.id,
+        })
+      } catch {
+        // Fallback if unmigrated
+      }
+    }
 
     return NextResponse.json(outcome.body, { status: outcome.status ?? 200 })
   } catch (error: any) {

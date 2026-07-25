@@ -1,7 +1,8 @@
 // app/api/quests/route.ts
-// The student's quest library. Every active quest is listed whether or not the
-// student has done it — /quests is a mission board, so a quest they haven't
-// completed still has to tell them what to go and do.
+// The student's quest library. Every active quest that is currently available
+// (availableFrom <= now AND now <= availableUntil, if those fields are set) is
+// listed. Quests with a future availableFrom are shown with an "opens at" label
+// so students can plan; quests whose window has closed are hidden.
 import { supabase } from '@/lib/supabase'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -25,12 +26,10 @@ export async function GET() {
     return NextResponse.json({ error: 'Student not found' }, { status: 404 })
   }
 
-  // Soft-deleted and inactive quests are hidden: an inactive quest's QR is
-  // refused by lib/scan/quest.ts, so listing it would advertise a mission that
-  // cannot be completed.
+  // Fetch all active, non-deleted quests including time-gate fields.
   const { data: quests, error } = await supabase
     .from('Quest')
-    .select('id, title, description, points, achievement:Achievement(name, description, imageUrl)')
+    .select('id, title, description, points, availableFrom, availableUntil, achievement:Achievement(name, description, imageUrl)')
     .eq('isDeleted', false)
     .eq('isActive', true)
     .order('createdAt', { ascending: false })
@@ -53,15 +52,34 @@ export async function GET() {
     (progressRows ?? []).map((p: any) => [p.questId, p.completedAt])
   )
 
-  const questsWithProgress = (quests ?? []).map((q: any) => ({
-    id: q.id,
-    title: q.title,
-    description: q.description,
-    points: q.points,
-    achievement: q.achievement ?? null,
-    isCompleted: completedAt.has(q.id),
-    completedAt: completedAt.get(q.id) ?? null,
-  }))
+  const now = new Date()
+
+  const questsWithProgress = (quests ?? [])
+    .map((q: any) => {
+      const from = q.availableFrom ? new Date(q.availableFrom) : null
+      const until = q.availableUntil ? new Date(q.availableUntil) : null
+      // Window closed → hide completely
+      const expired = until && now > until
+      // Window not yet open
+      const notYet = from && now < from
+
+      return {
+        id: q.id,
+        title: q.title,
+        description: q.description,
+        points: q.points,
+        achievement: q.achievement ?? null,
+        isCompleted: completedAt.has(q.id),
+        completedAt: completedAt.get(q.id) ?? null,
+        // Time-gate metadata for the UI
+        availableFrom: q.availableFrom ?? null,
+        availableUntil: q.availableUntil ?? null,
+        isLocked: !!notYet,    // true = show "opens at X", disable scan button
+        isExpired: !!expired,  // true = window closed, hide from board
+      }
+    })
+    // Drop quests whose window has passed
+    .filter((q) => !q.isExpired)
 
   return NextResponse.json({
     quests: questsWithProgress,

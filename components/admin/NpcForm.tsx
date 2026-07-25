@@ -22,6 +22,7 @@ export default function NpcForm() {
     instagram: '',
     funFact: '',
     points: 10,
+    maxScans: '' as number | '',  // blank = unlimited
   })
 
   // Composite the raw QR data-URL onto a canvas with the NPC name and the time
@@ -76,7 +77,10 @@ export default function NpcForm() {
       const res = await fetch('/api/qr/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
+        body: JSON.stringify({
+          ...form,
+          maxScans: form.maxScans === '' ? null : Number(form.maxScans),
+        }),
       })
       const data = await res.json()
 
@@ -89,7 +93,7 @@ export default function NpcForm() {
       const labeled = await composeLabeledQr(data.qrCode, data.npc.committeeName, generatedAt)
       setGeneratedQr(labeled)
       setGeneratedName(data.npc.committeeName)
-      setForm({ committeeName: '', role: '', division: '', instagram: '', funFact: '', points: 10 })
+      setForm({ committeeName: '', role: '', division: '', instagram: '', funFact: '', points: 10, maxScans: '' })
       router.refresh()
     } catch {
       setError('Connection error')
@@ -171,6 +175,19 @@ export default function NpcForm() {
             value={form.points}
             onChange={(e) => setForm({ ...form, points: parseInt(e.target.value) || 0 })}
             required
+          />
+        </div>
+
+        {/* Max scans — optional, leave blank for unlimited */}
+        <div>
+          <label className={labelClass}>Max scans (blank = unlimited)</label>
+          <input
+            type="number"
+            min={1}
+            className={inputClass}
+            value={form.maxScans}
+            onChange={(e) => setForm({ ...form, maxScans: e.target.value === '' ? '' : parseInt(e.target.value) })}
+            placeholder="e.g. 150"
           />
         </div>
 

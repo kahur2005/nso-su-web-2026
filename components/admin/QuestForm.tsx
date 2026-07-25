@@ -10,6 +10,8 @@ export interface QuestRow {
   description: string
   points: number
   achievementId: string | null
+  availableFrom?: string | null
+  availableUntil?: string | null
 }
 
 export interface AchievementOption {
@@ -122,6 +124,35 @@ export default function QuestForm({
             No achievements exist yet — create one under Achievements first.
           </p>
         )}
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className={labelClass}>Active Time Window Start (Daily Quest optional)</label>
+          <input
+            name="availableFrom"
+            type="datetime-local"
+            defaultValue={
+              quest?.availableFrom
+                ? new Date(quest.availableFrom).toISOString().slice(0, 16)
+                : ''
+            }
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className={labelClass}>Active Time Window End (Daily Quest optional)</label>
+          <input
+            name="availableUntil"
+            type="datetime-local"
+            defaultValue={
+              quest?.availableUntil
+                ? new Date(quest.availableUntil).toISOString().slice(0, 16)
+                : ''
+            }
+            className={inputClass}
+          />
+        </div>
       </div>
 
       <div className="flex items-center gap-3">

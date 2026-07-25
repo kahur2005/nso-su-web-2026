@@ -37,24 +37,32 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }: any) {
-      // `user` is only present at sign-in; refresh the cached claims then.
-      if (user?.studentId) {
+    async jwt({ token, user }) {
+      if (user && 'studentId' in user && typeof user.studentId === 'string') {
         token.studentId = user.studentId
+      }
+      const targetStudentId = (token.studentId as string) || (user as any)?.studentId
+      if (targetStudentId) {
         const { data: student } = await supabase
           .from('Student')
-          .select('isAdmin, points')
-          .eq('studentId', user.studentId)
+          .select('isAdmin, points, role, groupId')
+          .eq('studentId', targetStudentId)
           .maybeSingle()
-        token.isAdmin = student?.isAdmin || false
+        token.isAdmin = Boolean(student?.isAdmin || student?.role === 'admin')
         token.points = student?.points || 0
+        token.role = student?.role || (token.isAdmin ? 'admin' : 'student')
+        token.groupId = student?.groupId || null
       }
       return token
     },
     async session({ session, token }) {
-      (session.user as any).studentId = token.studentId
-      ;(session.user as any).isAdmin = token.isAdmin
-      ;(session.user as any).points = token.points
+      if (session.user) {
+        session.user.studentId = (token.studentId as string) ?? ''
+        session.user.isAdmin = (token.isAdmin as boolean) ?? false
+        session.user.points = (token.points as number) ?? 0
+        session.user.role = (token.role as string) ?? 'student'
+        session.user.groupId = (token.groupId as string | null) ?? null
+      }
       return session
     },
   },

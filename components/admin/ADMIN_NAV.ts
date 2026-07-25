@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, QrCode, Users, Star, Megaphone, Building2, IdCard,
+  LayoutDashboard, QrCode, Smartphone, Users, Star, Megaphone, Building2, IdCard,
   Swords, Award, BookOpen,
   type LucideIcon,
 } from 'lucide-react'
@@ -18,6 +18,7 @@ export interface AdminNavItem {
 export const ADMIN_NAV: AdminNavItem[] = [
   { href: '/admin/dashboard', label: 'Overview', icon: LayoutDashboard },
   { href: '/admin/qr', label: 'QR & Fun Facts', icon: QrCode },
+  { href: '/admin/present', label: 'Live Presenter', icon: Smartphone },
   { href: '/admin/quests', label: 'Quests', icon: Swords },
   { href: '/admin/achievements', label: 'Achievements', icon: Award },
   { href: '/admin/groups', label: 'Groups', icon: Users },

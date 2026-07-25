@@ -1,8 +1,8 @@
 // app/(game)/quests/page.tsx
 // The student's quest board. Every active quest is shown with its instructions
 // whether or not it's been completed — a mission you can't read is a mission you
-// can't go and do. Completing one means finding its QR code and scanning it at
-// /scan; there is no in-app "complete" button by design.
+// can't go and do. Time-gated quests show "Opens at HH:MM" and disable the scan
+// button until the window opens.
 'use client'
 import { useState, useEffect } from 'react'
 import PageWrapper from '@/components/layout/PageWrapper'
@@ -24,6 +24,9 @@ interface Quest {
   achievement: QuestAchievement | null
   isCompleted: boolean
   completedAt: string | null
+  availableFrom: string | null
+  availableUntil: string | null
+  isLocked: boolean   // window hasn't opened yet
 }
 
 /** Gold display text with the design's brown pixel outline. */
@@ -31,6 +34,10 @@ const OUTLINE_GOLD = {
   color: '#ffd23f',
   textShadow:
     '3px 3px 0 #4e342e, -3px 3px 0 #4e342e, 3px -3px 0 #4e342e, -3px -3px 0 #4e342e, 0 5px 0 #4e342e',
+}
+
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
 export default function QuestsPage() {
@@ -51,7 +58,7 @@ export default function QuestsPage() {
 
   return (
     <PageWrapper>
-      <div className="mx-auto w-full max-w-md px-3 pb-4 pt-3 lg:max-w-lg">
+      <div className="game-column pb-4 pt-3">
         <h1
           className="text-center font-bytebounce text-[clamp(2.4rem,12vw,3.2rem)] leading-[0.85]"
           style={OUTLINE_GOLD}
@@ -102,9 +109,23 @@ export default function QuestsPage() {
                 <article
                   key={quest.id}
                   className={`relative rounded-md border-2 border-[#3a2418] px-3 py-3 ${
-                    quest.isCompleted ? 'bg-[#e0d3ae]' : 'bg-[#fdf6e3]'
+                    quest.isCompleted
+                      ? 'bg-[#e0d3ae]'
+                      : quest.isLocked
+                      ? 'bg-[#f0ead6] opacity-75'
+                      : 'bg-[#fdf6e3]'
                   }`}
                 >
+                  {/* Locked banner */}
+                  {quest.isLocked && (
+                    <div className="mb-2 flex items-center gap-1.5 rounded border border-[#c9a97b] bg-[#fff3d9] px-2 py-1">
+                      <span className="text-base leading-none">🔒</span>
+                      <p className="font-bytebounce text-[14px] leading-none text-[#8a5a37]">
+                        Opens at {quest.availableFrom ? formatTime(quest.availableFrom) : '—'}
+                      </p>
+                    </div>
+                  )}
+
                   <div className="flex items-start justify-between gap-3">
                     <h2 className="min-w-0 flex-1 font-bytebounce text-[22px] uppercase leading-none text-[#3e2723]">
                       {quest.title}
@@ -130,7 +151,7 @@ export default function QuestsPage() {
                         <span className="text-lg leading-none">🏅</span>
                       )}
                       <p className="min-w-0 flex-1 truncate font-bytebounce text-[15px] leading-none text-[#8a5a37]">
-                        Grants “{quest.achievement.name}”
+                        Grants &quot;{quest.achievement.name}&quot;
                       </p>
                     </div>
                   )}
@@ -145,13 +166,17 @@ export default function QuestsPage() {
                             day: 'numeric',
                           })}`}
                       </span>
+                    ) : quest.isLocked ? (
+                      <span className="font-bytebounce text-[16px] leading-none text-[#a58962]">
+                        Not available yet
+                      </span>
                     ) : (
                       <span className="font-bytebounce text-[16px] leading-none text-[#a58962]">
                         Not completed yet
                       </span>
                     )}
 
-                    {!quest.isCompleted && (
+                    {!quest.isCompleted && !quest.isLocked && (
                       <Link
                         href="/scan"
                         className="rounded border-2 border-[#3a2418] bg-[#8a5a37] px-2 py-1 font-bytebounce text-[15px] leading-none text-[#ffd23f] active:translate-y-0.5"

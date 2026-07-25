@@ -10,6 +10,8 @@ declare module 'next-auth' {
       studentId: string
       isAdmin: boolean
       points: number
+      role?: string
+      groupId?: string | null
     }
   }
 }
@@ -19,5 +21,7 @@ declare module 'next-auth/jwt' {
     studentId?: string
     isAdmin?: boolean
     points?: number
+    role?: string
+    groupId?: string | null
   }
 }

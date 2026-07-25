@@ -1,4 +1,10 @@
 // app/api/qr/generate/route.ts
+// Admin-only: mint a signed JWT for a given NPC. The token is stored in
+// NPC.qrToken so old printouts can be retired by regenerating.
+//
+// Optional `validFrom` / `validUntil` ISO strings turn a permanent QR into a
+// daily QR: the scan route checks these claims and rejects scans outside the
+// window. Omitting them (the default) leaves the QR permanently valid.
 import QRCode from 'qrcode'
 import jwt from 'jsonwebtoken'
 import { supabase } from '@/lib/supabase'
@@ -15,15 +21,12 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json()
-  const { npcId } = body
+  const { npcId, validFrom, validUntil } = body
 
   let npc: any
 
   if (npcId) {
-    // Generate (or regenerate) a QR for an existing committee member — e.g.
-    // one added via /admin/committee, which has no QR until this route runs.
-    // Update that row instead of inserting, so the person doesn't end up as
-    // two NPC rows (one scannable, one permanently orphaned).
+    // Regenerate QR for an existing NPC row.
     const { data: existingNpc, error: fetchError } = await supabase
       .from('NPC')
       .select('*')
@@ -41,15 +44,10 @@ export async function POST(request: Request) {
   } else {
     const { committeeName, role, division, instagram, funFact, points } = body
 
-    // division is required: /(game)/map/committee filters members by
-    // `m.division === activeDivision`, so a null-division member would be
-    // invisible to students. Reject a missing/empty value the same way an
-    // invalid one is already rejected.
     if (!division || !isDivisionId(division)) {
       return NextResponse.json({ error: 'Division is required' }, { status: 400 })
     }
 
-    // Create NPC
     const { data: createdNpc, error: createError } = await supabase
       .from('NPC')
       .insert({
@@ -70,25 +68,28 @@ export async function POST(request: Request) {
     npc = createdNpc
   }
 
-  // Generate JWT token. Points come from the NPC row itself (not request
-  // body) so a regenerate for an existing member always encodes the points
-  // actually configured for them, not whatever a caller happened to send.
-  const token = jwt.sign(
-    { npcId: npc.id, points: npc.points },
-    process.env.QR_SECRET_KEY!,
-    { expiresIn: '7d' }
-  )
+  // ── Build JWT payload ───────────────────────────────────────────────────
+  // Points come from the NPC row so a regenerate for an existing member always
+  // encodes the configured value, not whatever the caller sent.
+  const payload: Record<string, unknown> = {
+    npcId: npc.id,
+    points: npc.points,
+  }
+  // Daily-QR window claims — omitted for permanent QRs.
+  if (validFrom) payload.validFrom = validFrom
+  if (validUntil) payload.validUntil = validUntil
 
-  // Generate QR Code
+  const token = jwt.sign(payload, process.env.QR_SECRET_KEY!, { expiresIn: '7d' })
+
+  // Generate QR Code image
   const scanUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/scan?token=${token}`
   const qrCodeImage = await QRCode.toDataURL(scanUrl, {
     width: 400,
     margin: 2,
-    color: { dark: '#000000', light: '#FFFFFF' }
+    color: { dark: '#000000', light: '#FFFFFF' },
   })
 
-  // Save token & QR. This also legitimately replaces any existing QR (e.g. a
-  // lost printout) — regenerating simply overwrites qrToken/qrCode.
+  // Persist — also retires any previously issued token for this NPC.
   const { data: updatedNpc, error: updateError } = await supabase
     .from('NPC')
     .update({ qrToken: token, qrCode: qrCodeImage })
@@ -105,6 +106,8 @@ export async function POST(request: Request) {
     success: true,
     npc: updatedNpc ?? npc,
     qrCode: qrCodeImage,
-    scanUrl
+    scanUrl,
+    validFrom: validFrom ?? null,
+    validUntil: validUntil ?? null,
   })
 }
