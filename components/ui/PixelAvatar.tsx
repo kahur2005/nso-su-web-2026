@@ -1,6 +1,7 @@
 // components/ui/PixelAvatar.tsx
-// Composite pixel avatar: skin base + hair overlay layered with absolute positioning.
-// Pass size in px (square). Both props are optional — falls back to a plain placeholder.
+// Composite pixel avatar: skin base + eyes + brows + mouth + hair overlays.
+// Pass size in px (square). All part props are optional — falls back gracefully.
+// Layer order (bottom→top): skin → eyes → brows → mouth → hair
 
 interface PixelAvatarProps {
   /** e.g. "skin3" */
@@ -11,6 +12,8 @@ interface PixelAvatarProps {
   eyes?: string | null
   /** e.g. "brow1" */
   brow?: string | null
+  /** e.g. "mouth1" */
+  mouth?: string | null
   size?: number
   className?: string
 }
@@ -20,6 +23,7 @@ export default function PixelAvatar({
   hair,
   eyes,
   brow,
+  mouth,
   size = 48,
   className = '',
 }: PixelAvatarProps) {
@@ -57,6 +61,18 @@ export default function PixelAvatar({
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={`/images/avatar/${brow}.png`}
+          alt=""
+          aria-hidden
+          className="absolute inset-0 w-full h-full object-contain"
+          style={{ imageRendering: 'pixelated' }}
+        />
+      )}
+
+      {/* Mouth layer (above brows, below hair) */}
+      {mouth && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={`/images/avatar/${mouth}.png`}
           alt=""
           aria-hidden
           className="absolute inset-0 w-full h-full object-contain"

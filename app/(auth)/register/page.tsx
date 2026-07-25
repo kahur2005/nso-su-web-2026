@@ -1,7 +1,7 @@
 'use client'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import PixelAvatar from '@/components/ui/PixelAvatar'
 
 const TOTAL_STEPS = 5
@@ -44,6 +44,12 @@ const HAIR_COLORS: { suffix: string; label: string; swatch: string }[] = [
   { suffix: '.2',  label: 'Brown', swatch: '#6b3a1f' },
   { suffix: '.3',  label: 'Light', swatch: '#c68642' },
 ]
+
+// Mouth options — add mouth*.png sprites to public/images/avatar/
+const MOUTHS: Array<string | null> = [
+  null,
+  ...Array.from({ length: 8 }, (_, i) => `mouth${i + 1}`),
+]
 // ───────────────────────────────────────────────────────────────────────────
 
 export default function RegisterPage() {
@@ -59,14 +65,53 @@ export default function RegisterPage() {
     hobby: '',
     achievements: '',
     medicalNote: '',
+    gender: '' as 'M' | 'F' | 'other' | '',
   })
   const [avatarSkin, setAvatarSkin] = useState('skin1')
   const [avatarHairStyle, setAvatarHairStyle] = useState<string | null>('hairb1')
   const [avatarHairColor, setAvatarHairColor] = useState('')
   const [avatarEyes, setAvatarEyes] = useState('eyes1')
   const [avatarBrows, setAvatarBrows] = useState('brow1')
+  const [avatarMouth, setAvatarMouth] = useState<string | null>('mouth1')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // Hydrate draft from sessionStorage on mount
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('nso_register_draft')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (typeof parsed.step === 'number') setStep(parsed.step)
+        if (parsed.form) setForm((prev) => ({ ...prev, ...parsed.form }))
+        if (parsed.avatarSkin) setAvatarSkin(parsed.avatarSkin)
+        if (parsed.avatarHairStyle) setAvatarHairStyle(parsed.avatarHairStyle)
+        if (parsed.avatarHairColor) setAvatarHairColor(parsed.avatarHairColor)
+        if (parsed.avatarEyes) setAvatarEyes(parsed.avatarEyes)
+        if (parsed.avatarBrows) setAvatarBrows(parsed.avatarBrows)
+        if (parsed.avatarMouth !== undefined) setAvatarMouth(parsed.avatarMouth)
+      }
+    } catch {}
+  }, [])
+
+  // Persist draft to sessionStorage on state changes
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(
+        'nso_register_draft',
+        JSON.stringify({
+          step,
+          form,
+          avatarSkin,
+          avatarHairStyle,
+          avatarHairColor,
+          avatarEyes,
+          avatarBrows,
+          avatarMouth,
+        })
+      )
+    } catch {}
+  }, [step, form, avatarSkin, avatarHairStyle, avatarHairColor, avatarEyes, avatarBrows, avatarMouth])
 
   const hairKey = avatarHairStyle ? `${avatarHairStyle}${avatarHairColor}` : null
 
@@ -112,10 +157,13 @@ export default function RegisterPage() {
           hobby: form.hobby,
           achievements: form.achievements,
           medicalNote: form.medicalNote,
+          gender: form.gender || null,
           avatarSkin,
-          avatarHair: hairKey,
+          avatarHairStyle,
+          avatarHairColor,
           avatarEyes,
           avatarBrows,
+          avatarMouth,
         }),
       })
       const data = await res.json()
@@ -126,6 +174,7 @@ export default function RegisterPage() {
         return
       }
 
+      try { sessionStorage.removeItem('nso_register_draft') } catch {}
       const signInRes = await signIn('credentials', {
         email: form.email,
         password: form.password,
@@ -149,7 +198,7 @@ export default function RegisterPage() {
   const isLastStep = step === TOTAL_STEPS - 1
 
   return (
-    <div className="relative min-h-dvh w-full overflow-y-auto">
+    <div className="relative min-h-dvh w-full overflow-y-auto bg-[#000b8c] pb-12">
       <img
         src="/images/login/bg.png"
         alt=""
@@ -161,36 +210,36 @@ export default function RegisterPage() {
         type="button"
         onClick={goBack}
         aria-label={step === 0 ? 'Back to login' : 'Previous step'}
-        className="absolute left-5 top-8 z-20 w-[64px] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5"
+        className="absolute left-4 top-4 sm:top-8 z-20 w-[54px] sm:w-[64px] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5"
       >
         <img src="/images/login/back-button.png" alt="" className="w-full" />
       </button>
 
-      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-sm flex-col px-6 pb-8 pt-28 lg:max-w-md">
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-sm flex-col px-5 pb-8 pt-14 sm:pt-20 lg:max-w-md">
         {/* Title */}
         <h1 className="text-center font-bytebounce leading-[0.9] text-[#fbc94c]">
           <span
-            className="block text-[clamp(2.75rem,15vw,4rem)] lg:text-[4.25rem]"
-            style={{ textShadow: '3.4px 3.1px 0 #4e342e' }}
+            className="block text-[clamp(2.2rem,11vw,3.5rem)] lg:text-[4.25rem]"
+            style={{ textShadow: '3px 2.5px 0 #4e342e' }}
           >
             {titleTop}
           </span>
           <span
-            className="block text-[clamp(2.75rem,15vw,4rem)] lg:text-[4.25rem]"
-            style={{ textShadow: '3.4px 3.1px 0 #4e342e' }}
+            className="block text-[clamp(2.2rem,11vw,3.5rem)] lg:text-[4.25rem]"
+            style={{ textShadow: '3px 2.5px 0 #4e342e' }}
           >
             {titleBottom}
           </span>
         </h1>
 
         <p
-          className="mt-2 text-center font-bytebounce text-[18px] text-[#e0b391]"
+          className="mt-1 text-center font-bytebounce text-[17px] text-[#e0b391]"
           style={labelShadow}
         >
           Step {step + 1} of {TOTAL_STEPS}
         </p>
 
-        <form onSubmit={handleNext} className="mt-8 flex w-full flex-1 flex-col">
+        <form onSubmit={handleNext} className="mt-5 flex w-full flex-1 flex-col">
           {/* ── Step 0: Credentials ── */}
           {step === 0 && (
             <div className="space-y-5">
@@ -264,8 +313,35 @@ export default function RegisterPage() {
                   className={`${inputClass} h-[52px]`}
                 />
               </div>
+              {/* Gender — used for group analytics */}
+              <div>
+                <p className={labelClass} style={labelShadow}>Gender</p>
+                <div className="mt-2 flex gap-3">
+                  {(['M', 'F', 'other'] as const).map((g) => {
+                    const label = g === 'M' ? 'Male' : g === 'F' ? 'Female' : 'Other'
+                    const selected = form.gender === g
+                    return (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => setForm((f) => ({ ...f, gender: g }))}
+                        className="flex-1 rounded-[13px] border-2 py-2 font-bytebounce text-[18px] transition-colors"
+                        style={{
+                          borderColor: selected ? '#fbc94c' : '#e0b391',
+                          background: selected ? '#fbc94c22' : 'transparent',
+                          color: selected ? '#fbc94c' : '#c9b6a4',
+                          textShadow: selected ? '1.5px 1px 0 #4e342e' : 'none',
+                        }}
+                      >
+                        {label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
             </div>
           )}
+
 
           {/* ── Step 2: Your story ── */}
           {step === 2 && (
@@ -301,7 +377,7 @@ export default function RegisterPage() {
               {/* Live preview */}
               <div className="flex justify-center">
                 <div className="flex flex-col items-center gap-2">
-                  <PixelAvatar skin={avatarSkin} hair={hairKey} eyes={avatarEyes} brow={avatarBrows} size={112} />
+                  <PixelAvatar skin={avatarSkin} hair={hairKey} eyes={avatarEyes} brow={avatarBrows} mouth={avatarMouth ?? undefined} size={112} />
                   <p className="font-bytebounce text-[13px] text-[#fbc94c]" style={labelShadow}>
                     Your avatar
                   </p>
@@ -429,6 +505,33 @@ export default function RegisterPage() {
                   </div>
                 </div>
               )}
+
+              {/* Mouth picker */}
+              <div>
+                <p className={labelClass} style={labelShadow}>Mouth</p>
+                <div className="mt-2 flex gap-2 overflow-x-auto py-1 scrollbar-thin">
+                  {MOUTHS.map((m) => (
+                    <button
+                      key={m ?? 'none'} type="button"
+                      onClick={() => setAvatarMouth(m)}
+                      className="relative border-2 rounded transition-transform active:scale-95 bg-white/80 p-0.5 flex-shrink-0"
+                      style={{
+                        borderColor: avatarMouth === m ? '#fbc94c' : '#e0b391',
+                        boxShadow: avatarMouth === m ? '0 0 0 2px #fbc94c' : 'none',
+                      }}
+                    >
+                      {m ? (
+                        <PixelAvatar skin={avatarSkin} mouth={m} size={44} />
+                      ) : (
+                        <div className="w-11 h-11 flex items-center justify-center font-bytebounce text-[10px] text-[#4e342e]">
+                          None
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
             </div>
           )}
 
@@ -462,7 +565,7 @@ export default function RegisterPage() {
             </p>
           )}
 
-          <div className="mt-auto pt-10">
+          <div className="mt-8 pt-2 pb-6">
             <button
               type="submit"
               disabled={loading}

@@ -17,6 +17,7 @@ import PageWrapper from '@/components/layout/PageWrapper'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import GroupEmblem from '@/components/ui/GroupEmblem'
 import PixelAvatar from '@/components/ui/PixelAvatar'
+import { parseAvatarConfig, hairKey } from '@/lib/avatar'
 
 type Tab = 'groups' | 'individual' | 'record'
 
@@ -26,10 +27,7 @@ interface Member {
   points: number
   funFactsCollected: number
   instagram?: string | null
-  avatarSkin?: string | null
-  avatarHair?: string | null
-  avatarEyes?: string | null
-  avatarBrows?: string | null
+  avatarConfig?: unknown
 }
 
 interface Group {
@@ -49,10 +47,7 @@ interface Student {
   studentId: string
   points: number
   funFactsCollected: number
-  avatarSkin?: string | null
-  avatarHair?: string | null
-  avatarEyes?: string | null
-  avatarBrows?: string | null
+  avatarConfig?: unknown
   group: { name: string; emblem: string; emblemUrl?: string | null; color: string } | null
 }
 
@@ -154,10 +149,36 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
 
+  const [isLive, setIsLive] = useState(true)
+
   useEffect(() => {
     fetchData()
     const interval = setInterval(fetchData, 30000)
-    return () => clearInterval(interval)
+
+    // Supabase Realtime channel to refetch scores instantly whenever a scan happens
+    let channel: any = null
+    try {
+      const { supabase } = require('@/lib/supabase')
+      channel = supabase
+        .channel('realtime:leaderboard')
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'ScanLog' },
+          () => {
+            fetchData()
+          }
+        )
+        .subscribe((status: string) => {
+          setIsLive(status === 'SUBSCRIBED')
+        })
+    } catch {
+      setIsLive(false)
+    }
+
+    return () => {
+      if (channel) channel.unsubscribe()
+      clearInterval(interval)
+    }
   }, [])
 
   async function fetchData() {
@@ -200,7 +221,17 @@ export default function LeaderboardPage() {
 
   return (
     <PageWrapper>
-      <div className="mx-auto w-full max-w-md px-3 pb-4 pt-3 lg:max-w-lg">
+      <div className="game-column pt-3 sm:pt-5 pb-28 sm:pb-32 md:pb-12">
+        {/* LIVE status indicator */}
+        <div className="mb-2 flex items-center justify-end gap-1.5 px-2">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span className="font-bytebounce text-[13px] text-[#86efac] tracking-wide" style={{ textShadow: '1px 1px 0 #14532d' }}>
+            {isLive ? 'LIVE REALTIME' : 'LIVE 30s'}
+          </span>
+        </div>
 
         {/* ── Current Leader billboard ─────────────────────────────────── */}
         {activeTab !== 'record' && (activeTab === 'groups' ? leaderGroup : leaderStudent) && (
@@ -246,10 +277,7 @@ export default function LeaderboardPage() {
                   />
                 ) : (
                   <PixelAvatar
-                    skin={leaderStudent.avatarSkin ?? 'skin1'}
-                    hair={leaderStudent.avatarHair ?? undefined}
-                    eyes={leaderStudent.avatarEyes ?? undefined}
-                    brow={leaderStudent.avatarBrows ?? undefined}
+                    {...(() => { const a = parseAvatarConfig(leaderStudent.avatarConfig); return { skin: a.skin, hair: hairKey(a) ?? undefined, eyes: a.eyes ?? undefined, brow: a.brows ?? undefined, mouth: a.mouth ?? undefined } })()}
                     size={118}
                   />
                 )}
@@ -401,12 +429,14 @@ export default function LeaderboardPage() {
                               ) : (
                                 group.members.map((m) => {
                                   const href = instagramHref(m.instagram)
+                                  const ma = parseAvatarConfig(m.avatarConfig)
                                   const avatar = (
                                     <PixelAvatar
-                                      skin={m.avatarSkin ?? 'skin1'}
-                                      hair={m.avatarHair ?? undefined}
-                                      eyes={m.avatarEyes ?? undefined}
-                                      brow={m.avatarBrows ?? undefined}
+                                      skin={ma.skin}
+                                      hair={hairKey(ma) ?? undefined}
+                                      eyes={ma.eyes ?? undefined}
+                                      brow={ma.brows ?? undefined}
+                                      mouth={ma.mouth ?? undefined}
                                       size={34}
                                     />
                                   )
@@ -429,10 +459,17 @@ export default function LeaderboardPage() {
                                       ) : (
                                         <span className="flex-shrink-0" title="No Instagram linked">{avatar}</span>
                                       )}
-                                      <p className="min-w-0 flex-1 truncate font-bytebounce text-[16px] leading-none text-[#5d4330]">
-                                        {m.name}
-                                      </p>
-                                      <p className="flex-shrink-0 font-bytebounce text-[16px] leading-none text-[#88684e]">
+                                      <div className="min-w-0 flex-1">
+                                        <p className="truncate font-bytebounce text-[16px] leading-tight text-[#5d4330]">
+                                          {m.name}
+                                        </p>
+                                        {m.instagram && (
+                                          <p className="truncate font-bytebounce text-[12px] leading-none text-[#8a5a37]">
+                                            @{m.instagram.replace(/^@/, '')}
+                                          </p>
+                                        )}
+                                      </div>
+                                      <p className="flex-shrink-0 font-bytebounce text-[16px] leading-none text-[#88684e] ml-1">
                                         {m.points.toLocaleString()} pts
                                       </p>
                                     </div>
@@ -482,10 +519,7 @@ export default function LeaderboardPage() {
                         )}
                       </div>
                       <PixelAvatar
-                        skin={student.avatarSkin ?? 'skin1'}
-                        hair={student.avatarHair ?? undefined}
-                        eyes={student.avatarEyes ?? undefined}
-                        brow={student.avatarBrows ?? undefined}
+                        {...(() => { const a = parseAvatarConfig(student.avatarConfig); return { skin: a.skin, hair: hairKey(a) ?? undefined, eyes: a.eyes ?? undefined, brow: a.brows ?? undefined, mouth: a.mouth ?? undefined } })()}
                         size={38}
                       />
                       <div className="min-w-0 flex-1">
