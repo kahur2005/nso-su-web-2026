@@ -251,3 +251,27 @@ export async function deactivateCommitteeMember(formData: FormData) {
   revalidatePath('/admin/qr')
   revalidatePath('/map/committee')
 }
+
+export async function updateCommitteeMemberPhoto(formData: FormData) {
+  await requireAdmin()
+
+  const id = String(formData.get('id') || '')
+  const photoUrlInput = String(formData.get('photoUrl') || '').trim()
+  const image = formData.get('image')
+
+  if (!id) return
+
+  let avatarUrl: string | null = photoUrlInput || null
+
+  if (image instanceof File && image.size > 0) {
+    const uploaded = await uploadImage('committee-photos', image)
+    if (uploaded) avatarUrl = uploaded
+  }
+
+  await supabase.from('NPC').update({ avatarUrl }).eq('id', id)
+
+  revalidatePath('/admin/committee')
+  revalidatePath('/admin/qr')
+  revalidatePath('/info/committee')
+  revalidatePath('/map/committee')
+}
