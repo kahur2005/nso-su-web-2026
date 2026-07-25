@@ -110,7 +110,7 @@ export default async function DashboardPage() {
           </div>
 
           <div className="rounded-md border-2 border-[#3e2723] bg-[#fdf3e3] px-4 py-3.5 shadow-[3px_3px_0_#3e2723]">
-            <p className="font-bytebounce text-[20px] sm:text-[22px] leading-snug text-[#3e2723] truncate">
+            <p className="font-bytebounce text-[19px] sm:text-[21px] leading-snug text-[#3e2723] break-words whitespace-normal">
               {latestAnn ? (
                 <>
                   <span className="font-bold uppercase">{latestAnn.title}</span>{" "}
