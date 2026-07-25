@@ -17,7 +17,7 @@ export interface AdminNavItem {
 // free — kept first as the panel's landing/overview page.
 export const ADMIN_NAV: AdminNavItem[] = [
   { href: '/admin/dashboard', label: 'Overview', icon: LayoutDashboard },
-  { href: '/admin/qr', label: 'QR & Fun Facts', icon: QrCode },
+  { href: '/admin/committee', label: 'Committee Info', icon: IdCard },
   { href: '/admin/present', label: 'Live Presenter', icon: Smartphone },
   { href: '/admin/quests', label: 'Quests', icon: Swords },
   { href: '/admin/achievements', label: 'Achievements', icon: Award },
@@ -25,6 +25,5 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: '/admin/points', label: 'Points', icon: Star },
   { href: '/admin/announcements', label: 'Announcements', icon: Megaphone },
   { href: '/admin/clubs', label: 'Clubs', icon: Building2 },
-  { href: '/admin/committee', label: 'Committee', icon: IdCard },
   { href: '/admin/guide', label: 'Guide', icon: BookOpen },
 ]

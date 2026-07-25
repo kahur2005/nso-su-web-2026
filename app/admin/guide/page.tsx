@@ -33,14 +33,16 @@ const SECTIONS: GuideSection[] = [
     note: 'Group totals are added up from each member’s points, so they stay right even when you move a student between groups.',
   },
   {
-    href: '/admin/qr',
-    label: 'QR & Fun Facts',
-    icon: QrCode,
-    what: 'Committee members and their personal fun-fact QR codes. Each member carries their own code; a student who scans it collects that person’s fun fact and earns their points.',
+    href: '/admin/committee',
+    label: 'Committee Info',
+    icon: IdCard,
+    what: 'Committee members and their personal fun-fact QR codes. Each member carries their own code; a student who scans it collects that person’s fun fact and earns their points. Shown as a roster grouped by division at /map/committee.',
     steps: [
       'Add a committee member with their name, role, division, fun fact and points.',
       'Generate their QR, then download and print it.',
       'A student can only collect each member once.',
+      'Edit a member’s details, or generate a QR for someone added here.',
+      'Removing a member hides them from students but keeps their scan history.',
     ],
     note: 'Regenerating someone’s QR immediately stops the old printout working. Only do it if a code is lost.',
   },
@@ -102,16 +104,6 @@ const SECTIONS: GuideSection[] = [
     what: 'The student society directory students browse at /map/clubs.',
     steps: ['Add a club with its name, category, photos, Instagram and sign-up link.'],
   },
-  {
-    href: '/admin/committee',
-    label: 'Committee',
-    icon: IdCard,
-    what: 'The same people as QR & Fun Facts, shown as a roster grouped by division — this is what students see at /map/committee.',
-    steps: [
-      'Edit a member’s details, or generate a QR for someone added here.',
-      'Removing a member hides them from students but keeps their scan history.',
-    ],
-  },
 ]
 
 export default async function AdminGuidePage() {
@@ -133,7 +125,7 @@ export default async function AdminGuidePage() {
       <div className="border border-slate-200 rounded-lg bg-white p-5">
         <h2 className="text-sm font-semibold text-slate-900">Setting up from scratch</h2>
         <ol className="mt-3 space-y-1.5 text-sm text-slate-600 list-decimal list-inside">
-          <li>Add the committee in <span className="font-medium text-slate-700">QR &amp; Fun Facts</span> and print their codes.</li>
+          <li>Add the committee in <span className="font-medium text-slate-700">Committee Info</span> and print their codes.</li>
           <li>Create badges in <span className="font-medium text-slate-700">Achievements</span>.</li>
           <li>Create missions in <span className="font-medium text-slate-700">Quests</span>, link any badges, print the codes.</li>
           <li>Put students into guilds in <span className="font-medium text-slate-700">Groups</span>.</li>
