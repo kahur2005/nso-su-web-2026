@@ -53,6 +53,35 @@ body {
   overflow-x: hidden;
 }
 
+/* ── Game page layout utility ─────────────────────────────────────────────
+   All in-game pages use a centered phone-width column so the pixel-art UI
+   feels intentional on wide screens (like a phone game running in a window).
+   Use this on the top-level wrapper div inside every game page/component. */
+.game-column {
+  width: 100%;
+  max-width: 448px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .game-column {
+    max-width: 520px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .game-column {
+    max-width: 640px;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
 /* Wooden plank (login banner + button) — rebuilt in CSS from the Figma
    sprite palette; the raw exports carry a stray white bottom edge row */
 .wood-plank {
@@ -68,9 +97,18 @@ body {
   );
 }
 
-/* /map/committee needs no rules here: its sprites rely on the global
-   `image-rendering: pixelated` above, and the parchment strip carries its own
-   inline background. */
+/* Parchment Card with inner decorations from Figma paper assets */
+.parchment-card {
+  border: 2px solid #3e2723;
+  border-radius: 4px;
+  background-color: #fdf3e3;
+  background-image: url('/images/dashboard/paper-1.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  box-shadow: 3px 3px 0px #3e2723;
+  position: relative;
+  image-rendering: pixelated;
+}
 
 /* Pixel Border */
 .pixel-border {

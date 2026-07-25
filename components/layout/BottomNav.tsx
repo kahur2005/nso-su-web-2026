@@ -8,28 +8,22 @@ import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useEffect, useState } from 'react'
 import PixelAvatar from '@/components/ui/PixelAvatar'
-
-interface AvatarParts {
-  avatarSkin: string | null
-  avatarHair: string | null
-  avatarEyes: string | null
-  avatarBrows: string | null
-}
+import { parseAvatarConfig, hairKey, type AvatarConfig } from '@/lib/avatar'
 
 const LABEL_SHADOW = '2.4px 2.5px 0 #4e342e'
 
 const items = [
-  { href: '/dashboard', label: 'Home', icon: '/images/nav/house.png', iconWidth: 40 },
-  { href: '/map', label: 'Info', icon: '/images/nav/info.png', iconWidth: 28 },
-  { href: '/scan', label: 'QR Scan', icon: 'qr' as const, iconWidth: 0 },
+  { href: '/dashboard', label: 'Home',    icon: '/images/nav/house.png',  iconWidth: 40 },
+  { href: '/info',      label: 'Info',    icon: '/images/nav/info.png',   iconWidth: 28 },
+  { href: '/scan',      label: 'QR Scan', icon: 'qr'     as const,        iconWidth: 0  },
   { href: '/leaderboard', label: 'Rankings', icon: '/images/nav/trophy.png', iconWidth: 43 },
-  { href: '/profile', label: 'Me', icon: 'avatar' as const, iconWidth: 0 },
+  { href: '/profile',   label: 'Me',      icon: 'avatar' as const,        iconWidth: 0  },
 ]
 
 export default function BottomNav() {
   const pathname = usePathname()
   const { data: session, status } = useSession()
-  const [avatar, setAvatar] = useState<AvatarParts | null>(null)
+  const [avatarConfig, setAvatarConfig] = useState<AvatarConfig | null>(null)
 
   useEffect(() => {
     if (status !== 'authenticated') return
@@ -38,7 +32,7 @@ export default function BottomNav() {
     const cached = sessionStorage.getItem(cacheKey)
     if (cached) {
       try {
-        setAvatar(JSON.parse(cached))
+        setAvatarConfig(JSON.parse(cached))
         return
       } catch {
         sessionStorage.removeItem(cacheKey)
@@ -48,12 +42,14 @@ export default function BottomNav() {
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.avatar) {
-          setAvatar(data.avatar)
+          setAvatarConfig(data.avatar)
           sessionStorage.setItem(cacheKey, JSON.stringify(data.avatar))
         }
       })
       .catch(() => {})
   }, [status, session])
+
+  const av = parseAvatarConfig(avatarConfig)
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 h-20 md:hidden">
@@ -109,10 +105,11 @@ export default function BottomNav() {
                   className={`absolute left-1/2 -translate-x-1/2 top-[9px] transition-transform ${isActive ? 'scale-110' : ''}`}
                 >
                   <PixelAvatar
-                    skin={avatar?.avatarSkin}
-                    hair={avatar?.avatarHair}
-                    eyes={avatar?.avatarEyes}
-                    brow={avatar?.avatarBrows}
+                    skin={av.skin}
+                    hair={hairKey(av)}
+                    eyes={av.eyes ?? undefined}
+                    brow={av.brows ?? undefined}
+                    mouth={av.mouth ?? undefined}
                     size={43}
                   />
                 </span>
