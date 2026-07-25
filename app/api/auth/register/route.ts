@@ -27,8 +27,10 @@ export async function POST(request: Request) {
   // Build avatarConfig JSONB — replaces flat avatarSkin/Hair/Eyes/Brows columns
   const avatarConfig = {
     skin:      String(body.avatarSkin       || 'skin1').trim(),
-    hair:      body.avatarHairStyle         ? String(body.avatarHairStyle).trim()  : null,
+    clothes:   body.avatarClothes           ? String(body.avatarClothes).trim()     : null,
+    hair:      body.avatarHairStyle         ? String(body.avatarHairStyle).trim()   : null,
     hairColor: body.avatarHairColor !== undefined ? String(body.avatarHairColor).trim() : '',
+    hijab:     body.avatarHijab             ? String(body.avatarHijab).trim()       : null,
     eyes:      body.avatarEyes              ? String(body.avatarEyes).trim()        : null,
     brows:     body.avatarBrows             ? String(body.avatarBrows).trim()       : null,
     mouth:     body.avatarMouth             ? String(body.avatarMouth).trim()       : null,

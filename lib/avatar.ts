@@ -5,9 +5,11 @@
 
 export interface AvatarConfig {
   skin?: string | null
+  clothes?: string | null
   hair?: string | null
   /** Colour suffix appended to hair key, e.g. '' | '.2' | '.3' */
   hairColor?: string | null
+  hijab?: string | null
   eyes?: string | null
   brows?: string | null
   mouth?: string | null
@@ -16,8 +18,10 @@ export interface AvatarConfig {
 /** Parsed, defaulted avatar config. Every field is guaranteed non-undefined. */
 export interface ParsedAvatar {
   skin: string
+  clothes: string | null
   hair: string | null
   hairColor: string
+  hijab: string | null
   eyes: string | null
   brows: string | null
   mouth: string | null
@@ -31,8 +35,10 @@ export function parseAvatarConfig(raw: unknown): ParsedAvatar {
   const c = (typeof raw === 'object' && raw !== null ? raw : {}) as AvatarConfig
   return {
     skin:      c.skin      || 'skin1',
+    clothes:   c.clothes   || null,
     hair:      c.hair      || null,
     hairColor: c.hairColor || '',
+    hijab:     c.hijab     || null,
     eyes:      c.eyes      || null,
     brows:     c.brows     || null,
     mouth:     c.mouth     || null,

@@ -1,13 +1,17 @@
 // components/ui/PixelAvatar.tsx
-// Composite pixel avatar: skin base + eyes + brows + mouth + hair overlays.
+// Composite pixel avatar: skin base + clothes + eyes + brows + mouth + hair + hijab overlays.
 // Pass size in px (square). All part props are optional — falls back gracefully.
-// Layer order (bottom→top): skin → eyes → brows → mouth → hair
+// Layer order (bottom→top): skin → clothes → eyes → brows → mouth → hair → hijab
 
 interface PixelAvatarProps {
   /** e.g. "skin3" */
   skin?: string | null
+  /** e.g. "roundshirt1", "shirt2", "turtleneck3" */
+  clothes?: string | null
   /** e.g. "hairb2" or "hairg1.2" */
   hair?: string | null
+  /** e.g. "hijab1" */
+  hijab?: string | null
   /** e.g. "eyes1" */
   eyes?: string | null
   /** e.g. "brow1" */
@@ -20,7 +24,9 @@ interface PixelAvatarProps {
 
 export default function PixelAvatar({
   skin = 'skin1',
+  clothes,
   hair,
+  hijab,
   eyes,
   brow,
   mouth,
@@ -43,6 +49,18 @@ export default function PixelAvatar({
         className="absolute inset-0 w-full h-full object-contain"
         style={{ imageRendering: 'pixelated' }}
       />
+
+      {/* Clothes layer (over skin, under face details) */}
+      {clothes && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={`/images/avatar/${clothes}.png`}
+          alt=""
+          aria-hidden
+          className="absolute inset-0 w-full h-full object-contain"
+          style={{ imageRendering: 'pixelated' }}
+        />
+      )}
 
       {/* Eyes layer */}
       {eyes && (
@@ -68,7 +86,7 @@ export default function PixelAvatar({
         />
       )}
 
-      {/* Mouth layer (above brows, below hair) */}
+      {/* Mouth layer */}
       {mouth && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -80,11 +98,23 @@ export default function PixelAvatar({
         />
       )}
 
-      {/* Hair overlay (transparent PNG on top) */}
+      {/* Hair overlay */}
       {hair && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={`/images/avatar/${hair}.png`}
+          alt=""
+          aria-hidden
+          className="absolute inset-0 w-full h-full object-contain"
+          style={{ imageRendering: 'pixelated' }}
+        />
+      )}
+
+      {/* Hijab overlay (top layer) */}
+      {hijab && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={`/images/avatar/${hijab}.png`}
           alt=""
           aria-hidden
           className="absolute inset-0 w-full h-full object-contain"

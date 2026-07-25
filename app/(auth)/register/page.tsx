@@ -20,9 +20,21 @@ const inputClass =
   'mt-1 w-full rounded-[13px] border-2 border-[#e0b391] bg-white px-4 font-bytebounce text-[22px] text-[#4e342e] placeholder:text-[#c9b6a4] focus:border-[#fbc94c] focus:outline-none'
 
 // ── Avatar option data ──────────────────────────────────────────────────────
-const SKINS = ['skin1', 'skin2', 'skin3', 'skin4', 'skin5', 'skin6', 'skin7', 'skin8', 'skin9']
+const SKINS = ['skin1', 'skin2', 'skin3', 'skin4', 'skin5', 'skin6', 'skin7', 'skin8', 'skin9', 'skin10']
 const EYES = Array.from({ length: 16 }, (_, i) => `eyes${i + 1}`)
 const BROWS = Array.from({ length: 18 }, (_, i) => `brow${i + 1}`)
+
+const CLOTHES: Array<{ key: string | null; label: string }> = [
+  { key: null, label: 'None' },
+  ...Array.from({ length: 9 }, (_, i) => ({ key: `roundshirt${i + 1}`, label: `Round ${i + 1}` })),
+  ...Array.from({ length: 9 }, (_, i) => ({ key: `shirt${i + 1}`, label: `Shirt ${i + 1}` })),
+  ...Array.from({ length: 9 }, (_, i) => ({ key: `turtleneck${i + 1}`, label: `Turtle ${i + 1}` })),
+]
+
+const HIJABS: Array<{ key: string | null; label: string }> = [
+  { key: null, label: 'None' },
+  ...Array.from({ length: 9 }, (_, i) => ({ key: `hijab${i + 1}`, label: `Hijab ${i + 1}` })),
+]
 
 // Hair options: base key used for the file path + display label
 const HAIR_STYLES = [
@@ -45,10 +57,11 @@ const HAIR_COLORS: { suffix: string; label: string; swatch: string }[] = [
   { suffix: '.3',  label: 'Light', swatch: '#c68642' },
 ]
 
-// Mouth options — add mouth*.png sprites to public/images/avatar/
+// Mouth options
 const MOUTHS: Array<string | null> = [
   null,
-  ...Array.from({ length: 8 }, (_, i) => `mouth${i + 1}`),
+  ...Array.from({ length: 7 }, (_, i) => `mouth${i + 1}`),
+  'mouth4.2',
 ]
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -68,8 +81,10 @@ export default function RegisterPage() {
     gender: '' as 'M' | 'F' | 'other' | '',
   })
   const [avatarSkin, setAvatarSkin] = useState('skin1')
+  const [avatarClothes, setAvatarClothes] = useState<string | null>('roundshirt1')
   const [avatarHairStyle, setAvatarHairStyle] = useState<string | null>('hairb1')
   const [avatarHairColor, setAvatarHairColor] = useState('')
+  const [avatarHijab, setAvatarHijab] = useState<string | null>(null)
   const [avatarEyes, setAvatarEyes] = useState('eyes1')
   const [avatarBrows, setAvatarBrows] = useState('brow1')
   const [avatarMouth, setAvatarMouth] = useState<string | null>('mouth1')
@@ -85,8 +100,10 @@ export default function RegisterPage() {
         if (typeof parsed.step === 'number') setStep(parsed.step)
         if (parsed.form) setForm((prev) => ({ ...prev, ...parsed.form }))
         if (parsed.avatarSkin) setAvatarSkin(parsed.avatarSkin)
+        if (parsed.avatarClothes !== undefined) setAvatarClothes(parsed.avatarClothes)
         if (parsed.avatarHairStyle) setAvatarHairStyle(parsed.avatarHairStyle)
         if (parsed.avatarHairColor) setAvatarHairColor(parsed.avatarHairColor)
+        if (parsed.avatarHijab !== undefined) setAvatarHijab(parsed.avatarHijab)
         if (parsed.avatarEyes) setAvatarEyes(parsed.avatarEyes)
         if (parsed.avatarBrows) setAvatarBrows(parsed.avatarBrows)
         if (parsed.avatarMouth !== undefined) setAvatarMouth(parsed.avatarMouth)
@@ -103,15 +120,17 @@ export default function RegisterPage() {
           step,
           form,
           avatarSkin,
+          avatarClothes,
           avatarHairStyle,
           avatarHairColor,
+          avatarHijab,
           avatarEyes,
           avatarBrows,
           avatarMouth,
         })
       )
     } catch {}
-  }, [step, form, avatarSkin, avatarHairStyle, avatarHairColor, avatarEyes, avatarBrows, avatarMouth])
+  }, [step, form, avatarSkin, avatarClothes, avatarHairStyle, avatarHairColor, avatarHijab, avatarEyes, avatarBrows, avatarMouth])
 
   const hairKey = avatarHairStyle ? `${avatarHairStyle}${avatarHairColor}` : null
 
@@ -159,8 +178,10 @@ export default function RegisterPage() {
           medicalNote: form.medicalNote,
           gender: form.gender || null,
           avatarSkin,
+          avatarClothes,
           avatarHairStyle,
           avatarHairColor,
+          avatarHijab,
           avatarEyes,
           avatarBrows,
           avatarMouth,
@@ -377,14 +398,23 @@ export default function RegisterPage() {
               {/* Live preview */}
               <div className="flex justify-center">
                 <div className="flex flex-col items-center gap-2">
-                  <PixelAvatar skin={avatarSkin} hair={hairKey} eyes={avatarEyes} brow={avatarBrows} mouth={avatarMouth ?? undefined} size={112} />
+                  <PixelAvatar
+                    skin={avatarSkin}
+                    clothes={avatarClothes ?? undefined}
+                    hair={hairKey}
+                    hijab={avatarHijab ?? undefined}
+                    eyes={avatarEyes}
+                    brow={avatarBrows}
+                    mouth={avatarMouth ?? undefined}
+                    size={112}
+                  />
                   <p className="font-bytebounce text-[13px] text-[#fbc94c]" style={labelShadow}>
                     Your avatar
                   </p>
                 </div>
               </div>
 
-              {/* Skin picker */}
+              {/* Skin tone picker */}
               <div>
                 <p className={labelClass} style={labelShadow}>Skin tone</p>
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -404,6 +434,32 @@ export default function RegisterPage() {
                         className="w-12 h-12 object-contain"
                         style={{ imageRendering: 'pixelated' }}
                       />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Clothes picker */}
+              <div>
+                <p className={labelClass} style={labelShadow}>Clothing</p>
+                <div className="mt-2 flex gap-2 overflow-x-auto py-1 scrollbar-thin">
+                  {CLOTHES.map((c) => (
+                    <button
+                      key={c.key ?? 'none'} type="button"
+                      onClick={() => setAvatarClothes(c.key)}
+                      className="relative border-2 rounded transition-transform active:scale-95 bg-white/80 p-0.5 flex-shrink-0"
+                      style={{
+                        borderColor: avatarClothes === c.key ? '#fbc94c' : '#e0b391',
+                        boxShadow: avatarClothes === c.key ? '0 0 0 2px #fbc94c' : 'none',
+                      }}
+                    >
+                      {c.key ? (
+                        <PixelAvatar skin={avatarSkin} clothes={c.key} size={44} />
+                      ) : (
+                        <div className="w-11 h-11 flex items-center justify-center font-bytebounce text-[10px] text-[#4e342e]">
+                          None
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -522,6 +578,32 @@ export default function RegisterPage() {
                     >
                       {m ? (
                         <PixelAvatar skin={avatarSkin} mouth={m} size={44} />
+                      ) : (
+                        <div className="w-11 h-11 flex items-center justify-center font-bytebounce text-[10px] text-[#4e342e]">
+                          None
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Hijab picker */}
+              <div>
+                <p className={labelClass} style={labelShadow}>Hijab / Headwear</p>
+                <div className="mt-2 flex gap-2 overflow-x-auto py-1 scrollbar-thin">
+                  {HIJABS.map((h) => (
+                    <button
+                      key={h.key ?? 'none'} type="button"
+                      onClick={() => setAvatarHijab(h.key)}
+                      className="relative border-2 rounded transition-transform active:scale-95 bg-white/80 p-0.5 flex-shrink-0"
+                      style={{
+                        borderColor: avatarHijab === h.key ? '#fbc94c' : '#e0b391',
+                        boxShadow: avatarHijab === h.key ? '0 0 0 2px #fbc94c' : 'none',
+                      }}
+                    >
+                      {h.key ? (
+                        <PixelAvatar skin={avatarSkin} hijab={h.key} size={44} />
                       ) : (
                         <div className="w-11 h-11 flex items-center justify-center font-bytebounce text-[10px] text-[#4e342e]">
                           None

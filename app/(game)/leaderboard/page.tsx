@@ -277,7 +277,7 @@ export default function LeaderboardPage() {
                   />
                 ) : (
                   <PixelAvatar
-                    {...(() => { const a = parseAvatarConfig(leaderStudent.avatarConfig); return { skin: a.skin, hair: hairKey(a) ?? undefined, eyes: a.eyes ?? undefined, brow: a.brows ?? undefined, mouth: a.mouth ?? undefined } })()}
+                    {...(() => { const a = parseAvatarConfig(leaderStudent.avatarConfig); return { skin: a.skin, clothes: a.clothes ?? undefined, hair: hairKey(a) ?? undefined, hijab: a.hijab ?? undefined, eyes: a.eyes ?? undefined, brow: a.brows ?? undefined, mouth: a.mouth ?? undefined } })()}
                     size={118}
                   />
                 )}
@@ -433,7 +433,9 @@ export default function LeaderboardPage() {
                                   const avatar = (
                                     <PixelAvatar
                                       skin={ma.skin}
+                                      clothes={ma.clothes ?? undefined}
                                       hair={hairKey(ma) ?? undefined}
+                                      hijab={ma.hijab ?? undefined}
                                       eyes={ma.eyes ?? undefined}
                                       brow={ma.brows ?? undefined}
                                       mouth={ma.mouth ?? undefined}
@@ -519,7 +521,7 @@ export default function LeaderboardPage() {
                         )}
                       </div>
                       <PixelAvatar
-                        {...(() => { const a = parseAvatarConfig(student.avatarConfig); return { skin: a.skin, hair: hairKey(a) ?? undefined, eyes: a.eyes ?? undefined, brow: a.brows ?? undefined, mouth: a.mouth ?? undefined } })()}
+                        {...(() => { const a = parseAvatarConfig(student.avatarConfig); return { skin: a.skin, clothes: a.clothes ?? undefined, hair: hairKey(a) ?? undefined, hijab: a.hijab ?? undefined, eyes: a.eyes ?? undefined, brow: a.brows ?? undefined, mouth: a.mouth ?? undefined } })()}
                         size={38}
                       />
                       <div className="min-w-0 flex-1">

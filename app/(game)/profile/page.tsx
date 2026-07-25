@@ -139,7 +139,9 @@ export default async function ProfilePage() {
           <div className="shrink-0 border-2 border-[#3e2723]">
             <PixelAvatar
               skin={av.skin}
+              clothes={av.clothes ?? undefined}
               hair={hairKey(av) ?? undefined}
+              hijab={av.hijab ?? undefined}
               eyes={av.eyes ?? undefined}
               brow={av.brows ?? undefined}
               mouth={av.mouth ?? undefined}
