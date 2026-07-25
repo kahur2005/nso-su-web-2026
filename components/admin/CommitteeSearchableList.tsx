@@ -5,7 +5,7 @@ import { useState } from 'react'
 import SearchableList from '@/components/admin/SearchableList'
 import DeactivateCommitteeButton from '@/components/admin/DeactivateCommitteeButton'
 import GenerateQrButton from '@/components/admin/GenerateQrButton'
-import EditCommitteePhotoModal from '@/components/admin/EditCommitteePhotoModal'
+import EditCommitteeMemberModal from '@/components/admin/EditCommitteeMemberModal'
 import QrPreviewModal from '@/components/admin/QrPreviewModal'
 import DataTable from '@/components/admin/DataTable'
 import { DIVISIONS, divisionName } from '@/lib/divisions'
@@ -87,7 +87,7 @@ function MemberRow({
         {member.isActive ? 'Active' : 'Inactive'}
       </span>
 
-      <EditCommitteePhotoModal id={member.id} name={member.committeeName} currentAvatarUrl={member.avatarUrl} />
+      <EditCommitteeMemberModal member={member} />
 
       <GenerateQrButton npcId={member.id} name={member.committeeName} hasQr={Boolean(member.qrCode)} />
 
@@ -208,7 +208,7 @@ export default function CommitteeSearchableList({ members }: { members: Committe
                     </td>
                     <td className="px-4 py-2.5 whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
-                        <EditCommitteePhotoModal id={m.id} name={m.committeeName} currentAvatarUrl={m.avatarUrl} />
+                        <EditCommitteeMemberModal member={m} />
                         <GenerateQrButton npcId={m.id} name={m.committeeName} hasQr={Boolean(m.qrCode)} />
                         <DeactivateCommitteeButton id={m.id} name={m.committeeName} isActive={m.isActive} />
                       </div>

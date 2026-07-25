@@ -298,3 +298,46 @@ export async function updateCommitteeMemberPhoto(formData: FormData) {
   revalidatePath('/info/committee')
   revalidatePath('/map/committee')
 }
+
+export async function updateCommitteeMember(formData: FormData) {
+  await requireAdmin()
+
+  const id = String(formData.get('id') || '')
+  if (!id) return
+
+  const committeeName = String(formData.get('name') || '').trim()
+  const role = String(formData.get('role') || '').trim()
+  const division = String(formData.get('division') || '')
+  const funFact = String(formData.get('funFact') || '').trim()
+  const pointsRaw = formData.get('points')
+  const photoUrlInput = String(formData.get('photoUrl') || '').trim()
+  const image = formData.get('image')
+
+  const updatePayload: Record<string, any> = {}
+
+  if (committeeName) updatePayload.committeeName = committeeName
+  if (role) updatePayload.role = role
+  if (division && isDivisionId(division)) updatePayload.division = division
+  if (funFact) updatePayload.funFact = funFact
+
+  if (pointsRaw !== null && pointsRaw !== undefined && pointsRaw !== '') {
+    const pts = parseInt(String(pointsRaw), 10)
+    if (!isNaN(pts)) updatePayload.points = pts
+  }
+
+  if (image instanceof File && image.size > 0) {
+    const uploaded = await uploadImage('committee-photos', image)
+    if (uploaded) updatePayload.avatarUrl = uploaded
+  } else if (photoUrlInput !== '') {
+    updatePayload.avatarUrl = photoUrlInput || null
+  }
+
+  if (Object.keys(updatePayload).length > 0) {
+    await supabase.from('NPC').update(updatePayload).eq('id', id)
+  }
+
+  revalidatePath('/admin/committee')
+  revalidatePath('/admin/qr')
+  revalidatePath('/info/committee')
+  revalidatePath('/map/committee')
+}
