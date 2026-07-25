@@ -336,7 +336,7 @@ export default function RegisterPage() {
               </div>
               {/* Gender — used for group analytics */}
               <div>
-                <p className={labelClass} style={labelShadow}>Gender</p>
+                <p className={labelClass} style={labelShadow}>Gender selection</p>
                 <div className="mt-2 flex gap-3">
                   {(['M', 'F', 'other'] as const).map((g) => {
                     const label = g === 'M' ? 'Male' : g === 'F' ? 'Female' : 'Other'
@@ -349,7 +349,7 @@ export default function RegisterPage() {
                         className="flex-1 rounded-[13px] border-2 py-2 font-bytebounce text-[18px] transition-colors"
                         style={{
                           borderColor: selected ? '#fbc94c' : '#e0b391',
-                          background: selected ? '#fbc94c22' : 'transparent',
+                          background: selected ? '#fbc94c22' : '#fffcfb',
                           color: selected ? '#fbc94c' : '#c9b6a4',
                           textShadow: selected ? '1.5px 1px 0 #4e342e' : 'none',
                         }}
@@ -627,7 +627,7 @@ export default function RegisterPage() {
                 className="mt-2 font-bytebounce text-[16px] leading-tight text-[#24e9d5]"
                 style={{ textShadow: '1.2px 1px 0 #4e342e' }}
               >
-                Kept private — helps the committee keep you safe during orientation.
+                Kept private! It helps the committee keep you safe during orientation.
               </p>
               <textarea
                 id="medicalNote" value={form.medicalNote}
