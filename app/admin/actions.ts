@@ -25,15 +25,24 @@ async function requireAdmin() {
 export async function assignStudentToGroup(formData: FormData) {
   await requireAdmin()
 
-  const studentId = String(formData.get('studentId') || '').trim()
+  const input = String(formData.get('studentId') || '').trim()
   const groupId = String(formData.get('groupId') || '')
 
-  if (!studentId || !groupId) return
+  if (!input || !groupId) return
+
+  // Resolve student by studentId, UUID id, or exact name
+  const { data: student } = await supabase
+    .from('Student')
+    .select('id, studentId')
+    .or(`studentId.eq."${input}",id.eq."${input}",name.ilike."${input}"`)
+    .maybeSingle()
+
+  const targetId = student?.studentId ?? input
 
   await supabase
     .from('Student')
     .update({ groupId })
-    .eq('studentId', studentId)
+    .or(`studentId.eq."${targetId}",id.eq."${targetId}"`)
 
   revalidatePath('/admin/groups')
   revalidatePath('/leaderboard')
@@ -44,13 +53,21 @@ export async function assignStudentToGroup(formData: FormData) {
 export async function unassignStudent(formData: FormData) {
   await requireAdmin()
 
-  const studentId = String(formData.get('studentId') || '').trim()
-  if (!studentId) return
+  const input = String(formData.get('studentId') || '').trim()
+  if (!input) return
+
+  const { data: student } = await supabase
+    .from('Student')
+    .select('id, studentId')
+    .or(`studentId.eq."${input}",id.eq."${input}",name.ilike."${input}"`)
+    .maybeSingle()
+
+  const targetId = student?.studentId ?? input
 
   await supabase
     .from('Student')
     .update({ groupId: null })
-    .eq('studentId', studentId)
+    .or(`studentId.eq."${targetId}",id.eq."${targetId}"`)
 
   revalidatePath('/admin/groups')
   revalidatePath('/leaderboard')
