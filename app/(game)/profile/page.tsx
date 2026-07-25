@@ -149,25 +149,25 @@ export default async function ProfilePage() {
           </div>
           <div className="flex-1 min-w-0">
             <p
-              className="font-bytebounce text-[14px] leading-none text-[#e0b391]"
-              style={{ textShadow: '1px 1px 0 #3e2723' }}
+              className="font-bytebounce text-[18px] sm:text-[20px] leading-none text-[#e0b391]"
+              style={{ textShadow: '1.5px 1.5px 0 #3e2723' }}
             >
               WELCOME BACK, PLAYER
             </p>
             <h1
-              className="font-bytebounce text-[clamp(1.8rem,10vw,2.6rem)] leading-tight truncate"
+              className="font-bytebounce text-[clamp(2.4rem,10vw,3.4rem)] leading-tight truncate my-0.5"
               style={OUTLINE_GOLD}
             >
               {student.name.split(' ')[0].toUpperCase()} !
             </h1>
             <p
-              className="font-bytebounce text-[15px] leading-none text-[#fff3d9]"
+              className="font-bytebounce text-[18px] sm:text-[20px] leading-none text-[#fff3d9]"
               style={{ textShadow: '1.5px 1.5px 0 #3e2723' }}
             >
               LEVEL {level} — {levelTitle(level)}
             </p>
             {/* XP bar */}
-            <div className="mt-1.5 relative h-[10px] w-full rounded-sm overflow-hidden border border-[#3e2723]">
+            <div className="mt-2 relative h-[12px] w-full rounded-sm overflow-hidden border border-[#3e2723]">
               <div className="absolute inset-0 bg-[#5d3a1a]" />
               <div
                 className="absolute inset-y-0 left-0 bg-[#ffd23f]"
@@ -175,7 +175,7 @@ export default async function ProfilePage() {
               />
             </div>
             <p
-              className="font-bytebounce text-[11px] leading-none text-[#e0b391] mt-0.5"
+              className="font-bytebounce text-[14px] sm:text-[15px] leading-none text-[#e0b391] mt-1"
               style={{ textShadow: '1px 1px 0 #3e2723' }}
             >
               {into}/{span} XP
@@ -184,62 +184,62 @@ export default async function ProfilePage() {
         </div>
 
         {/* ── 2×2 stat cards (parchment) ── */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2.5">
 
           {/* Total Points */}
-          <div className="rounded border-2 border-[#b08a5e] bg-[#f5e7c6] px-3 py-3 flex flex-col items-center">
+          <div className="rounded border-2 border-[#b08a5e] bg-[#f5e7c6] px-3 py-3.5 flex flex-col items-center justify-center">
             <p
-              className="font-bytebounce text-[13px] leading-none text-[#7d5a3d] text-center"
+              className="font-bytebounce text-[16px] sm:text-[18px] leading-none text-[#7d5a3d] text-center font-bold"
               style={{ textShadow: '1px 1px 0 #c8a97b' }}
             >
               TOTAL POINTS
             </p>
             <p
-              className={`font-bytebounce text-[clamp(2.5rem,14vw,3.5rem)] leading-none mt-1 font-bold ${getPointsColor(student.points)}`}
+              className={`font-bytebounce text-[clamp(2.8rem,14vw,4rem)] leading-none mt-1 font-bold ${getPointsColor(student.points)}`}
             >
               {student.points}
             </p>
           </div>
 
           {/* Fun Facts */}
-          <div className="rounded border-2 border-[#b08a5e] bg-[#f5e7c6] px-3 py-3 flex flex-col items-center">
+          <div className="rounded border-2 border-[#b08a5e] bg-[#f5e7c6] px-3 py-3.5 flex flex-col items-center justify-center">
             <p
-              className="font-bytebounce text-[13px] leading-none text-[#7d5a3d] text-center"
+              className="font-bytebounce text-[16px] sm:text-[18px] leading-none text-[#7d5a3d] text-center font-bold"
               style={{ textShadow: '1px 1px 0 #c8a97b' }}
             >
               FUNFACTS COLLECTED
             </p>
             <p
-              className="font-bytebounce text-[clamp(2rem,11vw,2.8rem)] leading-none text-[#3e2723] mt-1"
+              className="font-bytebounce text-[clamp(2.2rem,11vw,3.2rem)] leading-none text-[#3e2723] font-bold mt-1"
             >
               {student.funFactsCollected}
             </p>
             <p
-              className="font-bytebounce text-[clamp(1.2rem,6vw,1.6rem)] leading-none text-[#88684e]"
+              className="font-bytebounce text-[clamp(1.4rem,6vw,1.8rem)] leading-none text-[#88684e] font-bold"
             >
               /{totalNPCs}
             </p>
           </div>
 
           {/* Quests Completed */}
-          <div className="rounded border-2 border-[#b08a5e] bg-[#f5e7c6] px-3 py-3 flex flex-col items-center">
+          <div className="rounded border-2 border-[#b08a5e] bg-[#f5e7c6] px-3 py-3.5 flex flex-col items-center justify-center">
             <p
-              className="font-bytebounce text-[13px] leading-none text-[#7d5a3d] text-center"
+              className="font-bytebounce text-[16px] sm:text-[18px] leading-none text-[#7d5a3d] text-center font-bold"
               style={{ textShadow: '1px 1px 0 #c8a97b' }}
             >
               QUESTS COMPLETED
             </p>
             <p
-              className="font-bytebounce text-[clamp(2.5rem,14vw,3.5rem)] leading-none text-[#3e2723] mt-1"
+              className="font-bytebounce text-[clamp(2.8rem,14vw,4rem)] leading-none text-[#3e2723] font-bold mt-1"
             >
               {completedQuests}
             </p>
           </div>
 
           {/* House (group) */}
-          <div className="rounded border-2 border-[#b08a5e] bg-[#f5e7c6] px-3 py-3 flex flex-col items-center justify-center gap-1">
+          <div className="rounded border-2 border-[#b08a5e] bg-[#f5e7c6] px-3 py-3.5 flex flex-col items-center justify-center gap-1">
             <p
-              className="font-bytebounce text-[13px] leading-none text-[#7d5a3d] text-center"
+              className="font-bytebounce text-[16px] sm:text-[18px] leading-none text-[#7d5a3d] text-center font-bold"
               style={{ textShadow: '1px 1px 0 #c8a97b' }}
             >
               HOUSE
@@ -256,7 +256,7 @@ export default async function ProfilePage() {
               <span className="text-4xl">🛡️</span>
             )}
             <p
-              className="font-bytebounce text-[17px] leading-tight text-center"
+              className="font-bytebounce text-[20px] sm:text-[22px] leading-tight text-center font-bold"
               style={{ color: groupColor, textShadow: '1px 1px 0 #3e2723' }}
             >
               {groupName ?? 'Unassigned'}

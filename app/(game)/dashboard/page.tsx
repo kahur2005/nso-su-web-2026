@@ -99,18 +99,18 @@ export default async function DashboardPage() {
             <img
               src="/images/dashboard/coin.svg"
               alt=""
-              className="w-5 h-5 object-contain"
+              className="w-6 h-6 object-contain"
             />
             <span
-              className="font-bytebounce text-[18px] leading-none text-[#ffd23f]"
+              className="font-bytebounce text-[22px] sm:text-[25px] leading-none text-[#ffd23f] font-bold"
               style={{ textShadow: "2px 2px 0 #3e2723" }}
             >
               New announcement!
             </span>
           </div>
 
-          <div className="rounded-md border-2 border-[#3e2723] bg-[#fdf3e3] px-4 py-3 shadow-[3px_3px_0_#3e2723]">
-            <p className="font-bytebounce text-[18px] leading-tight text-[#3e2723] truncate">
+          <div className="rounded-md border-2 border-[#3e2723] bg-[#fdf3e3] px-4 py-3.5 shadow-[3px_3px_0_#3e2723]">
+            <p className="font-bytebounce text-[20px] sm:text-[22px] leading-snug text-[#3e2723] truncate">
               {latestAnn ? (
                 <>
                   <span className="font-bold uppercase">{latestAnn.title}</span>{" "}
@@ -144,7 +144,7 @@ export default async function DashboardPage() {
                   style={{ imageRendering: "pixelated" }}
                 />
                 <span
-                  className="font-bytebounce text-[18px] leading-none text-[#fff3d9]"
+                  className="font-bytebounce text-[20px] sm:text-[22px] leading-none text-[#fff3d9] font-bold"
                   style={{ textShadow: "2px 2px 0 #3e2723" }}
                 >
                   {tile.label}
@@ -155,32 +155,32 @@ export default async function DashboardPage() {
 
           {/* Right Side Panel: You have collected : (larger points text & dynamic color) */}
           <div
-            className="rounded-md border-2 border-[#3e2723] bg-[#fdf3e3] flex flex-col items-center justify-between p-3.5 w-[36%] shrink-0 shadow-[3px_3px_0_#3e2723] text-center"
+            className="rounded-md border-2 border-[#3e2723] bg-[#fdf3e3] flex flex-col items-center justify-between p-3.5 w-[38%] shrink-0 shadow-[3px_3px_0_#3e2723] text-center"
             data-tour="codex"
           >
             <div>
-              <p className="font-bytebounce text-[13px] leading-snug text-[#7d5a3d]">
+              <p className="font-bytebounce text-[16px] sm:text-[18px] leading-tight text-[#5d3a1a] font-bold" style={{ textShadow: '1px 1px 0 #e6c896' }}>
                 You have
                 <br />
                 collected :
               </p>
               <p
-                className={`font-bytebounce text-[clamp(36px,12vw,56px)] leading-none font-bold mt-1 ${pointsColorClass}`}
+                className={`font-bytebounce text-[clamp(44px,14vw,66px)] leading-none font-bold mt-1 ${pointsColorClass}`}
               >
                 {student.points}
               </p>
-              <p className="font-bytebounce text-[12px] leading-none text-[#7d5a3d] tracking-wider uppercase mt-0.5">
+              <p className="font-bytebounce text-[15px] sm:text-[17px] leading-none text-[#8a5a37] tracking-wider uppercase font-bold mt-1">
                 POINTS
               </p>
             </div>
 
-            <div className="w-full border-b-2 border-[#d2b48c] my-1.5" />
+            <div className="w-full border-b-2 border-[#d2b48c] my-2" />
 
             <div>
-              <p className="font-bytebounce text-[clamp(20px,6vw,28px)] leading-none text-[#3e2723] font-bold">
+              <p className="font-bytebounce text-[clamp(26px,8vw,36px)] leading-none text-[#3e2723] font-bold">
                 {student.funFactsCollected}/{totalNPCs || 66}
               </p>
-              <p className="font-bytebounce text-[12px] leading-none text-[#7d5a3d] tracking-wider uppercase mt-0.5">
+              <p className="font-bytebounce text-[15px] sm:text-[17px] leading-none text-[#8a5a37] tracking-wider uppercase font-bold mt-1">
                 FUN FACTS
               </p>
             </div>
@@ -188,15 +188,15 @@ export default async function DashboardPage() {
         </div>
 
         {/* ── Active Quests section ── */}
-        <div className="flex flex-col gap-2" data-tour="quests">
-          <div className="flex items-center gap-2 px-1">
+        <div className="flex flex-col gap-2.5 mt-1" data-tour="quests">
+          <div className="flex items-center gap-2.5 px-1">
             <img
               src="/images/dashboard/quest.svg"
               alt=""
-              className="w-6 h-6 object-contain"
+              className="w-7 h-7 object-contain"
             />
             <h2
-              className="font-bytebounce text-[24px] leading-none"
+              className="font-bytebounce text-[28px] sm:text-[32px] leading-none"
               style={OUTLINE_GOLD}
             >
               Active Quests
@@ -247,13 +247,13 @@ export default async function DashboardPage() {
         <div className="flex flex-col gap-2 mt-1">
           <div className="flex items-center justify-between px-1">
             <h2
-              className="font-bytebounce text-[24px] leading-none"
+              className="font-bytebounce text-[28px] sm:text-[32px] leading-none"
               style={OUTLINE_GOLD}
             >
               All Announcements
             </h2>
             <span
-              className="font-bytebounce text-[15px] leading-none text-[#ffd23f]"
+              className="font-bytebounce text-[18px] sm:text-[20px] leading-none text-[#ffd23f]"
               style={{ textShadow: "1.5px 1.5px 0 #3e2723" }}
             >
               {announcements.length} total
