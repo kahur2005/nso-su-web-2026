@@ -141,7 +141,7 @@ export default function AdminPresenterPage() {
   }
 
   return (
-    <PageWrapper>
+    <PageWrapper showNav={false}>
       <div className="game-column min-h-dvh flex flex-col justify-between py-4 px-3">
         {/* Header */}
         <div>
