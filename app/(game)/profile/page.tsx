@@ -9,7 +9,6 @@ import { supabase } from '@/lib/supabase'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PixelAvatar from '@/components/ui/PixelAvatar'
 import { parseAvatarConfig, hairKey } from '@/lib/avatar'
-import ProfileSettings from './ProfileSettings'
 import { levelProgress } from '@/lib/leveling'
 
 function getPointsColor(pts: number): string {
@@ -399,12 +398,6 @@ export default async function ProfilePage() {
             ))}
           </div>
         )}
-
-        {/* ── Edit profile (collapsed by default) ── */}
-        <ProfileSettings
-          name={student.name}
-          instagram={student.instagram || ''}
-        />
 
       </div>
     </PageWrapper>
