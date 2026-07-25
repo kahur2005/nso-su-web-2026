@@ -1,7 +1,20 @@
 // app/page.tsx
+// Public landing page — shown before login.
+// Shows a live countdown to the NSO event start date (NEXT_PUBLIC_NSO_EVENT_DATE).
+// Once the event has started the countdown is replaced with "NSO IS LIVE!".
 import Link from 'next/link'
+import CountdownTimer from '@/components/ui/CountdownTimer'
+
+// Set NEXT_PUBLIC_NSO_EVENT_DATE in .env.local, e.g.:
+//   NEXT_PUBLIC_NSO_EVENT_DATE=2026-08-15T08:00:00+07:00
+// Falls back to a placeholder date if not set so the page still renders.
+const EVENT_DATE_ISO =
+  process.env.NEXT_PUBLIC_NSO_EVENT_DATE ?? '2026-09-01T08:00:00+07:00'
 
 export default function HomePage() {
+  const eventDate = new Date(EVENT_DATE_ISO)
+  const isLive = Date.now() >= eventDate.getTime()
+
   return (
     <main className="flex min-h-dvh w-full items-center justify-center bg-[#000b8c] px-5 py-10">
       <div className="w-full max-w-[380px] overflow-hidden rounded-[10px] bg-white pb-14 shadow-[0px_4px_4px_rgba(0,0,0,0.25)] lg:max-w-[420px]">
@@ -39,8 +52,27 @@ export default function HomePage() {
           </p>
         </div>
 
+        {/* Countdown or LIVE indicator */}
+        <div className="flex flex-col items-center px-6 pt-6">
+          {isLive ? (
+            <div className="w-full rounded-lg bg-[#000b8c] py-3 text-center">
+              <p className="font-bytebounce text-[20px] text-[#fbc94c]">
+                🎉 NSO IS LIVE!
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="mb-3 font-campton text-[13px] font-semibold tracking-[0.06em] text-[#667085] uppercase">
+                Orientation starts in
+              </p>
+              {/* CountdownTimer is a client component — rendered client-side */}
+              <CountdownTimer targetDate={eventDate} />
+            </>
+          )}
+        </div>
+
         {/* CTA */}
-        <div className="px-6 pt-12">
+        <div className="px-6 pt-8">
           <Link
             href="/login"
             className="block rounded-[4px] bg-[#000b8c] py-1.5 text-center font-adamina text-[14px] tracking-[0.03em] text-white shadow-[0px_4px_4px_rgba(0,0,0,0.25)] transition-colors hover:bg-[#0018c4] active:bg-[#000970]"
