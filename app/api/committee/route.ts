@@ -11,47 +11,58 @@ const LOCKED_FACT = 'Scan this member’s QR to unlock their fun fact!'
 
 export async function GET() {
   const session = await getServerSession(authOptions)
-  const studentId = (session?.user as { studentId?: string } | undefined)?.studentId
+  const studentDbId = session?.user?.id
+  const studentId = session?.user?.studentId
 
-  const { data: npcs, error } = await supabase
-    .from('NPC')
-    .select('id, committeeName, role, division, funFact, avatarUrl, instagram')
-    .eq('isActive', true)
-    .order('committeeName')
-
-  if (error) {
-    console.error('committee fetch failed:', error)
-    return NextResponse.json({ error: 'Failed to load committee' }, { status: 500 })
-  }
-
-  // Which of these members has the current student already scanned?
-  const scanned = new Set<string>()
-  if (studentId) {
-    const { data: student, error: studentError } = await supabase
-      .from('Student')
-      .select('id')
-      .eq('studentId', studentId)
-      .maybeSingle()
-
-    if (student) {
+  async function getStudentScanLogIds(): Promise<string[]> {
+    if (studentDbId) {
       const { data: logs, error: logsError } = await supabase
         .from('ScanLog')
         .select('npcId')
-        .eq('studentId', student.id)
-      // This route is a deliberately public read and must keep working for
-      // logged-out visitors, so a failure here degrades to "locked" rather
-      // than failing the whole request — but it must still be logged, since
-      // otherwise a real outage in the unlock path looks like normal
-      // behaviour (everyone just appears unscanned). Do not turn this into
-      // a 500.
+        .eq('studentId', studentDbId)
       if (logsError) {
-        console.error(`committee scan-log fetch failed for student ${student.id}:`, logsError)
+        console.error(`committee scan-log fetch failed for student ${studentDbId}:`, logsError)
       }
-      for (const log of logs ?? []) scanned.add(log.npcId)
-    } else if (studentError) {
-      console.error(`committee student lookup failed for studentId ${studentId}:`, studentError)
+      return (logs ?? []).map((l) => l.npcId)
     }
+    if (studentId) {
+      const { data: student, error: studentError } = await supabase
+        .from('Student')
+        .select('id')
+        .eq('studentId', studentId)
+        .maybeSingle()
+      if (student) {
+        const { data: logs, error: logsError } = await supabase
+          .from('ScanLog')
+          .select('npcId')
+          .eq('studentId', student.id)
+        if (logsError) {
+          console.error(`committee scan-log fetch failed for student ${student.id}:`, logsError)
+        }
+        return (logs ?? []).map((l) => l.npcId)
+      } else if (studentError) {
+        console.error(`committee student lookup failed for studentId ${studentId}:`, studentError)
+      }
+    }
+    return []
   }
+
+  const [npcsRes, scannedNpcIds] = await Promise.all([
+    supabase
+      .from('NPC')
+      .select('id, committeeName, role, division, funFact, avatarUrl, instagram')
+      .eq('isActive', true)
+      .order('committeeName'),
+    getStudentScanLogIds(),
+  ])
+
+  if (npcsRes.error) {
+    console.error('committee fetch failed:', npcsRes.error)
+    return NextResponse.json({ error: 'Failed to load committee' }, { status: 500 })
+  }
+
+  const scanned = new Set<string>(scannedNpcIds)
+  const npcs = npcsRes.data ?? []
 
   const members = (npcs ?? []).map((n) => {
     const isScanned = scanned.has(n.id)

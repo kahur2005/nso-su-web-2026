@@ -13,16 +13,18 @@ export default async function AdminPointsPage() {
 
   const { data: studentsData } = await supabase
     .from('Student')
-    .select('studentId, name, email, points, group:Group(name, emblem, emblemUrl, color)')
+    .select('studentId, name, email, points, isAdmin, group:Group(name, emblem, emblemUrl, color)')
     .order('name', { ascending: true })
 
-  const students = (studentsData ?? []).map((s: any) => ({
-    studentId: s.studentId,
-    name: s.name,
-    email: s.email,
-    points: s.points,
-    group: s.group ?? null,
-  }))
+  const students = (studentsData ?? [])
+    .filter((s: any) => !s.isAdmin)
+    .map((s: any) => ({
+      studentId: s.studentId,
+      name: s.name,
+      email: s.email,
+      points: s.points,
+      group: s.group ?? null,
+    }))
 
   return (
     <div className="space-y-6">

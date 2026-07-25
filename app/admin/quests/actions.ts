@@ -32,18 +32,29 @@ export async function createQuest(formData: FormData) {
   const title = String(formData.get('title') || '').trim()
   const description = String(formData.get('description') || '').trim()
   const points = parseInt(String(formData.get('points') || '0'), 10)
+  const fromRaw = String(formData.get('availableFrom') || '').trim()
+  const untilRaw = String(formData.get('availableUntil') || '').trim()
+  const availableFrom = fromRaw ? new Date(fromRaw).toISOString() : null
+  const availableUntil = untilRaw ? new Date(untilRaw).toISOString() : null
 
   if (!title || !description || !Number.isFinite(points) || points <= 0) return
 
-  await supabase.from('Quest').insert({
+  const payload: any = {
     title,
     description,
     points,
     achievementId: achievementIdOrNull(formData),
-    // New quests start inactive so a code can be generated and printed before
-    // students are able to claim it.
     isActive: false,
-  })
+  }
+  if (availableFrom) payload.availableFrom = availableFrom
+  if (availableUntil) payload.availableUntil = availableUntil
+
+  const { error } = await supabase.from('Quest').insert(payload)
+  if (error) {
+    delete payload.availableFrom
+    delete payload.availableUntil
+    await supabase.from('Quest').insert(payload)
+  }
 
   revalidate()
 }
@@ -55,22 +66,28 @@ export async function updateQuest(formData: FormData) {
   const title = String(formData.get('title') || '').trim()
   const description = String(formData.get('description') || '').trim()
   const points = parseInt(String(formData.get('points') || '0'), 10)
+  const fromRaw = String(formData.get('availableFrom') || '').trim()
+  const untilRaw = String(formData.get('availableUntil') || '').trim()
+  const availableFrom = fromRaw ? new Date(fromRaw).toISOString() : null
+  const availableUntil = untilRaw ? new Date(untilRaw).toISOString() : null
 
   if (!id || !title || !description || !Number.isFinite(points) || points <= 0) return
 
-  // qrToken is deliberately untouched: editing a quest's wording or points must
-  // not invalidate codes already printed and posted. complete_quest reads the
-  // points from the row at scan time, so an edit takes effect immediately on
-  // the existing code.
-  await supabase
-    .from('Quest')
-    .update({
-      title,
-      description,
-      points,
-      achievementId: achievementIdOrNull(formData),
-    })
-    .eq('id', id)
+  const payload: any = {
+    title,
+    description,
+    points,
+    achievementId: achievementIdOrNull(formData),
+  }
+  if (availableFrom !== undefined) payload.availableFrom = availableFrom
+  if (availableUntil !== undefined) payload.availableUntil = availableUntil
+
+  const { error } = await supabase.from('Quest').update(payload).eq('id', id)
+  if (error) {
+    delete payload.availableFrom
+    delete payload.availableUntil
+    await supabase.from('Quest').update(payload).eq('id', id)
+  }
 
   revalidate()
 }

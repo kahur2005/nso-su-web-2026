@@ -1,6 +1,6 @@
 // app/api/me/avatar/route.ts
-// Returns the logged-in student's pixel-avatar part keys, used by the
-// bottom nav "Me" tab to render their customized avatar.
+// Returns the logged-in student's avatarConfig JSONB, used by the
+// bottom nav "Me" tab and desktop Navbar to render their customised avatar.
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
@@ -14,7 +14,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('Student')
-    .select('avatarSkin, avatarHair, avatarEyes, avatarBrows')
+    .select('avatarConfig')
     .eq('studentId', session.user.studentId)
     .maybeSingle()
 
@@ -23,5 +23,5 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to fetch avatar' }, { status: 500 })
   }
 
-  return NextResponse.json({ avatar: data ?? null })
+  return NextResponse.json({ avatar: data?.avatarConfig ?? null })
 }

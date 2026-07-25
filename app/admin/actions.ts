@@ -25,31 +25,54 @@ async function requireAdmin() {
 export async function assignStudentToGroup(formData: FormData) {
   await requireAdmin()
 
-  const studentId = String(formData.get('studentId') || '').trim()
+  const input = String(formData.get('studentId') || '').trim()
   const groupId = String(formData.get('groupId') || '')
 
-  if (!studentId || !groupId) return
+  if (!input || !groupId) return
+
+  // Resolve student by studentId, UUID id, or exact name
+  const { data: student } = await supabase
+    .from('Student')
+    .select('id, studentId')
+    .or(`studentId.eq."${input}",id.eq."${input}",name.ilike."${input}"`)
+    .maybeSingle()
+
+  const targetId = student?.studentId ?? input
 
   await supabase
     .from('Student')
     .update({ groupId })
-    .eq('studentId', studentId)
+    .or(`studentId.eq."${targetId}",id.eq."${targetId}"`)
 
   revalidatePath('/admin/groups')
+  revalidatePath('/leaderboard')
+  revalidatePath('/dashboard')
+  revalidatePath('/profile')
 }
 
 export async function unassignStudent(formData: FormData) {
   await requireAdmin()
 
-  const studentId = String(formData.get('studentId') || '').trim()
-  if (!studentId) return
+  const input = String(formData.get('studentId') || '').trim()
+  if (!input) return
+
+  const { data: student } = await supabase
+    .from('Student')
+    .select('id, studentId')
+    .or(`studentId.eq."${input}",id.eq."${input}",name.ilike."${input}"`)
+    .maybeSingle()
+
+  const targetId = student?.studentId ?? input
 
   await supabase
     .from('Student')
     .update({ groupId: null })
-    .eq('studentId', studentId)
+    .or(`studentId.eq."${targetId}",id.eq."${targetId}"`)
 
   revalidatePath('/admin/groups')
+  revalidatePath('/leaderboard')
+  revalidatePath('/dashboard')
+  revalidatePath('/profile')
 }
 
 // --- Points ---
@@ -249,5 +272,72 @@ export async function deactivateCommitteeMember(formData: FormData) {
 
   revalidatePath('/admin/committee')
   revalidatePath('/admin/qr')
+  revalidatePath('/map/committee')
+}
+
+export async function updateCommitteeMemberPhoto(formData: FormData) {
+  await requireAdmin()
+
+  const id = String(formData.get('id') || '')
+  const photoUrlInput = String(formData.get('photoUrl') || '').trim()
+  const image = formData.get('image')
+
+  if (!id) return
+
+  let avatarUrl: string | null = photoUrlInput || null
+
+  if (image instanceof File && image.size > 0) {
+    const uploaded = await uploadImage('committee-photos', image)
+    if (uploaded) avatarUrl = uploaded
+  }
+
+  await supabase.from('NPC').update({ avatarUrl }).eq('id', id)
+
+  revalidatePath('/admin/committee')
+  revalidatePath('/admin/qr')
+  revalidatePath('/info/committee')
+  revalidatePath('/map/committee')
+}
+
+export async function updateCommitteeMember(formData: FormData) {
+  await requireAdmin()
+
+  const id = String(formData.get('id') || '')
+  if (!id) return
+
+  const committeeName = String(formData.get('name') || '').trim()
+  const role = String(formData.get('role') || '').trim()
+  const division = String(formData.get('division') || '')
+  const funFact = String(formData.get('funFact') || '').trim()
+  const pointsRaw = formData.get('points')
+  const photoUrlInput = String(formData.get('photoUrl') || '').trim()
+  const image = formData.get('image')
+
+  const updatePayload: Record<string, any> = {}
+
+  if (committeeName) updatePayload.committeeName = committeeName
+  if (role) updatePayload.role = role
+  if (division && isDivisionId(division)) updatePayload.division = division
+  if (funFact) updatePayload.funFact = funFact
+
+  if (pointsRaw !== null && pointsRaw !== undefined && pointsRaw !== '') {
+    const pts = parseInt(String(pointsRaw), 10)
+    if (!isNaN(pts)) updatePayload.points = pts
+  }
+
+  if (image instanceof File && image.size > 0) {
+    const uploaded = await uploadImage('committee-photos', image)
+    if (uploaded) updatePayload.avatarUrl = uploaded
+  } else if (photoUrlInput !== '') {
+    updatePayload.avatarUrl = photoUrlInput || null
+  }
+
+  if (Object.keys(updatePayload).length > 0) {
+    await supabase.from('NPC').update(updatePayload).eq('id', id)
+  }
+
+  revalidatePath('/admin/committee')
+  revalidatePath('/admin/qr')
+  revalidatePath('/info/committee')
   revalidatePath('/map/committee')
 }

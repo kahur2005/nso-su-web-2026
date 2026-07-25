@@ -26,12 +26,12 @@ export default async function AdminGroupsPage() {
    * Totalling the roster here is correct whatever order things happened in. */
   const { data: rawGroups } = await supabase
     .from('Group')
-    .select('*, members:Student(points)')
+    .select('*, members:Student(points, isAdmin)')
 
   const groups = (rawGroups ?? [])
     .map((g: any) => {
       const { members, ...rest } = g
-      const roster = members ?? []
+      const roster = (members ?? []).filter((m: any) => !m.isAdmin)
       return {
         ...rest,
         totalPoints: roster.reduce((sum: number, m: any) => sum + (m.points ?? 0), 0),
@@ -44,19 +44,22 @@ export default async function AdminGroupsPage() {
     .from('Student')
     .select('*', { count: 'exact', head: true })
     .is('groupId', null)
+    .or('isAdmin.eq.false,isAdmin.is.null')
 
   const { data: studentsData } = await supabase
     .from('Student')
-    .select('studentId, name, email, groupId, group:Group(name)')
+    .select('studentId, name, email, groupId, isAdmin, group:Group(name)')
     .order('name', { ascending: true })
 
-  const students = (studentsData ?? []).map((s: any) => ({
-    studentId: s.studentId,
-    name: s.name,
-    email: s.email,
-    groupId: s.groupId ?? null,
-    groupName: s.group?.name ?? null,
-  }))
+  const students = (studentsData ?? [])
+    .filter((s: any) => !s.isAdmin)
+    .map((s: any) => ({
+      studentId: s.studentId,
+      name: s.name,
+      email: s.email,
+      groupId: s.groupId ?? null,
+      groupName: s.group?.name ?? null,
+    }))
 
   // Groups sorted by name for the logo grid (the ranking table below keeps
   // the points-descending order already applied by the query).

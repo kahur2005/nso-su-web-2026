@@ -7,7 +7,7 @@ import Link from 'next/link'
 import GroupEmblem from '@/components/ui/GroupEmblem'
 import {
   Users, ScanLine as ScanIcon, Sunrise, IdCard, Swords, Star, Megaphone,
-  Building2, QrCode as QrIcon,
+  Building2, QrCode as QrIcon, Calendar, Smartphone,
 } from 'lucide-react'
 
 async function getAdminStats() {
@@ -15,21 +15,40 @@ async function getAdminStats() {
   todayStart.setHours(0, 0, 0, 0)
 
   const [
-    students, scans, npcs, quests, groups, announcements, today,
+    students, scans, npcs, quests, groups, announcements, today, genderRes,
   ] = await Promise.all([
-    supabase.from('Student').select('*', { count: 'exact', head: true }),
+    supabase.from('Student').select('*', { count: 'exact', head: true }).or('isAdmin.eq.false,isAdmin.is.null'),
     supabase.from('ScanLog').select('*', { count: 'exact', head: true }),
     supabase.from('NPC').select('*', { count: 'exact', head: true }).eq('isActive', true),
     supabase.from('Quest').select('*', { count: 'exact', head: true }).eq('isActive', true),
-    // Roster points, not the stored `totalPoints` counter, which misses points
-    // a student already had when assigned — see app/api/leaderboard/route.ts.
-    supabase.from('Group').select('*, members:Student(points)'),
+    supabase.from('Group').select('*, members:Student(points, isAdmin)'),
     supabase.from('Announcement').select('*').eq('isActive', true).limit(3),
     supabase
       .from('ScanLog')
       .select('*', { count: 'exact', head: true })
       .gte('scannedAt', todayStart.toISOString()),
+    supabase.from('Student').select('gender, isAdmin'),
   ])
+
+  // Safely compute gender counts for non-admin students
+  let genderCounts: { M: number; F: number; other: number; unspecified: number } = {
+    M: 0,
+    F: 0,
+    other: 0,
+    unspecified: 0,
+  }
+  if (!genderRes.error && genderRes.data) {
+    genderCounts = genderRes.data
+      .filter((s: any) => !s.isAdmin)
+      .reduce(
+        (acc: { M: number; F: number; other: number; unspecified: number }, s: any) => {
+          const g = (s.gender as 'M' | 'F' | 'other') || 'unspecified'
+          acc[g] = (acc[g] || 0) + 1
+          return acc
+        },
+        { M: 0, F: 0, other: 0, unspecified: 0 }
+      )
+  }
 
   return {
     totalStudents: students.count ?? 0,
@@ -39,14 +58,14 @@ async function getAdminStats() {
     groups: (groups.data ?? [])
       .map((g: any) => ({
         ...g,
-        totalPoints: (g.members ?? []).reduce(
-          (sum: number, m: any) => sum + (m.points ?? 0),
-          0
-        ),
+        totalPoints: (g.members ?? [])
+          .filter((m: any) => !m.isAdmin)
+          .reduce((sum: number, m: any) => sum + (m.points ?? 0), 0),
       }))
       .sort((a: any, b: any) => b.totalPoints - a.totalPoints),
     announcements: announcements.data ?? [],
     todayScans: today.count ?? 0,
+    genderCounts,
   }
 }
 
@@ -59,6 +78,7 @@ export default async function AdminDashboard() {
   const stats = await getAdminStats()
 
   const adminMenus = [
+    { href: '/admin/present', icon: Smartphone, label: 'Live Presenter', desc: '1-Time rolling QR for lines', color: '#6366F1' },
     { href: '/admin/qr', icon: QrIcon, label: 'QR & Fun Facts', desc: 'Generate & print QR codes', color: '#4CAF50' },
     { href: '/admin/committee', icon: IdCard, label: 'Committee', desc: 'Manage the roster by division', color: '#9C27B0' },
     { href: '/admin/quests', icon: Swords, label: 'Quests', desc: 'Create & activate quests', color: '#B8860B' },
@@ -71,7 +91,7 @@ export default async function AdminDashboard() {
   return (
     <div className="space-y-8">
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {[
           { icon: Users, label: 'Students', value: stats.totalStudents },
           { icon: ScanIcon, label: 'Total scans', value: stats.totalScans },
@@ -87,6 +107,16 @@ export default async function AdminDashboard() {
             <p className="text-xs text-slate-500 mt-1">{stat.label}</p>
           </div>
         ))}
+        {/* Gender breakdown */}
+        <div className="bg-white border border-slate-200 rounded-lg p-4 text-center">
+          <Users size={22} className="mx-auto mb-2 text-indigo-500" />
+          <p className="text-xs font-semibold text-slate-900">Gender Ratio</p>
+          <div className="text-xs text-slate-600 mt-1 flex justify-center gap-2">
+            <span>👨 {stats.genderCounts.M}</span>
+            <span>👩 {stats.genderCounts.F}</span>
+            {stats.genderCounts.other > 0 && <span>🧑 {stats.genderCounts.other}</span>}
+          </div>
+        </div>
       </div>
 
       {/* Quick links to the other sections */}

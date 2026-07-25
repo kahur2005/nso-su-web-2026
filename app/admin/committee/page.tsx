@@ -14,7 +14,7 @@ export default async function AdminCommitteePage() {
 
   const { data: membersData } = await supabase
     .from('NPC')
-    .select('id, committeeName, role, division, funFact, avatarUrl, qrCode, isActive')
+    .select('id, committeeName, role, division, funFact, points, scanCount, avatarUrl, qrCode, isActive')
     .order('committeeName', { ascending: true })
 
   const members = membersData ?? []
@@ -22,11 +22,10 @@ export default async function AdminCommitteePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-lg font-semibold text-slate-900">Committee</h1>
+        <h1 className="text-lg font-semibold text-slate-900">Committee Info</h1>
         <p className="text-sm text-slate-500 mt-1">
-          Manage the committee roster shown at /map/committee, grouped by division.
-          A member added here has no QR code until you generate one — use the
-          &quot;Generate QR&quot; action on their row, or QR &amp; Fun Facts.
+          Manage committee members, personal fun-fact QR codes, roles, and divisions (shown at /map/committee).
+          Add new members, edit details, generate or print QR codes, and manage active status.
         </p>
       </div>
 

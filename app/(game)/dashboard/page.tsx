@@ -1,300 +1,302 @@
 // app/(game)/dashboard/page.tsx
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { redirect } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
-import PageWrapper from '@/components/layout/PageWrapper'
-import PixelCard from '@/components/ui/PixelCard'
-import ProgressBar from '@/components/ui/ProgressBar'
-import GroupEmblem from '@/components/ui/GroupEmblem'
-import PixelAvatar from '@/components/ui/PixelAvatar'
-import Timeline from '@/components/dashboard/Timeline'
-import DashboardIntro from '@/components/dashboard/DashboardIntro'
-import { levelProgress } from '@/lib/leveling'
-import Link from 'next/link'
+// Figma: full-screen pixel-art village dashboard with parallax scroll and dynamic points color.
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import PageWrapper from "@/components/layout/PageWrapper";
+import PageIntro from "@/components/onboarding/PageIntro";
+import ParallaxBg from "@/components/layout/ParallaxBg";
+import Link from "next/link";
 
 async function getDashboardData(studentId: string) {
-  const { data: student } = await supabase
-    .from('Student')
-    .select('*, group:Group(*)')
-    .eq('studentId', studentId)
-    .maybeSingle()
-
-  /* Derive each group's total from its members rather than reading the stored
-   * `totalPoints`, which desyncs whenever a student joins or leaves a group
-   * after earning points — see the note in app/api/leaderboard/route.ts.
-   * Fetch all groups, total them, then take the top 4. */
-  const { data: allGroups } = await supabase
-    .from('Group')
-    .select('*, members:Student(points)')
-
-  const topGroups = (allGroups ?? [])
-    .map((g: any) => ({
-      ...g,
-      totalPoints: (g.members ?? []).reduce(
-        (sum: number, m: any) => sum + (m.points ?? 0),
-        0
-      ),
-    }))
-    .sort((a: any, b: any) => b.totalPoints - a.totalPoints)
-    .slice(0, 4)
-
-  const { data: activeQuests } = await supabase
-    .from('Quest')
-    .select('*')
-    .eq('isActive', true)
-    .eq('isHidden', false)
-    .limit(3)
-
-  const { data: announcements } = await supabase
-    .from('Announcement')
-    .select('*')
-    .eq('isActive', true)
-    .order('createdAt', { ascending: false })
-    .limit(3)
-
-  const { count: totalNPCs } = await supabase
-    .from('NPC')
-    .select('*', { count: 'exact', head: true })
-    .eq('isActive', true)
+  const [
+    { data: student },
+    { data: activeQuests },
+    { data: announcements },
+    { count: totalNPCs },
+  ] = await Promise.all([
+    supabase
+      .from("Student")
+      .select("*, group:Group(*)")
+      .eq("studentId", studentId)
+      .maybeSingle(),
+    supabase
+      .from("Quest")
+      .select("*")
+      .eq("isActive", true)
+      .eq("isHidden", false)
+      .limit(3),
+    supabase
+      .from("Announcement")
+      .select("*")
+      .eq("isActive", true)
+      .order("createdAt", { ascending: false }),
+    supabase
+      .from("NPC")
+      .select("*", { count: "exact", head: true })
+      .eq("isActive", true),
+  ]);
 
   return {
     student,
-    topGroups: topGroups ?? [],
     activeQuests: activeQuests ?? [],
     announcements: announcements ?? [],
     totalNPCs: totalNPCs ?? 0,
-  }
+  };
+}
+
+/* ── Quick-action tiles (Figma 2×2 grid with SVG icons) ────────────────── */
+const quickTiles = [
+  {
+    href: "/info/guidebook",
+    icon: "/images/dashboard/guidebook.svg",
+    label: "Guidebook",
+  },
+  {
+    href: "/info/timeline",
+    icon: "/images/dashboard/timeline.svg",
+    label: "Timeline",
+  },
+  { href: "/info/maps", icon: "/images/dashboard/map.svg", label: "Map" },
+  { href: "/info/clubs", icon: "/images/dashboard/food.svg", label: "Food" },
+];
+
+/** Gold outline shared across all Figma-style page titles */
+const OUTLINE_GOLD = {
+  color: "#ffd23f",
+  textShadow:
+    "2.5px 2.5px 0 #3e2723, -2.5px 2.5px 0 #3e2723, 2.5px -2.5px 0 #3e2723, -2.5px -2.5px 0 #3e2723, 0 4px 0 #3e2723",
+};
+
+/** Positive green, negative red, neutral dark brown */
+function getPointsColor(pts: number): string {
+  if (pts > 0) return "text-[#1b8a34]"; // Green when positive
+  if (pts < 0) return "text-[#d32f2f]"; // Red when negative
+  return "text-[#3e2723]"; // Neutral dark brown
 }
 
 export default async function DashboardPage() {
-  const session = await getServerSession(authOptions)
-  if (!session) redirect('/login')
+  const session = await getServerSession(authOptions);
+  if (!session) redirect("/login");
 
-  const { student, topGroups, activeQuests, announcements, totalNPCs } =
-    await getDashboardData((session.user as any).studentId)
+  const { student, activeQuests, announcements, totalNPCs } =
+    await getDashboardData((session.user as any).studentId);
 
-  if (!student) redirect('/login')
+  if (!student) redirect("/login");
 
-  const groupRank = topGroups.findIndex(g => g.id === student.groupId) + 1
-  const { level, into, span } = levelProgress(student.xp)
+  const latestAnn = announcements[0];
+  const pointsColorClass = getPointsColor(student.points);
 
   return (
     <PageWrapper>
-      <DashboardIntro show={!student.hasSeenIntro} />
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      <PageIntro page="dashboard" />
 
-        {/* Welcome Banner */}
-        <div className="rpg-dialog bg-gray-800 p-4 mb-6" data-tour="profile">
-          <div className="flex items-center gap-4">
-            <PixelAvatar
-              skin={student.avatarSkin ?? 'skin1'}
-              hair={student.avatarHair ?? undefined}
-              eyes={student.avatarEyes ?? undefined}
-              brow={student.avatarBrows ?? undefined}
-              size={64}
-              className="border-4 border-black"
+      {/* ── Parallax village background ── */}
+      <ParallaxBg src="/images/scan/bg.png" />
+
+      {/* ── Main content column — centered game-column ── */}
+      <div className="game-column pt-3 sm:pt-5 pb-28 sm:pb-32 md:pb-12 flex flex-col gap-3.5 sm:gap-4">
+        {/* ── Top Announcement Ticker (No arrow click, title + content in line) ── */}
+        <div className="flex flex-col gap-1" data-tour="announcements">
+          <div className="flex items-center gap-2 px-1">
+            <img
+              src="/images/dashboard/coin.svg"
+              alt=""
+              className="w-6 h-6 object-contain"
             />
-            <div className="flex-1">
-              <p className="font-pixel text-xs text-gray-400">WELCOME BACK, PLAYER</p>
-              <h2 className="font-pixel text-lg text-white mt-1">
-                {student.name.split(' ')[0].toUpperCase()}!
-              </h2>
-              <div className="flex gap-4 mt-2 flex-wrap">
-                <span className="font-pixel text-xs flex items-center gap-1"
-                  style={{ color: student.group?.color || '#4CAF50' }}>
-                  <GroupEmblem emblem={student.group?.emblem} emblemUrl={student.group?.emblemUrl} size={16} />
-                  {student.group?.name || 'UNASSIGNED'}
-                </span>
-                <span className="font-pixel text-xs text-yellow-400">
-                  ⭐ {student.points} PTS
-                </span>
-                {groupRank > 0 && (
-                  <span className="font-pixel text-xs text-blue-400">
-                    RANK #{groupRank}
-                  </span>
-                )}
-              </div>
-            </div>
+            <span
+              className="font-bytebounce text-[22px] sm:text-[25px] leading-none text-[#ffd23f] font-bold"
+              style={{ textShadow: "2px 2px 0 #3e2723" }}
+            >
+              New announcement!
+            </span>
           </div>
 
-          {/* XP Bar */}
-          <div className="mt-4" data-tour="xp">
-            <ProgressBar
-              value={into}
-              max={span}
-              color="#FFD700"
-              label={`LVL ${level} · ${into}/${span} XP`}
-            />
+          <div className="rounded-md border-2 border-[#3e2723] bg-[#fdf3e3] px-4 py-3.5 shadow-[3px_3px_0_#3e2723]">
+            <p className="font-bytebounce text-[19px] sm:text-[21px] leading-snug text-[#3e2723] break-words whitespace-normal">
+              {latestAnn ? (
+                <>
+                  <span className="font-bold uppercase">{latestAnn.title}</span>{" "}
+                  — {latestAnn.content}
+                </>
+              ) : (
+                "Welcome to NSO 2026! Check Info Station for daily updates."
+              )}
+            </p>
           </div>
         </div>
 
-        {/* Announcements */}
-        {announcements.length > 0 && (
-          <div className="mb-6">
-            <h3 className="font-pixel text-sm text-yellow-400 pixel-text-shadow mb-3">
-              📢 ANNOUNCEMENTS
-            </h3>
-            <div className="space-y-2">
-              {announcements.map((ann) => (
-                <div key={ann.id}
-                  className="rpg-dialog bg-blue-900/50 border-blue-500 p-3">
-                  <p className="font-pixel text-xs text-blue-300">
-                    🔔 {ann.title}
-                  </p>
-                  <p className="font-pixel text-xs text-gray-300 mt-1">
+        {/* ── 2×2 Quick Tiles + You have collected side panel ── */}
+        <div className="flex gap-2.5 items-stretch">
+          {/* Left 2×2 Grid with larger icons */}
+          <div
+            className="grid grid-cols-2 gap-2 flex-1 min-w-0"
+            data-tour="actions"
+          >
+            {quickTiles.map((tile) => (
+              <Link
+                key={tile.href}
+                href={tile.href}
+                aria-label={tile.label}
+                className="wood-plank flex flex-col items-center justify-center p-3 text-center transition-transform hover:scale-[1.02] active:scale-[0.97] min-h-[112px] shadow-[3px_3px_0_#3e2723]"
+              >
+                <img
+                  src={tile.icon}
+                  alt=""
+                  className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 object-contain mb-1.5"
+                  style={{ imageRendering: "pixelated" }}
+                />
+                <span
+                  className="font-bytebounce text-[20px] sm:text-[22px] leading-none text-[#fff3d9] font-bold"
+                  style={{ textShadow: "2px 2px 0 #3e2723" }}
+                >
+                  {tile.label}
+                </span>
+              </Link>
+            ))}
+          </div>
+
+          {/* Right Side Panel: You have collected : (larger points text & dynamic color) */}
+          <div
+            className="rounded-md border-2 border-[#3e2723] bg-[#fdf3e3] flex flex-col items-center justify-between p-3.5 w-[38%] shrink-0 shadow-[3px_3px_0_#3e2723] text-center"
+            data-tour="stats"
+          >
+            <div>
+              <p className="font-bytebounce text-[16px] sm:text-[18px] leading-tight text-[#5d3a1a] font-bold" style={{ textShadow: '1px 1px 0 #e6c896' }}>
+                You have
+                <br />
+                collected :
+              </p>
+              <p
+                className={`font-bytebounce text-[clamp(44px,14vw,66px)] leading-none font-bold mt-1 ${pointsColorClass}`}
+              >
+                {student.points}
+              </p>
+              <p className="font-bytebounce text-[15px] sm:text-[17px] leading-none text-[#8a5a37] tracking-wider uppercase font-bold mt-1">
+                POINTS
+              </p>
+            </div>
+
+            <div className="w-full border-b-2 border-[#d2b48c] my-2" />
+
+            <div>
+              <p className="font-bytebounce text-[clamp(26px,8vw,36px)] leading-none text-[#3e2723] font-bold">
+                {student.funFactsCollected}/{totalNPCs || 66}
+              </p>
+              <p className="font-bytebounce text-[15px] sm:text-[17px] leading-none text-[#8a5a37] tracking-wider uppercase font-bold mt-1">
+                FUN FACTS
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Active Quests section ── */}
+        <div className="flex flex-col gap-2.5 mt-1" data-tour="quests">
+          <div className="flex items-center gap-2.5 px-1">
+            <img
+              src="/images/dashboard/quest.svg"
+              alt=""
+              className="w-7 h-7 object-contain"
+            />
+            <h2
+              className="font-bytebounce text-[28px] sm:text-[32px] leading-none"
+              style={OUTLINE_GOLD}
+            >
+              Active Quests
+            </h2>
+          </div>
+
+          {activeQuests.length === 0 ? (
+            <div className="rounded-md border-2 border-[#3e2723] bg-[#fdf3e3] px-4 py-5 text-center shadow-[3px_3px_0_#3e2723]">
+              <p className="font-bytebounce text-[18px] text-[#7d5a3d]">
+                No active quests right now
+              </p>
+            </div>
+          ) : (
+            activeQuests.map((quest) => (
+              <Link
+                key={quest.id}
+                href="/quests"
+                className="block transition-transform active:translate-y-0.5"
+              >
+                <div className="wood-plank px-4 py-3.5 flex items-center justify-between gap-3 shadow-[3px_3px_0_#3e2723]">
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className="font-bytebounce text-[20px] leading-tight text-[#fff3d9] truncate"
+                      style={{ textShadow: "2px 2px 0 #3e2723" }}
+                    >
+                      {quest.title}
+                    </p>
+                    <p
+                      className="font-bytebounce text-[14px] leading-tight text-[#e0b391] truncate mt-0.5"
+                      style={{ textShadow: "1px 1px 0 #3e2723" }}
+                    >
+                      {quest.description || "Ask their Funfacts"}
+                    </p>
+                  </div>
+                  <span
+                    className="font-bytebounce text-[22px] text-[#ffd23f] shrink-0"
+                    style={{ textShadow: "2px 2px 0 #3e2723" }}
+                  >
+                    ▶
+                  </span>
+                </div>
+              </Link>
+            ))
+          )}
+        </div>
+
+        {/* ── All Announcements ── */}
+        <div className="flex flex-col gap-2 mt-1" data-tour="all-announcements">
+          <div className="flex items-center justify-between px-1">
+            <h2
+              className="font-bytebounce text-[28px] sm:text-[32px] leading-none"
+              style={OUTLINE_GOLD}
+            >
+              All Announcements
+            </h2>
+            <span
+              className="font-bytebounce text-[18px] sm:text-[20px] leading-none text-[#ffd23f]"
+              style={{ textShadow: "1.5px 1.5px 0 #3e2723" }}
+            >
+              {announcements.length} total
+            </span>
+          </div>
+
+          {announcements.length === 0 ? (
+            <div className="rounded-md border-2 border-[#3e2723] bg-[#fdf3e3] px-4 py-5 text-center shadow-[3px_3px_0_#3e2723]">
+              <p className="font-bytebounce text-[18px] text-[#7d5a3d]">
+                No announcements posted yet
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {announcements.map((ann: any) => (
+                <div
+                  key={ann.id}
+                  className="rounded-md border-2 border-[#3e2723] bg-[#fdf3e3] p-4 space-y-1.5 shadow-[3px_3px_0_#3e2723]"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-bytebounce text-[20px] leading-snug text-[#3e2723] font-bold uppercase">
+                      {ann.title}
+                    </h3>
+                    <span className="font-bytebounce text-[13px] text-[#8a5a37] shrink-0">
+                      {new Date(ann.createdAt).toLocaleDateString([], {
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </div>
+                  <p className="font-bytebounce text-[16px] leading-relaxed text-[#5d4330] whitespace-pre-line">
                     {ann.content}
                   </p>
                 </div>
               ))}
             </div>
-          </div>
-        )}
-
-        {/* Quick Actions Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6" data-tour="actions">
-          {[
-            { href: '/scan', icon: '📱', label: 'SCAN QR', color: '#4CAF50', bg: 'bg-green-900/50' },
-            { href: '/quests', icon: '⚔️', label: 'QUESTS', color: '#FFD700', bg: 'bg-yellow-900/50' },
-            { href: '/codex', icon: '📖', label: 'CODEX', color: '#9C27B0', bg: 'bg-purple-900/50' },
-            { href: '/map', icon: '🗺️', label: 'MAP', color: '#2196F3', bg: 'bg-blue-900/50' },
-          ].map((action) => (
-            <Link key={action.href} href={action.href}>
-              <PixelCard
-                className={`${action.bg} hover:scale-105 transition-transform cursor-pointer`}
-                glowColor={action.color}
-              >
-                <div className="text-center py-2">
-                  <div className="text-3xl mb-2 float inline-block">
-                    {action.icon}
-                  </div>
-                  <p className="font-pixel text-xs" style={{ color: action.color }}>
-                    {action.label}
-                  </p>
-                </div>
-              </PixelCard>
-            </Link>
-          ))}
+          )}
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Active Quests */}
-          <div data-tour="quests">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="font-pixel text-sm text-yellow-400 pixel-text-shadow">⚔️ ACTIVE QUESTS</h3>
-              <Link href="/quests"
-                className="font-pixel text-xs text-green-400 hover:text-green-300">
-                VIEW ALL →
-              </Link>
-            </div>
-            <div className="space-y-3">
-              {activeQuests.map((quest) => (
-                <PixelCard key={quest.id} className="bg-gray-800">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="font-pixel text-xs text-white">
-                        {quest.type === 'daily' ? '📋' : '⭐'} {quest.title}
-                      </p>
-                      <p className="font-pixel text-xs text-gray-400 mt-1">
-                        {quest.description.substring(0, 40)}...
-                      </p>
-                    </div>
-                    <div className="text-right ml-3">
-                      <span className="font-pixel text-xs text-yellow-400">
-                        +{quest.points}
-                      </span>
-                      <br />
-                      <span className="font-pixel text-xs text-gray-500">
-                        PTS
-                      </span>
-                    </div>
-                  </div>
-                </PixelCard>
-              ))}
-              {activeQuests.length === 0 && (
-                <PixelCard className="bg-gray-800">
-                  <p className="font-pixel text-xs text-gray-400 text-center py-4">
-                    NO ACTIVE QUESTS
-                  </p>
-                </PixelCard>
-              )}
-            </div>
-          </div>
-
-          {/* Leaderboard Widget */}
-          <div data-tour="leaderboard">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="font-pixel text-sm text-yellow-400 pixel-text-shadow">🏆 LEADERBOARD</h3>
-              <Link href="/leaderboard"
-                className="font-pixel text-xs text-green-400 hover:text-green-300">
-                VIEW ALL →
-              </Link>
-            </div>
-            <div className="space-y-2">
-              {topGroups.map((group, index) => (
-                <PixelCard
-                  key={group.id}
-                  className={`${group.id === student.groupId
-                    ? 'bg-yellow-900/30 border-yellow-600'
-                    : 'bg-gray-800'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    {index < 3 ? (
-                      <img
-                        src={`/images/trophy_${index + 1}.png`}
-                        alt={`Rank ${index + 1}`}
-                        className="w-8 h-8 object-contain flex-shrink-0"
-                        style={{ imageRendering: 'pixelated' }}
-                      />
-                    ) : (
-                      <span className="font-pixel text-sm w-8 text-center text-white">
-                        #{index + 1}
-                      </span>
-                    )}
-                    <GroupEmblem emblem={group.emblem} emblemUrl={group.emblemUrl} size={24} />
-                    <div className="flex-1">
-                      <p className="font-pixel text-xs text-white">{group.name}</p>
-                      <ProgressBar
-                        value={group.totalPoints}
-                        max={topGroups[0]?.totalPoints || 1}
-                        color={group.color}
-                        showText={false}
-                      />
-                    </div>
-                    <span className="font-pixel text-xs text-yellow-400">
-                      {group.totalPoints}
-                    </span>
-                  </div>
-                </PixelCard>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Codex Progress */}
-        <div className="mt-6" data-tour="codex">
-          <PixelCard className="bg-gray-800">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="font-pixel text-sm text-yellow-400 pixel-text-shadow">📖 CODEX PROGRESS</h3>
-              <Link href="/codex"
-                className="font-pixel text-xs text-green-400">
-                OPEN →
-              </Link>
-            </div>
-            <ProgressBar
-              value={student.funFactsCollected}
-              max={totalNPCs}
-              color="#9C27B0"
-              label="FUN FACTS COLLECTED"
-            />
-          </PixelCard>
-        </div>
-
-        {/* Event Timeline */}
-        <Timeline />
-
       </div>
     </PageWrapper>
-  )
+  );
 }

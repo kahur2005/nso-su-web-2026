@@ -10,18 +10,31 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid request.' }, { status: 400 })
   }
 
-  const name = String(body.name || '').trim()
-  const email = String(body.email || '').toLowerCase().trim()
-  const password = String(body.password || '')
+  const name        = String(body.name        || '').trim()
+  const email       = String(body.email       || '').toLowerCase().trim()
+  const password    = String(body.password    || '')
   const medicalNote = String(body.medicalNote || '').trim()
   const achievements = String(body.achievements || '').trim()
-  const instagram = String(body.instagram || '').trim()
-  const major = String(body.major || '').trim()
-  const hobby = String(body.hobby || '').trim()
-  const avatarSkin = String(body.avatarSkin || 'skin1').trim()
-  const avatarHair = body.avatarHair ? String(body.avatarHair).trim() : null
-  const avatarEyes = body.avatarEyes ? String(body.avatarEyes).trim() : null
-  const avatarBrows = body.avatarBrows ? String(body.avatarBrows).trim() : null
+  const instagram   = String(body.instagram   || '').trim()
+  const major       = String(body.major       || '').trim()
+  const hobby       = String(body.hobby       || '').trim()
+
+  // gender: 'M' | 'F' | 'other' | null
+  const VALID_GENDERS = ['M', 'F', 'other'] as const
+  const rawGender = String(body.gender || '').trim()
+  const gender = (VALID_GENDERS as readonly string[]).includes(rawGender) ? rawGender : null
+
+  // Build avatarConfig JSONB — replaces flat avatarSkin/Hair/Eyes/Brows columns
+  const avatarConfig = {
+    skin:      String(body.avatarSkin       || 'skin1').trim(),
+    clothes:   body.avatarClothes           ? String(body.avatarClothes).trim()     : null,
+    hair:      body.avatarHairStyle         ? String(body.avatarHairStyle).trim()   : null,
+    hairColor: body.avatarHairColor !== undefined ? String(body.avatarHairColor).trim() : '',
+    hijab:     body.avatarHijab             ? String(body.avatarHijab).trim()       : null,
+    eyes:      body.avatarEyes              ? String(body.avatarEyes).trim()        : null,
+    brows:     body.avatarBrows             ? String(body.avatarBrows).trim()       : null,
+    mouth:     body.avatarMouth             ? String(body.avatarMouth).trim()       : null,
+  }
 
   if (!name || !email || !password) {
     return NextResponse.json(
@@ -58,26 +71,37 @@ export async function POST(request: Request) {
     )
   }
 
-  const { error } = await supabase.from('Student').insert({
-    studentId: `NSO-${randomUUID().slice(0, 8).toUpperCase()}`,
+  const insertPayload: Record<string, unknown> = {
+    studentId:       `NSO-${randomUUID().slice(0, 8).toUpperCase()}`,
     name,
     email,
-    password: hashPassword(password),
+    password:        hashPassword(password),
     medicalNote,
     pastAchievements: achievements,
-    instagram: instagram || null,
+    instagram:       instagram || null,
     major,
     hobby,
-    avatarSkin,
-    avatarHair,
-    avatarEyes,
-    avatarBrows,
-  })
+    avatarConfig,
+  }
+
+  if (gender) {
+    insertPayload.gender = gender
+  }
+
+  let { error } = await supabase.from('Student').insert(insertPayload)
+
+  // Fallback: if the gender column doesn't exist yet in a partially migrated DB.
+  if (error && gender) {
+    console.warn('Registration insert with gender failed (likely unmigrated DB column). Retrying without gender...', error)
+    delete insertPayload.gender
+    const retry = await supabase.from('Student').insert(insertPayload)
+    error = retry.error
+  }
 
   if (error) {
-    console.error(error)
+    console.error('Registration failed:', error)
     return NextResponse.json(
-      { error: 'Could not create account. Please try again.' },
+      { error: error.message || 'Could not create account. Please try again.' },
       { status: 500 }
     )
   }

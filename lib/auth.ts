@@ -28,33 +28,47 @@ export const authOptions: NextAuthOptions = {
         if (!verifyPassword(credentials.password, student.password)) return null
 
         return {
-          id: student.studentId,
+          id: student.id,
           name: student.name,
           email: student.email,
           studentId: student.studentId,
+          isAdmin: Boolean(student.isAdmin),
+          points: student.points || 0,
+          role: student.isAdmin ? 'admin' : 'student',
+          groupId: student.groupId || null,
         }
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }: any) {
-      // `user` is only present at sign-in; refresh the cached claims then.
-      if (user?.studentId) {
-        token.studentId = user.studentId
-        const { data: student } = await supabase
-          .from('Student')
-          .select('isAdmin, points')
-          .eq('studentId', user.studentId)
-          .maybeSingle()
-        token.isAdmin = student?.isAdmin || false
-        token.points = student?.points || 0
+    async jwt({ token, user }) {
+      if (user) {
+        const u = user as {
+          id?: string
+          studentId?: string
+          isAdmin?: boolean
+          points?: number
+          role?: string
+          groupId?: string | null
+        }
+        token.id = u.id ?? token.id
+        token.studentId = u.studentId ?? token.studentId
+        token.isAdmin = u.isAdmin ?? token.isAdmin
+        token.points = u.points ?? token.points
+        token.role = u.role ?? token.role
+        token.groupId = u.groupId ?? token.groupId
       }
       return token
     },
     async session({ session, token }) {
-      (session.user as any).studentId = token.studentId
-      ;(session.user as any).isAdmin = token.isAdmin
-      ;(session.user as any).points = token.points
+      if (session.user) {
+        session.user.id = (token.id as string) ?? ''
+        session.user.studentId = (token.studentId as string) ?? ''
+        session.user.isAdmin = (token.isAdmin as boolean) ?? false
+        session.user.points = (token.points as number) ?? 0
+        session.user.role = (token.role as string) ?? 'student'
+        session.user.groupId = (token.groupId as string | null) ?? null
+      }
       return session
     },
   },

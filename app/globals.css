@@ -1,5 +1,5 @@
 /* app/globals.css */
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Adamina&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Silkscreen&family=Pixelify+Sans:wght@400..700&family=Adamina&display=swap');
 
 @import 'tailwindcss';
 
@@ -20,14 +20,21 @@
   font-display: swap;
 }
 
-@theme {
-  --font-pixel: 'Press Start 2P', monospace;
-  --font-bytebounce: 'ByteBounce', 'Press Start 2P', monospace;
-  --font-campton: 'Campton', 'Poppins', sans-serif;
-  --font-adamina: 'Adamina', Georgia, serif;
-}
-
 :root {
+  /* =========================================================================
+     GAME WEBSITE CENTRAL FONT CONFIG
+     To test different fonts for all website content (excluding admin panel)
+     in one go, simply change --game-font-family below!
+
+     Preset Options to test:
+       1. 'ByteBounce', 'Press Start 2P', monospace    (Default Retro Pixel)
+       2. 'Pixelify Sans', sans-serif                  (Modern Crisp Pixel)
+       3. 'VT323', monospace                           (Arcade Terminal Pixel)
+       4. 'Silkscreen', monospace                      (8-bit Micro Pixel)
+       5. 'Press Start 2P', monospace                 (Classic NES 8-Bit)
+     ========================================================================= */
+  --game-font-family: 'ByteBounce', 'Press Start 2P', monospace;
+
   --pixel-black: #000000;
   --pixel-white: #FFFFFF;
   --pixel-green: #4CAF50;
@@ -41,6 +48,17 @@
   --pixel-brown: #795548;
 }
 
+@theme {
+  --font-pixel: 'Press Start 2P', monospace;
+  --font-bytebounce: var(--game-font-family);
+  --font-campton: 'Campton', 'Poppins', sans-serif;
+  --font-adamina: 'Adamina', Georgia, serif;
+}
+
+.font-bytebounce {
+  font-family: var(--game-font-family) !important;
+}
+
 * {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
@@ -51,6 +69,51 @@ body {
   background: linear-gradient(180deg, #8ec9f0 0%, #a9d9f5 45%, #cdeeff 100%) fixed;
   color: #FFFFFF;
   overflow-x: hidden;
+}
+
+/* ── Game page layout utility ─────────────────────────────────────────────
+   All in-game pages use a centered phone-width column so the pixel-art UI
+   feels intentional on wide screens (like a phone game running in a window).
+   Use this on the top-level wrapper div inside every game page/component. */
+.game-column {
+  width: 100%;
+  max-width: 448px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .game-column {
+    max-width: 520px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .game-column {
+    max-width: 640px;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .game-column {
+    max-width: 720px;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .game-column {
+    max-width: 800px;
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
 }
 
 /* Wooden plank (login banner + button) — rebuilt in CSS from the Figma
@@ -68,9 +131,18 @@ body {
   );
 }
 
-/* /map/committee needs no rules here: its sprites rely on the global
-   `image-rendering: pixelated` above, and the parchment strip carries its own
-   inline background. */
+/* Parchment Card with inner decorations from Figma paper assets */
+.parchment-card {
+  border: 2px solid #3e2723;
+  border-radius: 4px;
+  background-color: #fdf3e3;
+  background-image: url('/images/dashboard/paper-1.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  box-shadow: 3px 3px 0px #3e2723;
+  position: relative;
+  image-rendering: pixelated;
+}
 
 /* Pixel Border */
 .pixel-border {
@@ -144,6 +216,81 @@ body {
 /* Pixel Text Shadow */
 .pixel-text-shadow {
   text-shadow: 3px 3px 0px #000;
+}
+
+/* ── Standardized Retro Pixel Design System ────────────────────────────── */
+
+.pixel-title {
+  font-family: 'ByteBounce', 'Press Start 2P', monospace;
+  font-size: clamp(1.8rem, 6vw, 2.5rem);
+  line-height: 1;
+  color: #ffd23f;
+  text-shadow: 2.5px 2.5px 0 #3e2723, -2.5px 2.5px 0 #3e2723, 2.5px -2.5px 0 #3e2723, -2.5px -2.5px 0 #3e2723, 0 4px 0 #3e2723;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.pixel-subtitle {
+  font-family: 'ByteBounce', 'Press Start 2P', monospace;
+  font-size: clamp(14px, 3.5vw, 18px);
+  line-height: 1.25;
+  color: #ffffff;
+  text-shadow: 1.5px 1.5px 0 #4e342e;
+  text-align: center;
+}
+
+.pixel-heading {
+  font-family: 'ByteBounce', 'Press Start 2P', monospace;
+  font-size: clamp(20px, 4.5vw, 26px);
+  line-height: 1.1;
+  color: #ffd23f;
+  text-shadow: 2px 2px 0 #3e2723;
+}
+
+.pixel-body {
+  font-family: 'ByteBounce', 'Press Start 2P', monospace;
+  font-size: clamp(15px, 3.5vw, 18px);
+  line-height: 1.25;
+  color: #3e2723;
+}
+
+.pixel-subtext {
+  font-family: 'ByteBounce', 'Press Start 2P', monospace;
+  font-size: clamp(12px, 3vw, 15px);
+  line-height: 1.2;
+  color: #8a5a37;
+}
+
+.pixel-icon-sm {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.pixel-icon-md {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.pixel-icon-lg {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.pixel-icon-hero {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex-shrink: 0;
 }
 
 /* Blink Animation */

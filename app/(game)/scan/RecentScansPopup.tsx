@@ -22,7 +22,7 @@ export default function RecentScansPopup({ scans, total, onClose }: RecentScansP
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 pt-8 sm:pt-4"
       role="dialog"
       aria-modal="true"
       aria-label="Recent scans"

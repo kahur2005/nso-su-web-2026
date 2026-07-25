@@ -24,11 +24,12 @@ export async function completeNpcScan(
   studentInternalId: string,
   npcId: string,
   points: number,
-  token: string
+  token: string,
+  isLiveToken?: boolean
 ): Promise<ScanOutcome> {
   const { data: npc, error: npcError } = await supabase
     .from('NPC')
-    .select('isActive, qrToken')
+    .select('isActive, qrToken, scanCount, maxScans')
     .eq('id', npcId)
     .maybeSingle()
 
@@ -45,9 +46,17 @@ export async function completeNpcScan(
       status: 410,
     }
   }
-  // A null qrToken means no QR was ever generated, so no presented token can be
-  // valid. A mismatch means this printout has been superseded by a regenerate.
-  if (!npc.qrToken || npc.qrToken !== token) {
+  // Max scans check
+  if (npc.maxScans !== null && npc.maxScans !== undefined && npc.scanCount >= npc.maxScans) {
+    return {
+      body: { success: false, error: 'This QR code has reached its maximum scan limit.' },
+      status: 410,
+    }
+  }
+  // For static QRs: verify the token presented matches the current active printed token in DB.
+  // For live 1-time QRs (isLiveToken = true): the JWT signature has already been verified
+  // statelessly by jwt.verify in the scan dispatcher.
+  if (!isLiveToken && (!npc.qrToken || npc.qrToken !== token)) {
     return {
       body: {
         success: false,
@@ -68,6 +77,11 @@ export async function completeNpcScan(
   if (error) {
     console.error('scan/npc: scan_npc rpc failed:', error)
     return { body: { success: false, error: 'Server error' }, status: 500 }
+  }
+
+  // Auto-deactivate NPC if maxScans limit reached after this scan
+  if (npc.maxScans !== null && npc.maxScans !== undefined && (npc.scanCount + 1) >= npc.maxScans) {
+    await supabase.from('NPC').update({ isActive: false }).eq('id', npcId)
   }
 
   return { body: { ...result, kind: 'npc' } }

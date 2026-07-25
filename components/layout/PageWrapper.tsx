@@ -24,7 +24,7 @@ export default function PageWrapper({
         }}
       />
       {showNav && <Navbar />}
-      <main className="pb-28 md:pb-8">
+      <main className="pb-28 md:pb-12 lg:pb-16 px-2 sm:px-4 md:px-6">
         {children}
       </main>
       {showNav && <BottomNav />}

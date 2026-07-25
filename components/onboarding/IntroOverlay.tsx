@@ -1,7 +1,6 @@
 // components/onboarding/IntroOverlay.tsx
 'use client'
 import { useEffect, useState, useCallback } from 'react'
-import PixelButton from '@/components/ui/PixelButton'
 
 export interface IntroStep {
   target: string // matches a `data-tour="<target>"` attribute on the page
@@ -21,6 +20,11 @@ const TOOLTIP_WIDTH = 300
 export default function IntroOverlay({ steps, open, onFinish }: IntroOverlayProps) {
   const [step, setStep] = useState(0)
   const [rect, setRect] = useState<DOMRect | null>(null)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const measure = useCallback(() => {
     const el = document.querySelector(`[data-tour="${steps[step]?.target}"]`)
@@ -46,7 +50,7 @@ export default function IntroOverlay({ steps, open, onFinish }: IntroOverlayProp
     }
   }, [open, step, steps, measure])
 
-  if (!open) return null
+  if (!open || !mounted) return null
 
   const last = step === steps.length - 1
   const current = steps[step]
@@ -80,50 +84,52 @@ export default function IntroOverlay({ steps, open, onFinish }: IntroOverlayProp
       {/* Darken everything except a spotlight cutout around the target. */}
       {highlightStyle ? (
         <div
-          className="absolute border-4 border-yellow-400 rounded transition-all duration-300 pointer-events-none"
-          style={{ ...highlightStyle, boxShadow: '0 0 0 9999px rgba(0,0,0,0.8)' }}
+          className="absolute border-4 border-[#fbc94c] rounded transition-all duration-300 pointer-events-none"
+          style={{ ...highlightStyle, boxShadow: '0 0 0 9999px rgba(0,0,0,0.85)' }}
         />
       ) : (
-        <div className="absolute inset-0 bg-black/80" />
+        <div className="absolute inset-0 bg-black/85" />
       )}
 
       {/* Tooltip card */}
       <div
-        className="absolute transition-all duration-300"
+        className="absolute transition-all duration-300 z-50"
         style={{ top, left, width: tooltipWidth }}
       >
-        <div className="pixel-card bg-gray-900 p-4">
-          <div className="flex justify-between items-center mb-3">
-            <span className="font-pixel text-xs text-yellow-400">
-              {step + 1}/{steps.length}
+        <div className="rounded-lg border-4 border-[#3a2418] bg-[#fdf6e3] p-4 shadow-2xl">
+          <div className="flex justify-between items-center mb-2">
+            <span className="font-bytebounce text-[16px] text-[#b8860b]">
+              STEP {step + 1}/{steps.length}
             </span>
             <button
               onClick={onFinish}
-              className="font-pixel text-xs text-gray-500 hover:text-gray-300"
+              className="font-bytebounce text-[15px] text-[#8a5a37] hover:text-[#3e2723] underline"
             >
               SKIP ✕
             </button>
           </div>
-          <h3 className="font-pixel text-sm text-white mb-2">{current.title}</h3>
-          <p className="font-pixel text-xs text-gray-300 leading-relaxed mb-4">
+          <h3 className="font-bytebounce text-[20px] leading-tight text-[#3e2723] mb-1">
+            {current.title}
+          </h3>
+          <p className="font-bytebounce text-[15px] leading-relaxed text-[#5d4330] mb-4">
             {current.description}
           </p>
           <div className="flex justify-between gap-3">
-            <PixelButton
-              color="gray"
-              size="sm"
+            <button
+              type="button"
               disabled={step === 0}
               onClick={() => setStep((s) => Math.max(0, s - 1))}
+              className="rounded border-2 border-[#3a2418] bg-[#f5e7c6] px-3 py-1.5 font-bytebounce text-[16px] text-[#3e2723] disabled:opacity-40"
             >
               ← PREV
-            </PixelButton>
-            <PixelButton
-              color="yellow"
-              size="sm"
+            </button>
+            <button
+              type="button"
               onClick={() => (last ? onFinish() : setStep((s) => s + 1))}
+              className="rounded border-2 border-[#3a2418] bg-[#8a5a37] px-4 py-1.5 font-bytebounce text-[16px] text-[#ffd23f] active:translate-y-0.5"
             >
               {last ? 'FINISH ✓' : 'NEXT →'}
-            </PixelButton>
+            </button>
           </div>
         </div>
       </div>

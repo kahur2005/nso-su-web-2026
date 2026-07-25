@@ -10,8 +10,8 @@ export default function DataTable({
       <table className="w-full text-sm">
         <thead className="bg-slate-50 border-b border-slate-200">
           <tr>
-            {headers.map((h) => (
-              <th key={h} className="text-left font-medium text-slate-500 px-4 py-2.5">
+            {headers.map((h, i) => (
+              <th key={`${h}-${i}`} className="text-left font-medium text-slate-500 px-4 py-2.5">
                 {h}
               </th>
             ))}

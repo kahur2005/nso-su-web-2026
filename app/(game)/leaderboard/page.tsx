@@ -14,9 +14,11 @@
 import { useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import PageWrapper from '@/components/layout/PageWrapper'
+import PageIntro from '@/components/onboarding/PageIntro'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import GroupEmblem from '@/components/ui/GroupEmblem'
 import PixelAvatar from '@/components/ui/PixelAvatar'
+import { parseAvatarConfig, hairKey } from '@/lib/avatar'
 
 type Tab = 'groups' | 'individual' | 'record'
 
@@ -26,10 +28,7 @@ interface Member {
   points: number
   funFactsCollected: number
   instagram?: string | null
-  avatarSkin?: string | null
-  avatarHair?: string | null
-  avatarEyes?: string | null
-  avatarBrows?: string | null
+  avatarConfig?: unknown
 }
 
 interface Group {
@@ -49,10 +48,7 @@ interface Student {
   studentId: string
   points: number
   funFactsCollected: number
-  avatarSkin?: string | null
-  avatarHair?: string | null
-  avatarEyes?: string | null
-  avatarBrows?: string | null
+  avatarConfig?: unknown
   group: { name: string; emblem: string; emblemUrl?: string | null; color: string } | null
 }
 
@@ -200,11 +196,22 @@ export default function LeaderboardPage() {
 
   return (
     <PageWrapper>
-      <div className="mx-auto w-full max-w-md px-3 pb-4 pt-3 lg:max-w-lg">
+      <PageIntro page="leaderboard" />
+      <div className="game-column pt-3 sm:pt-5 pb-28 sm:pb-32 md:pb-12">
+        {/* LIVE status indicator */}
+        <div className="mb-2 flex items-center justify-end gap-1.5 px-2" data-tour="lb-live">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span className="font-bytebounce text-[13px] text-[#86efac] tracking-wide" style={{ textShadow: '1px 1px 0 #14532d' }}>
+            LIVE 30s
+          </span>
+        </div>
 
         {/* ── Current Leader billboard ─────────────────────────────────── */}
         {activeTab !== 'record' && (activeTab === 'groups' ? leaderGroup : leaderStudent) && (
-          <div className="relative mx-auto mb-4 w-[88%] max-w-[350px]">
+          <div className="relative mx-auto mb-4 w-[88%] max-w-[350px]" data-tour="lb-leader">
             <div className="relative aspect-[337/248]">
               {/* Wood panel, sliced left/mid/right exactly as in Figma */}
               <div aria-hidden className="absolute inset-0 flex">
@@ -246,10 +253,7 @@ export default function LeaderboardPage() {
                   />
                 ) : (
                   <PixelAvatar
-                    skin={leaderStudent.avatarSkin ?? 'skin1'}
-                    hair={leaderStudent.avatarHair ?? undefined}
-                    eyes={leaderStudent.avatarEyes ?? undefined}
-                    brow={leaderStudent.avatarBrows ?? undefined}
+                    {...(() => { const a = parseAvatarConfig(leaderStudent.avatarConfig); return { skin: a.skin, clothes: a.clothes ?? undefined, hair: hairKey(a) ?? undefined, hijab: a.hijab ?? undefined, eyes: a.eyes ?? undefined, brow: a.brows ?? undefined, mouth: a.mouth ?? undefined } })()}
                     size={118}
                   />
                 )}
@@ -274,7 +278,7 @@ export default function LeaderboardPage() {
         )}
 
         {/* ── Tabs ─────────────────────────────────────────────────────── */}
-        <div className="mb-1 flex gap-2">
+        <div className="mb-1 flex gap-2" data-tour="lb-tabs">
           {tabs.map((tab) => (
             <button
               key={tab.key}
@@ -316,7 +320,7 @@ export default function LeaderboardPage() {
               sits at y=144, i.e. 19.3% of the sprite width; scroll-bottom.png
               starts its roll 146px above its foot, i.e. 19.5%. Anything less
               than those and the content slides under a roll. */}
-          <div className="relative" style={{ paddingTop: '22%', paddingBottom: '22%' }}>
+          <div className="relative" style={{ paddingTop: '22%', paddingBottom: '22%' }} data-tour="lb-list">
             <h1 className="text-center font-bytebounce text-[clamp(34px,11vw,46px)] leading-none text-[#3e2723]">
               LEADERBOARD
             </h1>
@@ -401,12 +405,16 @@ export default function LeaderboardPage() {
                               ) : (
                                 group.members.map((m) => {
                                   const href = instagramHref(m.instagram)
+                                  const ma = parseAvatarConfig(m.avatarConfig)
                                   const avatar = (
                                     <PixelAvatar
-                                      skin={m.avatarSkin ?? 'skin1'}
-                                      hair={m.avatarHair ?? undefined}
-                                      eyes={m.avatarEyes ?? undefined}
-                                      brow={m.avatarBrows ?? undefined}
+                                      skin={ma.skin}
+                                      clothes={ma.clothes ?? undefined}
+                                      hair={hairKey(ma) ?? undefined}
+                                      hijab={ma.hijab ?? undefined}
+                                      eyes={ma.eyes ?? undefined}
+                                      brow={ma.brows ?? undefined}
+                                      mouth={ma.mouth ?? undefined}
                                       size={34}
                                     />
                                   )
@@ -429,10 +437,17 @@ export default function LeaderboardPage() {
                                       ) : (
                                         <span className="flex-shrink-0" title="No Instagram linked">{avatar}</span>
                                       )}
-                                      <p className="min-w-0 flex-1 truncate font-bytebounce text-[16px] leading-none text-[#5d4330]">
-                                        {m.name}
-                                      </p>
-                                      <p className="flex-shrink-0 font-bytebounce text-[16px] leading-none text-[#88684e]">
+                                      <div className="min-w-0 flex-1">
+                                        <p className="truncate font-bytebounce text-[16px] leading-tight text-[#5d4330]">
+                                          {m.name}
+                                        </p>
+                                        {m.instagram && (
+                                          <p className="truncate font-bytebounce text-[12px] leading-none text-[#8a5a37]">
+                                            @{m.instagram.replace(/^@/, '')}
+                                          </p>
+                                        )}
+                                      </div>
+                                      <p className="flex-shrink-0 font-bytebounce text-[16px] leading-none text-[#88684e] ml-1">
                                         {m.points.toLocaleString()} pts
                                       </p>
                                     </div>
@@ -482,10 +497,7 @@ export default function LeaderboardPage() {
                         )}
                       </div>
                       <PixelAvatar
-                        skin={student.avatarSkin ?? 'skin1'}
-                        hair={student.avatarHair ?? undefined}
-                        eyes={student.avatarEyes ?? undefined}
-                        brow={student.avatarBrows ?? undefined}
+                        {...(() => { const a = parseAvatarConfig(student.avatarConfig); return { skin: a.skin, clothes: a.clothes ?? undefined, hair: hairKey(a) ?? undefined, hijab: a.hijab ?? undefined, eyes: a.eyes ?? undefined, brow: a.brows ?? undefined, mouth: a.mouth ?? undefined } })()}
                         size={38}
                       />
                       <div className="min-w-0 flex-1">
