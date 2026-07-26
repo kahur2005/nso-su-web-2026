@@ -13,12 +13,8 @@ import { levelProgress } from '@/lib/leveling'
 import PlayerBanner from '@/components/profile/PlayerBanner'
 import StatCard from '@/components/profile/StatCard'
 import HouseBanner from '@/components/profile/HouseBanner'
-
-// Build a usable href from either a full URL or a bare @handle.
-function instagramHref(value: string) {
-  if (/^https?:\/\//i.test(value)) return value
-  return `https://instagram.com/${value.replace(/^@/, '')}`
-}
+import SectionHeading from '@/components/profile/SectionHeading'
+import AchievementStrip from '@/components/profile/AchievementStrip'
 
 const MASCOTS = new Set([
   'chimera','faerie','fenrir','griffin','harpy','kitsune','kraken',
@@ -156,104 +152,22 @@ export default async function ProfilePage() {
           />
         </div>
 
-        {/* ── Instagram link (if set) ── */}
-        {student.instagram && (
-          <a
-            href={instagramHref(student.instagram)}
-            target="_blank"
-            rel="noreferrer"
-            className="wood-plank px-4 py-2.5 flex items-center gap-3 transition-opacity hover:opacity-90"
-          >
-            <span className="text-xl">📸</span>
-            <span
-              className="font-bytebounce text-[17px] leading-none text-[#fff3d9] flex-1 truncate"
-              style={{ textShadow: '1px 1px 0 #3e2723' }}
-            >
-              {student.instagram}
-            </span>
-            <span
-              className="font-bytebounce text-[18px] text-[#ffd23f]"
-              style={{ textShadow: '1px 1px 0 #3e2723' }}
-            >
-              ▶
-            </span>
-          </a>
-        )}
-
-        {/* ── Achievements section ── */}
-        <div className="flex flex-col gap-2" data-tour="profile-achievements">
-          {/* Section header */}
-          <div className="wood-plank px-4 py-2.5 flex items-center gap-3">
-            <span className="text-[22px]">🏅</span>
-            <h2
-              className="font-bytebounce text-[26px] leading-none text-[#ffd23f]"
-              style={{ textShadow: '2.5px 2.5px 0 #3e2723' }}
-            >
-              Achievements
-            </h2>
-            <span
-              className="ml-auto font-bytebounce text-[16px] text-[#e0b391]"
-              style={{ textShadow: '1px 1px 0 #3e2723' }}
-            >
-              {unlockedCount}/{achievements.length}
-            </span>
-          </div>
-
-          {achievements.length === 0 ? (
-            <div className="wood-plank px-4 py-4 text-center">
-              <p
-                className="font-bytebounce text-[16px] text-[#e0b391]"
-                style={{ textShadow: '1px 1px 0 #3e2723' }}
+        {/* ── Achievements ── */}
+        <section data-tour="profile-achievements">
+          <SectionHeading
+            icon="/images/profile/medal.png"
+            title="Achievements"
+            right={
+              <span
+                className="font-bytebounce text-[17px] leading-none text-[#e0b391]"
+                style={{ textShadow: '1.5px 1.5px 0 #3e2723' }}
               >
-                No achievements yet
-              </p>
-            </div>
-          ) : (
-            achievements.map((ach) => (
-              <div
-                key={ach.id}
-                className="wood-plank px-4 py-3 flex items-center gap-3"
-                style={{ opacity: ach.unlocked ? 1 : 0.5 }}
-              >
-                {/* Badge icon */}
-                <div className="w-10 h-10 shrink-0 flex items-center justify-center rounded border-2 border-[#3e2723] bg-[#5d3a1a]">
-                  {ach.unlocked ? (
-                    ach.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={ach.imageUrl} alt="" className="w-8 h-8 object-contain" />
-                    ) : (
-                      <span className="text-xl">🏅</span>
-                    )
-                  ) : (
-                    <span className="text-xl">🔒</span>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p
-                    className="font-bytebounce text-[18px] leading-tight text-[#fff3d9] truncate"
-                    style={{ textShadow: '1.5px 1.5px 0 #3e2723' }}
-                  >
-                    {ach.name}
-                  </p>
-                  <p
-                    className="font-bytebounce text-[13px] leading-tight text-[#e0b391] truncate"
-                    style={{ textShadow: '1px 1px 0 #3e2723' }}
-                  >
-                    {ach.description}
-                  </p>
-                </div>
-                {ach.unlocked && (
-                  <span
-                    className="font-bytebounce text-[18px] text-[#ffd23f] shrink-0"
-                    style={{ textShadow: '1px 1px 0 #3e2723' }}
-                  >
-                    ✓
-                  </span>
-                )}
-              </div>
-            ))
-          )}
-        </div>
+                {unlockedCount}/{achievements.length}
+              </span>
+            }
+          />
+          <AchievementStrip achievements={achievements} />
+        </section>
 
         {/* ── Activity log ── */}
         <div className="flex flex-col gap-2" data-tour="profile-activity">
