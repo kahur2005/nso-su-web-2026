@@ -8,8 +8,7 @@ import { redirect } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PageIntro from '@/components/onboarding/PageIntro'
-import PixelAvatar from '@/components/ui/PixelAvatar'
-import { parseAvatarConfig, hairKey } from '@/lib/avatar'
+import { parseAvatarConfig } from '@/lib/avatar'
 import { levelProgress } from '@/lib/leveling'
 import PlayerBanner from '@/components/profile/PlayerBanner'
 
@@ -111,7 +110,6 @@ export default async function ProfilePage() {
 
   const { level, into, span } = levelProgress(student.xp)
   const completedQuests = student.questProgress?.length ?? 0
-  const xpPct = Math.max(0, Math.min(100, (into / (span || 1)) * 100))
 
   const groupName = student.group?.name ?? null
   const groupColor = student.group?.color ?? '#e0b391'
