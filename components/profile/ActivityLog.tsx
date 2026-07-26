@@ -1,0 +1,87 @@
+// components/profile/ActivityLog.tsx
+// The frame's activity feed: parchment rows with the scanned committee member,
+// a fun-fact sub-line, and the point delta on the right — green when positive,
+// red when negative. "See All" expands the list in place, so no extra route is
+// needed. This is the page's only client component; it exists for that state.
+'use client'
+import { useState } from 'react'
+import SectionHeading from './SectionHeading'
+
+export interface ActivityRow {
+  id: string
+  title: string
+  points: number
+  scannedAt: string
+}
+
+/** Rows shown before "See All" is pressed — the frame shows a short feed. */
+const COLLAPSED_ROWS = 3
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+}
+
+const PAPER = {
+  backgroundImage: 'url(/images/quests/paper.png)',
+  backgroundSize: '100% 100%',
+  backgroundRepeat: 'no-repeat',
+  imageRendering: 'pixelated' as const,
+}
+
+export default function ActivityLog({ rows }: { rows: ActivityRow[] }) {
+  const [expanded, setExpanded] = useState(false)
+  const visible = expanded ? rows : rows.slice(0, COLLAPSED_ROWS)
+  const canExpand = rows.length > COLLAPSED_ROWS
+
+  return (
+    <section data-tour="profile-activity">
+      <SectionHeading
+        icon="/images/dashboard/quest.svg"
+        title="Activity Log"
+        right={
+          canExpand ? (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              aria-expanded={expanded}
+              className="font-bytebounce text-[17px] leading-none text-[#a1887f] transition-colors hover:text-[#ffecb3]"
+              style={{ textShadow: '1.5px 1.5px 0 #3e2723' }}
+            >
+              {expanded ? 'Show Less ◀' : 'See All ▶'}
+            </button>
+          ) : undefined
+        }
+      />
+
+      {rows.length === 0 ? (
+        <div className="px-5 py-4" style={PAPER}>
+          <p className="font-bytebounce text-[17px] leading-none text-[#6d4c41]">
+            No scans yet — go scan a committee member!
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {visible.map((row) => (
+            <div key={row.id} className="flex items-center gap-3 px-5 py-3.5" style={PAPER}>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-bytebounce text-[21px] leading-none text-[#3e2723]">
+                  Scanned {row.title}
+                </p>
+                <p className="mt-1.5 font-bytebounce text-[17px] leading-none text-[#6d4c41]">
+                  <span aria-hidden>💡</span> FunFact collected · {formatDate(row.scannedAt)}
+                </p>
+              </div>
+              <p
+                className={`shrink-0 font-bytebounce text-[18px] leading-none ${
+                  row.points < 0 ? 'text-[#d6101d]' : 'text-[#328b36]'
+                }`}
+              >
+                {row.points < 0 ? '−' : '+'} {Math.abs(row.points)} Points
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}

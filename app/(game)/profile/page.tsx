@@ -15,6 +15,7 @@ import StatCard from '@/components/profile/StatCard'
 import HouseBanner from '@/components/profile/HouseBanner'
 import SectionHeading from '@/components/profile/SectionHeading'
 import AchievementStrip from '@/components/profile/AchievementStrip'
+import ActivityLog, { type ActivityRow } from '@/components/profile/ActivityLog'
 
 const MASCOTS = new Set([
   'chimera','faerie','fenrir','griffin','harpy','kitsune','kraken',
@@ -47,7 +48,7 @@ async function getProfileData(studentId: string, studentDbId?: string) {
         .select('*, npc:NPC(*)')
         .eq('studentId', student.id)
         .order('scannedAt', { ascending: false })
-        .limit(8),
+        .limit(30),
       supabase
         .from('QuestProgress')
         .select('*, quest:Quest(*)')
@@ -107,6 +108,13 @@ export default async function ProfilePage() {
   const mascotImg = mascotSrc(groupName ?? '')
 
   const av = parseAvatarConfig(student.avatarConfig)
+
+  const activityRows: ActivityRow[] = (student.scanLogs ?? []).map((log: any) => ({
+    id: log.id,
+    title: log.npc?.committeeName ?? 'Committee',
+    points: log.pointsAwarded ?? 0,
+    scannedAt: log.scannedAt,
+  }))
 
   return (
     <PageWrapper>
@@ -170,46 +178,7 @@ export default async function ProfilePage() {
         </section>
 
         {/* ── Activity log ── */}
-        <div className="flex flex-col gap-2" data-tour="profile-activity">
-          <div className="wood-plank px-4 py-2.5 flex items-center gap-3">
-            <span className="text-[22px]">📋</span>
-            <h2
-              className="font-bytebounce text-[26px] leading-none text-[#ffd23f]"
-              style={{ textShadow: '2.5px 2.5px 0 #3e2723' }}
-            >
-              Activity Log
-            </h2>
-          </div>
-          {student.scanLogs?.length > 0 ? (
-            student.scanLogs.map((log: any) => (
-              <div
-                key={log.id}
-                className="rounded border-2 border-[#3a2418] bg-[#fdf6e3] p-3.5 flex items-center justify-between gap-3"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="font-bytebounce text-[18px] leading-tight text-[#3e2723] truncate font-bold">
-                    ✅ {log.npc?.committeeName ?? 'Committee'}
-                  </p>
-                  <p className="font-bytebounce text-[14px] leading-tight text-[#8a5a37] mt-0.5">
-                    Fun Fact collected ·{' '}
-                    {new Date(log.scannedAt).toLocaleDateString('en', {
-                      month: 'short', day: 'numeric',
-                    })}
-                  </p>
-                </div>
-                <span className="font-bytebounce text-[18px] text-[#b8860b] font-bold shrink-0">
-                  +{log.pointsAwarded}pts
-                </span>
-              </div>
-            ))
-          ) : (
-            <div className="rounded border-2 border-[#3a2418] bg-[#fdf6e3] p-3.5 text-center">
-              <p className="font-bytebounce text-[16px] text-[#8a5a37]">
-                No scans yet — go scan a committee member!
-              </p>
-            </div>
-          )}
-        </div>
+        <ActivityLog rows={activityRows} />
 
       </div>
     </PageWrapper>
