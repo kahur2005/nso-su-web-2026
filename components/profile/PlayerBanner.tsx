@@ -33,13 +33,24 @@ export default function PlayerBanner({
 
   return (
     <div
-      className="wood-plank flex items-center gap-4 px-4 py-4 sm:px-5"
+      className="flex items-center gap-4 px-4 py-4 sm:px-5"
+      style={{
+        backgroundImage: 'url(/images/profile/wooden-background.png)',
+        backgroundSize: '100% 100%',
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+      }}
       data-tour="profile-header"
     >
       {/* Gold-framed avatar on the frame's red backing */}
       <div
         className="shrink-0 border-[3px] border-[#fcf940]"
-        style={{ background: 'linear-gradient(180deg, #761915 0%, #d6101d 100%)' }}
+        style={{ 
+          backgroundImage: 'url(/images/profile/avatar-bg.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          imageRendering: 'pixelated'
+        }}
       >
         <PixelAvatar
           skin={avatar.skin}

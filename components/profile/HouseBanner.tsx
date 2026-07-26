@@ -24,29 +24,25 @@ export default function HouseBanner({ groupName, groupColor, mascotSrc }: HouseB
   const fill = groupColor || PENNANT_FALLBACK
 
   return (
-    <div className="relative w-[118px] shrink-0 sm:w-[132px]">
-      {/* Shape layer: fill, notch and outline only — never text. */}
+    <div className="relative w-[180px] shrink-0 -mt-3 -mr-12 sm:-mr-16 sm:-mt-4 sm:w-[200px]">
+      {/* Shape layer: using the uploaded group banner image. */}
       <div
         className="absolute inset-0"
         style={{
-          // Vertical cloth streaks over the house colour.
-          background: `repeating-linear-gradient(90deg, ${fill} 0 3px, rgba(0,0,0,0.10) 3px 4px)`,
-          clipPath: `polygon(0 0, 100% 0, 100% calc(100% - ${TIP_DEPTH}px), 50% 100%, 0 calc(100% - ${TIP_DEPTH}px))`,
-          filter:
-            'drop-shadow(2px 0 0 #3e2723) drop-shadow(-2px 0 0 #3e2723) drop-shadow(0 2px 0 #3e2723) drop-shadow(0 -2px 0 #3e2723)',
+          backgroundImage: 'url(/images/profile/group-banner.png)',
+          backgroundSize: '100% 100%',
+          backgroundRepeat: 'no-repeat',
+          imageRendering: 'pixelated'
         }}
-      >
-        {/* Darker crossbar across the top of the pennant */}
-        <div className="absolute inset-x-0 top-0 h-[5px] bg-[#a62700]" />
-      </div>
+      />
 
       {/* Content layer: sits above the shape and drives the wrapper's height. */}
       <div
-        className="relative flex flex-col items-center gap-2 px-2 pt-3"
-        style={{ paddingBottom: TIP_DEPTH + 8 }}
+        className="relative flex flex-col items-center gap-3 px-3 pt-6"
+        style={{ paddingBottom: TIP_DEPTH + 16 }}
       >
         <p
-          className="font-bytebounce text-[15px] leading-none text-[#ffecb3] sm:text-[16px]"
+          className="font-bytebounce text-[22px] leading-none text-[#ffecb3] sm:text-[24px]"
           style={{ textShadow: '1px 1px 0 rgba(0,0,0,0.4)' }}
         >
           HOUSE OF
@@ -58,15 +54,15 @@ export default function HouseBanner({ groupName, groupColor, mascotSrc }: HouseB
             src={mascotSrc}
             alt=""
             aria-hidden
-            className="h-[76px] w-[76px] object-contain sm:h-[88px] sm:w-[88px]"
+            className="h-[80px] w-[80px] object-contain sm:h-[90px] sm:w-[90px]"
             style={{ imageRendering: 'pixelated' }}
           />
         ) : (
-          <span className="text-4xl" aria-hidden>🛡️</span>
+          <span className="text-5xl" aria-hidden>🛡️</span>
         )}
 
         <p
-          className="w-full break-words text-center font-bytebounce text-[20px] leading-none text-[#ffecb3] sm:text-[22px]"
+          className="w-full break-words text-center font-bytebounce text-[26px] leading-none text-[#ffecb3] sm:text-[28px]"
           style={{ textShadow: '2px 2px 0 rgba(0,0,0,0.45)' }}
         >
           {groupName ?? 'Unassigned'}

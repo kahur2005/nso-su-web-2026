@@ -163,7 +163,7 @@ export default async function ProfilePage() {
         {/* ── Achievements ── */}
         <section data-tour="profile-achievements">
           <SectionHeading
-            icon="/images/profile/medal.png"
+            icon="/images/profile/medal-achevement-logo.svg"
             title="Achievements"
             right={
               <span

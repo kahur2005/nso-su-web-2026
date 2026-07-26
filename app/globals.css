@@ -144,6 +144,91 @@ body {
   image-rendering: pixelated;
 }
 
+/* Notched pixel row frame — replaces public/images/leaderboard/row-frame.png.
+   That sprite was a flat #d4b390 panel with a stair-stepped corner notch, plus
+   a 1px near-white fringe left over from the knockout export. Drawing the shape
+   in CSS keeps the steps crisp at any row size and drops the fringe.
+   The stair is measured off the sprite: the edge insets 9px for the first 4px
+   of height, then 5px for the next 5px, then meets the side. */
+.pixel-frame {
+  --frame-fill: #d4b390;
+  background: var(--frame-fill);
+  clip-path: polygon(
+    9px 0, calc(100% - 9px) 0,
+    calc(100% - 9px) 4px, calc(100% - 5px) 4px,
+    calc(100% - 5px) 9px, 100% 9px,
+    100% calc(100% - 9px), calc(100% - 5px) calc(100% - 9px),
+    calc(100% - 5px) calc(100% - 4px), calc(100% - 9px) calc(100% - 4px),
+    calc(100% - 9px) 100%, 9px 100%,
+    9px calc(100% - 4px), 5px calc(100% - 4px),
+    5px calc(100% - 9px), 0 calc(100% - 9px),
+    0 9px, 5px 9px, 5px 4px, 9px 4px
+  );
+}
+
+/* Expanded state: square off the bottom so the row and the roster below it
+   read as one card growing, not two stacked boxes. */
+.pixel-frame--top {
+  clip-path: polygon(
+    9px 0, calc(100% - 9px) 0,
+    calc(100% - 9px) 4px, calc(100% - 5px) 4px,
+    calc(100% - 5px) 9px, 100% 9px,
+    100% 100%, 0 100%,
+    0 9px, 5px 9px, 5px 4px, 9px 4px
+  );
+}
+
+/* The roster panel: square top to butt against the row, notched bottom. */
+.pixel-frame--bottom {
+  clip-path: polygon(
+    0 0, 100% 0,
+    100% calc(100% - 9px), calc(100% - 5px) calc(100% - 9px),
+    calc(100% - 5px) calc(100% - 4px), calc(100% - 9px) calc(100% - 4px),
+    calc(100% - 9px) 100%, 9px 100%,
+    9px calc(100% - 4px), 5px calc(100% - 4px),
+    5px calc(100% - 9px), 0 calc(100% - 9px)
+  );
+}
+
+/* Lighter parchment so the members area stays distinct from its group row. */
+.pixel-frame--roster {
+  --frame-fill: #e9d3ab;
+}
+
+/* Podium trim (gold / silver / bronze) around the top three rows. A real
+   `border` is no good here — clip-path cuts it away at every notch — so the
+   medal colour is painted as the panel itself and the parchment fill is inset
+   inside it, sharing the same clipped silhouette. Set --frame-edge to colour
+   it; the row's own children paint above both layers. */
+.pixel-frame--medal {
+  position: relative;
+  z-index: 0;
+  background: var(--frame-edge);
+}
+
+.pixel-frame--medal::before {
+  content: '';
+  position: absolute;
+  /* Trim thickness — the gap between the medal panel and the parchment. */
+  inset: 6px;
+  background: var(--frame-fill);
+  /* Follows whichever variant is active (base / --top / --bottom). */
+  clip-path: inherit;
+  z-index: -1;
+}
+
+/* Expanded card: the row and the roster meet in the middle, and each would
+   otherwise draw its own trim along that seam — reading as a double border
+   through the card. Drop the trim on the two edges that touch, so it survives
+   only around the outside of the combined card. */
+.pixel-frame--medal.pixel-frame--top::before {
+  inset: 6px 6px 0;
+}
+
+.pixel-frame--medal.pixel-frame--bottom::before {
+  inset: 0 6px 6px;
+}
+
 /* Pixel Border */
 .pixel-border {
   border: 4px solid #000;

@@ -38,3 +38,19 @@ export function levelProgress(xp: number) {
   const into = safeXp - floor // XP earned into the current level
   return { level, into, span, floor, nextLevelXp: floor + span }
 }
+
+// ── Guild (Group) levels ────────────────────────────────────────────────────
+// Deliberately NOT the doubling curve above. A guild's level is flat: every
+// level costs the same 10 points, so the step never gets more expensive.
+//   0-9 pts -> LV 1, 10-19 -> LV 2, 20-29 -> LV 3, ...
+// Derived from Group.totalPoints on read — there is no `level` column on Group
+// and nothing writes one, so this can never drift out of sync the way
+// Student.level does against Student.xp.
+
+export const GROUP_POINTS_PER_LEVEL = 10
+
+/** A guild's level from its total points. Starts at 1, +1 every 10 points. */
+export function groupLevel(totalPoints: number): number {
+  const pts = Math.max(0, totalPoints || 0)
+  return Math.floor(pts / GROUP_POINTS_PER_LEVEL) + 1
+}

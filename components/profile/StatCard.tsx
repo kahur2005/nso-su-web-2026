@@ -27,14 +27,14 @@ export default function StatCard({ label, value, sub, valueClassName = '' }: Sta
       <p className="min-w-0 flex-1 font-bytebounce text-[18px] uppercase leading-[1.05] text-[#3e2723] sm:text-[19px]">
         {label}
       </p>
-      <div className="shrink-0 text-right">
-        <p className={`font-bytebounce text-[38px] leading-none text-[#3e2723] sm:text-[42px] ${valueClassName}`}>
+      <div className="shrink-0 text-right flex items-baseline justify-end">
+        <span className={`font-bytebounce text-[46px] leading-none text-[#3e2723] sm:text-[52px] ${valueClassName}`}>
           {value}
-        </p>
+        </span>
         {sub && (
-          <p className="font-bytebounce text-[20px] leading-none text-[#3e2723] sm:text-[22px]">
+          <span className="font-bytebounce text-[46px] leading-none text-[#3e2723] sm:text-[52px]">
             /{sub}
-          </p>
+          </span>
         )}
       </div>
     </div>

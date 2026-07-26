@@ -1,7 +1,7 @@
 'use client'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import PixelAvatar from '@/components/ui/PixelAvatar'
 
 const TOTAL_STEPS = 5
@@ -64,6 +64,44 @@ const MOUTHS: Array<string | null> = [
   'mouth4.2',
 ]
 // ───────────────────────────────────────────────────────────────────────────
+
+function CarouselWrapper({ children }: { children: React.ReactNode }) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const scrollAmount = 150
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      })
+    }
+  }
+
+  return (
+    <div className="relative mt-2 flex items-center">
+      <button 
+        type="button" 
+        onClick={() => scroll('left')}
+        className="absolute -left-2 z-10 flex h-8 w-6 items-center justify-center rounded border-2 border-[#e0b391] bg-white shadow-sm transition-transform active:scale-95"
+      >
+        <img src="/images/committee/page-prev.png" alt="Previous" className="w-4 h-4 object-contain" style={{ imageRendering: 'pixelated' }} />
+      </button>
+      
+      <div ref={scrollRef} className="flex gap-2 overflow-x-auto py-1 scrollbar-thin w-full px-5">
+        {children}
+      </div>
+
+      <button 
+        type="button" 
+        onClick={() => scroll('right')}
+        className="absolute -right-2 z-10 flex h-8 w-6 items-center justify-center rounded border-2 border-[#e0b391] bg-white shadow-sm transition-transform active:scale-95"
+      >
+        <img src="/images/committee/page-next.png" alt="Next" className="w-4 h-4 object-contain" style={{ imageRendering: 'pixelated' }} />
+      </button>
+    </div>
+  )
+}
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -231,7 +269,7 @@ export default function RegisterPage() {
         type="button"
         onClick={goBack}
         aria-label={step === 0 ? 'Back to login' : 'Previous step'}
-        className="absolute left-4 top-4 sm:top-8 z-20 w-[54px] sm:w-[64px] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5"
+        className="fixed left-4 top-4 sm:top-8 z-20 w-[54px] sm:w-[64px] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5"
       >
         <img src="/images/login/back-button.png" alt="" className="w-full" />
       </button>
@@ -417,12 +455,12 @@ export default function RegisterPage() {
               {/* Skin tone picker */}
               <div>
                 <p className={labelClass} style={labelShadow}>Skin tone</p>
-                <div className="mt-2 flex flex-wrap gap-2">
+                <CarouselWrapper>
                   {SKINS.map((s) => (
                     <button
                       key={s} type="button"
                       onClick={() => setAvatarSkin(s)}
-                      className="relative border-2 rounded transition-transform active:scale-95"
+                      className="relative border-2 rounded transition-transform active:scale-95 flex-shrink-0"
                       style={{
                         borderColor: avatarSkin === s ? '#fbc94c' : '#e0b391',
                         boxShadow: avatarSkin === s ? '0 0 0 2px #fbc94c' : 'none',
@@ -436,13 +474,13 @@ export default function RegisterPage() {
                       />
                     </button>
                   ))}
-                </div>
+                </CarouselWrapper>
               </div>
 
               {/* Clothes picker */}
               <div>
                 <p className={labelClass} style={labelShadow}>Clothing</p>
-                <div className="mt-2 flex gap-2 overflow-x-auto py-1 scrollbar-thin">
+                <CarouselWrapper>
                   {CLOTHES.map((c) => (
                     <button
                       key={c.key ?? 'none'} type="button"
@@ -462,13 +500,13 @@ export default function RegisterPage() {
                       )}
                     </button>
                   ))}
-                </div>
+                </CarouselWrapper>
               </div>
 
               {/* Eyes picker */}
               <div>
                 <p className={labelClass} style={labelShadow}>Eyes Style</p>
-                <div className="mt-2 flex gap-2 overflow-x-auto py-1 scrollbar-thin">
+                <CarouselWrapper>
                   {EYES.map((e) => (
                     <button
                       key={e} type="button"
@@ -482,13 +520,13 @@ export default function RegisterPage() {
                       <PixelAvatar skin={avatarSkin} eyes={e} size={44} />
                     </button>
                   ))}
-                </div>
+                </CarouselWrapper>
               </div>
 
               {/* Brows picker */}
               <div>
                 <p className={labelClass} style={labelShadow}>Eyebrows Style</p>
-                <div className="mt-2 flex gap-2 overflow-x-auto py-1 scrollbar-thin">
+                <CarouselWrapper>
                   {BROWS.map((b) => (
                     <button
                       key={b} type="button"
@@ -502,18 +540,18 @@ export default function RegisterPage() {
                       <PixelAvatar skin={avatarSkin} eyes={avatarEyes} brow={b} size={44} />
                     </button>
                   ))}
-                </div>
+                </CarouselWrapper>
               </div>
 
               {/* Hair style picker */}
               <div>
                 <p className={labelClass} style={labelShadow}>Hair style</p>
-                <div className="mt-2 flex flex-wrap gap-2">
+                <CarouselWrapper>
                   {HAIR_STYLES.map((h) => (
                     <button
                       key={h.key ?? 'bald'} type="button"
                       onClick={() => setAvatarHairStyle(h.key)}
-                      className="relative border-2 rounded transition-transform active:scale-95 bg-white/80"
+                      className="relative border-2 rounded transition-transform active:scale-95 bg-white/80 flex-shrink-0"
                       style={{
                         borderColor: avatarHairStyle === h.key ? '#fbc94c' : '#e0b391',
                         boxShadow: avatarHairStyle === h.key ? '0 0 0 2px #fbc94c' : 'none',
@@ -533,7 +571,7 @@ export default function RegisterPage() {
                       )}
                     </button>
                   ))}
-                </div>
+                </CarouselWrapper>
               </div>
 
               {/* Hair color picker (only when a style is selected) */}
@@ -565,7 +603,7 @@ export default function RegisterPage() {
               {/* Mouth picker */}
               <div>
                 <p className={labelClass} style={labelShadow}>Mouth</p>
-                <div className="mt-2 flex gap-2 overflow-x-auto py-1 scrollbar-thin">
+                <CarouselWrapper>
                   {MOUTHS.map((m) => (
                     <button
                       key={m ?? 'none'} type="button"
@@ -585,13 +623,13 @@ export default function RegisterPage() {
                       )}
                     </button>
                   ))}
-                </div>
+                </CarouselWrapper>
               </div>
 
               {/* Hijab picker */}
               <div>
                 <p className={labelClass} style={labelShadow}>Hijab / Headwear</p>
-                <div className="mt-2 flex gap-2 overflow-x-auto py-1 scrollbar-thin">
+                <CarouselWrapper>
                   {HIJABS.map((h) => (
                     <button
                       key={h.key ?? 'none'} type="button"
@@ -611,7 +649,7 @@ export default function RegisterPage() {
                       )}
                     </button>
                   ))}
-                </div>
+                </CarouselWrapper>
               </div>
 
             </div>

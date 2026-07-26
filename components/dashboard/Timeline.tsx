@@ -1,5 +1,19 @@
 // components/dashboard/Timeline.tsx
-// Ring-bound calendar pad timeline matching the Figma reference design.
+// Ring-bound calendar pad built to the Figma "TIMELINE" frame
+// (VCnH1k8cwo2dWaLjL7YRVS, node 2:36).
+//
+// The pad is one 49x51 pixel-art sprite cut into four horizontal slices in
+// public/images/timeline/: a fixed top cap (ring loops + the top of the red
+// header), a 2px red strip and a 2px cream strip that each stretch vertically
+// to whatever they contain, and a fixed bottom edge. That lets the header grow
+// with the day title and the body grow with the agenda without the art
+// distorting — same trick as SliceBg in app/(game)/quests/page.tsx, rotated.
+//
+// Every measurement below is a percentage of the pad's own width, lifted
+// straight from the Figma frame (where the pad art is 362.3px wide), and
+// expressed in `cqw` against the container-query root on the pad wrapper. The
+// whole calendar therefore scales as a single unit at any column width, exactly
+// as the design does.
 'use client'
 
 import { useState } from 'react'
@@ -90,101 +104,204 @@ const TIMELINE_DATA: TimelineDay[] = [
   },
 ]
 
+/* ── Figma palette (node 2:36) ─────────────────────────────────────────── */
+const INK = '#3e2723' // pad border + agenda text
+const RULE = '#c29f78' // agenda grid lines
+const TITLE_GOLD = '#ffe045'
+const DATE_ORANGE = '#ff9800'
+const TAB_ON_BLUE = '#ffc20e' // label on the blue TM tab
+const TAB_ON_YELLOW = '#bf360c' // label on the yellow day tabs
+
+/* ── Geometry, as a share of the pad's width (Figma pad = 362.3px) ─────── */
+const TAB_W = '12.23cqw' // 44.3px sprite, 9:5 aspect
+const TAB_H = '6.79cqw' // 24.61px
+const TAB_RAISE = '1.66cqw' // 6px lift on the selected tab
+const CONTENT_L = '16.62cqw' // clears the wooden spine down the pad's left
+const CONTENT_R = '4.56cqw'
+const TIME_COL = '43.54%' // 124.35 of the 285.6px agenda table
+const CELL_FONT = '6cqw' // 21.73px
+const ROW_MIN_H = '6.72cqw' // 24.34px
+
+/** Repeats one 2px-tall slice of the pad sprite over a box of any height. */
+function padSlice(file: string): React.CSSProperties {
+  return {
+    backgroundImage: `url(/images/timeline/${file})`,
+    backgroundSize: '100% 100%',
+    backgroundRepeat: 'no-repeat',
+    imageRendering: 'pixelated',
+  }
+}
+
 export default function Timeline() {
   const [selectedDay, setSelectedDay] = useState<number>(0)
   const current = TIMELINE_DATA[selectedDay] ?? TIMELINE_DATA[0]
 
-  return (
-    <div className="relative mx-auto w-full max-w-md">
+  // "DAY 1" is set enormous in the design, on leading so tight the glyphs
+  // overflow their line box up over the flat red of the cap — which is exactly
+  // where Figma puts them. The technical-meeting title is far too long to
+  // survive that, so it steps down and wraps inside the same band.
+  const isLongTitle = current.headerTitle.length > 8
+  const titleSize = isLongTitle ? '10.5cqw' : '22.92cqw'
+  const titleLeading = isLongTitle ? 0.95 : 0.5
 
-      {/* ── Ring binder top loops ── */}
-      <div className="flex justify-center gap-6 relative z-10 -mb-3">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="relative flex flex-col items-center">
-            {/* Metal ring arc */}
-            <div className="w-9 h-9 rounded-t-full border-4 border-[#3e2723] bg-[#d9d9d9] flex items-center justify-center shadow-md">
-              <div className="w-5 h-5 rounded-t-full bg-[#8c8c8c] border border-[#3e2723]" />
-            </div>
-            {/* Ring hole cutout */}
-            <div className="w-4 h-2 bg-[#2a170e] border border-[#3e2723] rounded-sm -mt-1" />
-          </div>
-        ))}
+  return (
+    <div
+      className="relative mx-auto w-full max-w-[420px]"
+      style={{ containerType: 'inline-size' }}
+    >
+      {/* ── Top cap: the three ring loops and the head of the red banner ── */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/images/timeline/pad-top.png"
+        alt=""
+        aria-hidden
+        className="block w-full"
+        style={{ imageRendering: 'pixelated' }}
+      />
+
+      {/* ── Red banner: day title + date. Tucks 2px under the cap, whose two
+             spare rows of flat red hide the seam. ── */}
+      <div
+        className="relative -mt-[2px] text-center"
+        style={{
+          ...padSlice('pad-header.png'),
+          paddingLeft: CONTENT_L,
+          paddingRight: CONTENT_R,
+          paddingBottom: '1.5cqw',
+        }}
+      >
+        <h2
+          className="font-bytebounce"
+          style={{
+            fontSize: titleSize,
+            lineHeight: titleLeading,
+            color: TITLE_GOLD,
+            textShadow: `2px 2px 0 ${INK}`,
+          }}
+        >
+          {current.headerTitle}
+        </h2>
+        <p
+          className="font-bytebounce"
+          style={{
+            fontSize: '9.23cqw',
+            lineHeight: 0.85,
+            marginTop: isLongTitle ? undefined : '-1cqw',
+            color: DATE_ORANGE,
+            textShadow: `1px 1px 0 ${INK}`,
+          }}
+        >
+          {current.date}
+        </p>
       </div>
 
-      {/* ── Main calendar pad container ── */}
-      <div className="rounded-lg border-4 border-[#3e2723] bg-[#f5e7c6] shadow-[4px_4px_0_#3e2723] overflow-hidden">
-
-        {/* ── Red header block ── */}
-        <div className="bg-[#a02c12] border-b-4 border-[#3e2723] px-4 py-4 text-center">
-          <h2
-            className="font-bytebounce text-[clamp(20px,6vw,28px)] leading-tight text-[#ffd23f]"
-            style={{ textShadow: '2px 2px 0 #3e2723' }}
-          >
-            {current.headerTitle}
-          </h2>
-          <p
-            className="font-bytebounce text-[18px] leading-tight text-[#ffeb3b] mt-0.5"
-            style={{ textShadow: '1.5px 1.5px 0 #3e2723' }}
-          >
-            {current.date}
-          </p>
-        </div>
-
-        {/* ── Day selector tabs row ── */}
-        <div className="bg-[#e9d3ab] border-b-2 border-[#b08a5e] px-2 py-2 flex justify-center gap-1.5 overflow-x-auto">
+      {/* ── Cream body: day tabs + agenda table ── */}
+      <div
+        className="relative -mt-[1px]"
+        style={{
+          ...padSlice('pad-body.png'),
+          paddingLeft: CONTENT_L,
+          paddingRight: CONTENT_R,
+          paddingTop: '3.11cqw',
+          paddingBottom: '2cqw',
+        }}
+      >
+        {/* Day selector — the active tab sits 6px proud of the rest */}
+        <div className="flex items-start justify-between" role="tablist" aria-label="Event day">
           {TIMELINE_DATA.map((day, idx) => {
             const isActive = idx === selectedDay
+            const isMeeting = idx === 0
             return (
               <button
-                key={idx}
+                key={day.tabLabel}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
                 onClick={() => setSelectedDay(idx)}
-                className={`font-bytebounce text-[16px] leading-none px-3 py-1.5 rounded border-2 transition-all ${
-                  isActive
-                    ? 'bg-[#2a75bb] border-[#3e2723] text-[#ffd23f] scale-105 shadow-[1px_1px_0_#3e2723]'
-                    : 'bg-[#ffd23f] border-[#3e2723] text-[#3e2723] hover:brightness-110'
-                }`}
-                style={{ textShadow: isActive ? '1px 1px 0 #3e2723' : undefined }}
+                className="relative shrink-0 transition-[transform,filter] duration-75 hover:brightness-110"
+                style={{
+                  width: TAB_W,
+                  height: TAB_H,
+                  transform: isActive ? `translateY(-${TAB_RAISE})` : undefined,
+                }}
               >
-                {day.tabLabel}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/images/timeline/${isMeeting ? 'tab-blue' : 'tab-yellow'}.png`}
+                  alt=""
+                  aria-hidden
+                  className="absolute left-0 top-0"
+                  style={{ width: TAB_W, height: TAB_H, imageRendering: 'pixelated' }}
+                />
+                <span
+                  className="absolute inset-0 flex items-center justify-center font-bytebounce"
+                  style={{
+                    fontSize: '6.74cqw',
+                    lineHeight: 1,
+                    color: isMeeting ? TAB_ON_BLUE : TAB_ON_YELLOW,
+                    textShadow: `1px 1px 0 ${INK}`,
+                  }}
+                >
+                  {day.tabLabel}
+                </span>
               </button>
             )
           })}
         </div>
 
-        {/* ── Agenda table on cream parchment paper ── */}
-        <div className="p-3 bg-[#fdf3e3]">
-          <div className="rounded border-2 border-[#b08a5e] overflow-hidden">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b-2 border-[#b08a5e] bg-[#e9d3ab]">
-                  <th className="font-bytebounce text-[15px] text-[#3e2723] text-left px-3 py-2 w-2/5 border-r border-[#b08a5e]">
-                    TIME
-                  </th>
-                  <th className="font-bytebounce text-[15px] text-[#3e2723] text-left px-3 py-2">
-                    AGENDA
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {current.agenda.map((row, rIdx) => (
-                  <tr
-                    key={rIdx}
-                    className="border-b border-[#e5cb9f] last:border-0 hover:bg-[#f5e7c6]/60 transition-colors"
-                  >
-                    <td className="font-bytebounce text-[14px] text-[#3e2723] px-3 py-2.5 border-r border-[#b08a5e] align-top whitespace-nowrap">
-                      {row.time}
-                    </td>
-                    <td className="font-bytebounce text-[14px] text-[#3e2723] px-3 py-2.5 align-top leading-tight">
-                      {row.activity}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
+        {/* Agenda grid — hairline-ruled, no fill, the pad's cream shows through */}
+        <table
+          className="w-full border-collapse font-bytebounce"
+          style={{ tableLayout: 'fixed', marginTop: '3.49cqw' }}
+        >
+          <caption className="sr-only">
+            {current.headerTitle} agenda, {current.date}
+          </caption>
+          <tbody>
+            {current.agenda.map((row, rIdx) => (
+              <tr key={`${row.time}-${rIdx}`}>
+                <th
+                  scope="row"
+                  className="text-center font-normal"
+                  style={{
+                    width: TIME_COL,
+                    border: `2px solid ${RULE}`,
+                    color: INK,
+                    fontSize: CELL_FONT,
+                    lineHeight: 1.05,
+                    height: ROW_MIN_H,
+                    padding: '0.4cqw 0.8cqw',
+                  }}
+                >
+                  {row.time}
+                </th>
+                <td
+                  className="text-left"
+                  style={{
+                    border: `2px solid ${RULE}`,
+                    color: INK,
+                    fontSize: CELL_FONT,
+                    lineHeight: 1.05,
+                    padding: '0.4cqw 1cqw 0.4cqw 3.49cqw',
+                  }}
+                >
+                  {row.activity}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
+
+      {/* ── Bottom edge of the pad ── */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/images/timeline/pad-bottom.png"
+        alt=""
+        aria-hidden
+        className="-mt-[1px] block w-full"
+        style={{ imageRendering: 'pixelated' }}
+      />
     </div>
   )
 }

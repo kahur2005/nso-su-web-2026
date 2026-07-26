@@ -6,12 +6,14 @@
 // member's point contribution; tapping a member's avatar opens the Instagram
 // profile they gave at registration.
 //
-// Sprites live in `public/images/leaderboard/` (billboard slices, red banner,
-// star, row frame, progress-bar track — all white-knocked-out Figma exports);
+// Sprites live in `public/images/leaderboard/` (billboard, red banner, star —
+// all white-knocked-out Figma exports). The progress-bar and row-frame sprites
+// are no longer used: both are drawn in CSS now (see PixelBar and the
+// `.pixel-frame` classes in globals.css);
 // group mascots are the existing `public/images/group/*.png`; the parchment
 // reuses the committee scroll sprites.
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type CSSProperties } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PageIntro from '@/components/onboarding/PageIntro'
@@ -19,6 +21,7 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import GroupEmblem from '@/components/ui/GroupEmblem'
 import PixelAvatar from '@/components/ui/PixelAvatar'
 import { parseAvatarConfig, hairKey } from '@/lib/avatar'
+import { groupLevel } from '@/lib/leveling'
 
 type Tab = 'groups' | 'individual' | 'record'
 
@@ -63,12 +66,30 @@ const RECENT_RECORDS = 10
 
 /* Design palette per rank (Figma 258:520): gold / silver / bronze for the
  * podium rows, parchment brown for everyone else. */
+// `edge` is the podium trim drawn around the top three rows in both tabs (see
+// `.pixel-frame--medal`); null for every rank past third, which gets no trim.
 const RANK_STYLE = [
-  { color: '#ffeb3b', shadow: '0px 2px 0px #ff5722' },
-  { color: '#bdbdbd', shadow: '0px 2px 0px #424242' },
-  { color: '#a15548', shadow: '0px 2px 0px #773b50' },
+  { color: '#ffeb3b', shadow: '0px 2px 0px #ff5722', edge: '#ffc20e' }, // gold
+  { color: '#bdbdbd', shadow: '0px 2px 0px #424242', edge: '#cfd4da' }, // silver
+  { color: '#a15548', shadow: '0px 2px 0px #773b50', edge: '#b06a34' }, // bronze
 ]
-const RANK_REST = { color: '#88684e', shadow: 'none' }
+const RANK_REST = { color: '#88684e', shadow: 'none', edge: null }
+
+/** Class + CSS variable that paint rank `i`'s podium trim, if it has one. */
+function medalTrim(i: number): { className: string; style?: CSSProperties } {
+  const edge = RANK_STYLE[i]?.edge
+  if (!edge) return { className: '' }
+  return {
+    className: 'pixel-frame--medal',
+    style: { '--frame-edge': edge } as CSSProperties,
+  }
+}
+
+/** Page title: golden yellow on a hard black pixel drop shadow. */
+const TITLE_GOLD = {
+  color: '#ffd23f',
+  textShadow: '3px 3px 0 #000',
+}
 
 /** Gold display text with the design's brown pixel outline (committee page). */
 const OUTLINE_GOLD = {
@@ -98,20 +119,18 @@ function instagramHref(value: string | null | undefined): string | null {
   return `https://instagram.com/${trimmed.replace(/^@/, '')}`
 }
 
-/** Pixel progress bar: gold fill clipped inside the Figma track sprite. */
+/**
+ * Pixel progress bar: gold fill in a plain black-bordered track.
+ *
+ * This used to overlay `progress-bar.png` on top of the fill, but the sprite's
+ * own track art didn't line up with the fill underneath it and the two read as
+ * overlapping. Drawn in CSS instead, so the track is always exactly the bar.
+ */
 function PixelBar({ value, max }: { value: number; max: number }) {
   const pct = Math.max(0, Math.min(100, (value / (max || 1)) * 100))
   return (
-    <div className="relative h-[11px] w-full">
-      <div className="absolute inset-[2px] bg-[#f5e7c6]" />
-      <div className="absolute bottom-[2px] left-[2px] top-[2px] bg-[#fbc94c]" style={{ width: `${pct}%` }} />
-      <img
-        src="/images/leaderboard/progress-bar.png"
-        alt=""
-        aria-hidden
-        className="absolute inset-0 h-full w-full"
-        style={{ imageRendering: 'pixelated' }}
-      />
+    <div className="h-[11px] w-full overflow-hidden border-2 border-black bg-[#f5e7c6]">
+      <div className="h-full bg-[#fbc94c]" style={{ width: `${pct}%` }} />
     </div>
   )
 }
@@ -197,6 +216,23 @@ export default function LeaderboardPage() {
   return (
     <PageWrapper>
       <PageIntro page="leaderboard" />
+
+      {/* Leaderboard-only backdrop. Deliberately `absolute`, not `fixed` like
+          PageWrapper's sky layer, so it scrolls away with the content instead
+          of sitting still behind it. The negative insets cancel <main>'s
+          px-2/4/6 padding so it reaches the viewport edges and covers the sky
+          underneath; min-h-screen keeps it covering on short viewports. */}
+      <div className="relative min-h-screen">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 -left-2 -right-2 -z-10 sm:-left-4 sm:-right-4 md:-left-6 md:-right-6"
+          style={{
+            backgroundImage: 'url(/images/leaderboard-page-bg.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center top',
+          }}
+        />
+
       <div className="game-column pt-3 sm:pt-5 pb-28 sm:pb-32 md:pb-12">
         {/* LIVE status indicator */}
         <div className="mb-2 flex items-center justify-end gap-1.5 px-2" data-tour="lb-live">
@@ -212,13 +248,16 @@ export default function LeaderboardPage() {
         {/* ── Current Leader billboard ─────────────────────────────────── */}
         {activeTab !== 'record' && (activeTab === 'groups' ? leaderGroup : leaderStudent) && (
           <div className="relative mx-auto mb-4 w-[88%] max-w-[350px]" data-tour="lb-leader">
-            <div className="relative aspect-[337/248]">
-              {/* Wood panel, sliced left/mid/right exactly as in Figma */}
-              <div aria-hidden className="absolute inset-0 flex">
-                <img src="/images/leaderboard/board-left.png" alt="" className="h-full w-[34.1%] object-fill" />
-                <img src="/images/leaderboard/board-mid.png" alt="" className="h-full w-[31.8%] object-fill" />
-                <img src="/images/leaderboard/board-right.png" alt="" className="h-full w-[34.1%] object-fill" />
-              </div>
+            <div className="relative aspect-[337/249]">
+              {/* Wood panel — one 337x249 sprite (replaced the old
+                  left/mid/right slice trio). */}
+              <img
+                src="/images/leaderboard/board.png"
+                alt=""
+                aria-hidden
+                className="absolute inset-0 h-full w-full object-fill"
+                style={{ imageRendering: 'pixelated' }}
+              />
 
               {/* Stars flanking the title */}
               <img src="/images/leaderboard/star.png" alt="" aria-hidden
@@ -301,7 +340,13 @@ export default function LeaderboardPage() {
         </p>
 
         {/* ── Parchment scroll ─────────────────────────────────────────── */}
-        <div className="relative">
+        {/* Pulled wider than the text column: the negative margins cancel both
+            game-column's padding (12/16/24/32px) and <main>'s (8/16/24/24px),
+            so the parchment runs edge to edge. Widened here in local markup on
+            purpose — the sprites sit in the shared /images/map/ folder next to
+            the scroll.png that /info and /map render, so they are left alone
+            rather than re-exported or restyled through a shared class. */}
+        <div className="relative -mx-5 sm:-mx-8 md:-mx-12 lg:-mx-14">
           <div aria-hidden className="absolute inset-0 flex flex-col">
             <img src="/images/map/scroll-top.png" alt="" className="w-full" />
             <div
@@ -321,15 +366,22 @@ export default function LeaderboardPage() {
               starts its roll 146px above its foot, i.e. 19.5%. Anything less
               than those and the content slides under a roll. */}
           <div className="relative" style={{ paddingTop: '22%', paddingBottom: '22%' }} data-tour="lb-list">
-            <h1 className="text-center font-bytebounce text-[clamp(34px,11vw,46px)] leading-none text-[#3e2723]">
-              LEADERBOARD
-            </h1>
+            {/* The record tab is an activity feed, not a ranking — no title. */}
+            {activeTab !== 'record' && (
+              <h1
+                className="text-center font-bytebounce text-[clamp(34px,11vw,46px)] leading-none"
+                style={TITLE_GOLD}
+              >
+                LEADERBOARD
+              </h1>
+            )}
 
             {/* ── Groups Tab ── */}
             {activeTab === 'groups' && (
               <div className="mx-auto w-[78%] space-y-[6px]">
                 {groups.map((group, i) => {
                   const style = RANK_STYLE[i] ?? RANK_REST
+                  const medal = medalTrim(i)
                   const isOpen = openGroupId === group.id
                   return (
                     <div key={group.id}>
@@ -339,11 +391,10 @@ export default function LeaderboardPage() {
                         className="block w-full text-left transition-transform active:translate-y-0.5"
                       >
                         <div
-                          className="flex items-center gap-[4%] px-[4%] py-[3.5%]"
-                          style={{
-                            backgroundImage: 'url(/images/leaderboard/row-frame.png)',
-                            backgroundSize: '100% 100%',
-                          }}
+                          className={`pixel-frame flex items-center gap-[4%] px-[4%] py-[3.5%] ${medal.className} ${
+                            isOpen ? 'pixel-frame--top' : ''
+                          }`}
+                          style={medal.style}
                         >
                           {/* Trophy for top 3, numeral after */}
                           <div className="flex w-[14%] flex-shrink-0 items-center justify-center">
@@ -369,6 +420,9 @@ export default function LeaderboardPage() {
                             >
                               {group.name}
                             </p>
+                            <p className="mt-[3px] font-bytebounce text-[clamp(13px,4.2vw,18px)] leading-none text-[#5d4330]">
+                              LV {groupLevel(group.totalPoints)}
+                            </p>
                             <div className="mt-[4px]">
                               <PixelBar value={group.totalPoints} max={maxGroupPoints} />
                             </div>
@@ -391,13 +445,19 @@ export default function LeaderboardPage() {
                       <AnimatePresence initial={false}>
                         {isOpen && (
                           <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
+                            /* Height only — no opacity fade. Fading reads as a
+                               separate panel appearing; growing alone reads as
+                               the row itself expanding. */
+                            initial={{ height: 0 }}
+                            animate={{ height: 'auto' }}
+                            exit={{ height: 0 }}
+                            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
                             className="overflow-hidden"
                           >
-                            <div className="mx-[3%] border-2 border-t-0 border-[#b08a5e] bg-[#e9d3ab] px-3 py-2">
+                            <div
+                              className={`pixel-frame pixel-frame--bottom pixel-frame--roster px-3 pb-3 pt-2 ${medal.className}`}
+                              style={medal.style}
+                            >
                               {group.members.length === 0 ? (
                                 <p className="py-2 text-center font-bytebounce text-[15px] text-[#8a7355]">
                                   No members yet.
@@ -480,11 +540,8 @@ export default function LeaderboardPage() {
                   return (
                     <div
                       key={student.id}
-                      className="flex items-center gap-[4%] px-[4%] py-[3.5%]"
-                      style={{
-                        backgroundImage: 'url(/images/leaderboard/row-frame.png)',
-                        backgroundSize: '100% 100%',
-                      }}
+                      className={`pixel-frame flex items-center gap-[4%] px-[4%] py-[3.5%] ${medalTrim(i).className}`}
+                      style={medalTrim(i).style}
                     >
                       <div className="flex w-[14%] flex-shrink-0 items-center justify-center">
                         {i < 3 ? (
@@ -569,6 +626,7 @@ export default function LeaderboardPage() {
             )}
           </div>
         </div>
+      </div>
       </div>
     </PageWrapper>
   )
