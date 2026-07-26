@@ -11,6 +11,7 @@ import PageIntro from '@/components/onboarding/PageIntro'
 import PixelAvatar from '@/components/ui/PixelAvatar'
 import { parseAvatarConfig, hairKey } from '@/lib/avatar'
 import { levelProgress } from '@/lib/leveling'
+import PlayerBanner from '@/components/profile/PlayerBanner'
 
 function getPointsColor(pts: number): string {
   if (pts > 0) return 'text-[#1b8a34]' // Green when positive
@@ -88,13 +89,6 @@ async function getAchievements(studentInternalId: string) {
   }))
 }
 
-/* ── Shared text shadow values (match leaderboard / committee) ─────────── */
-const OUTLINE_GOLD = {
-  color: '#ffd23f',
-  textShadow:
-    '3px 3px 0 #4e342e, -3px 3px 0 #4e342e, 3px -3px 0 #4e342e, -3px -3px 0 #4e342e, 0 5px 0 #4e342e',
-}
-
 /* ── Level display names ────────────────────────────────────────────────── */
 const LEVEL_TITLES = [
   '', 'Freshman', 'Explorer', 'Veteran', 'Champion', 'Legend'
@@ -137,55 +131,14 @@ export default async function ProfilePage() {
 
       <div className="game-column pt-3 sm:pt-5 pb-28 sm:pb-32 md:pb-12 flex flex-col gap-3.5 sm:gap-4 md:gap-5">
 
-        {/* ── Player header banner (wood plank) ── */}
-        <div className="wood-plank px-4 py-3 flex items-center gap-4" data-tour="profile-header">
-          <div className="shrink-0 border-2 border-[#3e2723]">
-            <PixelAvatar
-              skin={av.skin}
-              clothes={av.clothes ?? undefined}
-              hair={hairKey(av) ?? undefined}
-              hijab={av.hijab ?? undefined}
-              eyes={av.eyes ?? undefined}
-              brow={av.brows ?? undefined}
-              mouth={av.mouth ?? undefined}
-              size={64}
-            />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p
-              className="font-bytebounce text-[18px] sm:text-[20px] leading-none text-[#e0b391]"
-              style={{ textShadow: '1.5px 1.5px 0 #3e2723' }}
-            >
-              WELCOME BACK, PLAYER
-            </p>
-            <h1
-              className="font-bytebounce text-[clamp(2.4rem,10vw,3.4rem)] leading-tight truncate my-0.5"
-              style={OUTLINE_GOLD}
-            >
-              {student.name.split(' ')[0].toUpperCase()} !
-            </h1>
-            <p
-              className="font-bytebounce text-[18px] sm:text-[20px] leading-none text-[#fff3d9]"
-              style={{ textShadow: '1.5px 1.5px 0 #3e2723' }}
-            >
-              LEVEL {level} — {levelTitle(level)}
-            </p>
-            {/* XP bar */}
-            <div className="mt-2 relative h-[12px] w-full rounded-sm overflow-hidden border border-[#3e2723]">
-              <div className="absolute inset-0 bg-[#5d3a1a]" />
-              <div
-                className="absolute inset-y-0 left-0 bg-[#ffd23f]"
-                style={{ width: `${xpPct}%` }}
-              />
-            </div>
-            <p
-              className="font-bytebounce text-[14px] sm:text-[15px] leading-none text-[#e0b391] mt-1"
-              style={{ textShadow: '1px 1px 0 #3e2723' }}
-            >
-              {into}/{span} XP
-            </p>
-          </div>
-        </div>
+        <PlayerBanner
+          name={student.name}
+          level={level}
+          title={levelTitle(level)}
+          into={into}
+          span={span}
+          avatar={av}
+        />
 
         {/* ── 2×2 stat cards (parchment) ── */}
         <div className="grid grid-cols-2 gap-2.5" data-tour="profile-stats">
