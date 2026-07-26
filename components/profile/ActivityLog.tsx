@@ -18,7 +18,7 @@ export interface ActivityRow {
 const COLLAPSED_ROWS = 3
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  return new Date(iso).toLocaleDateString('en', { month: 'short', day: 'numeric' })
 }
 
 const PAPER = {
