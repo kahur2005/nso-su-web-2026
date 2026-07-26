@@ -11,12 +11,8 @@ import PageIntro from '@/components/onboarding/PageIntro'
 import { parseAvatarConfig } from '@/lib/avatar'
 import { levelProgress } from '@/lib/leveling'
 import PlayerBanner from '@/components/profile/PlayerBanner'
-
-function getPointsColor(pts: number): string {
-  if (pts > 0) return 'text-[#1b8a34]' // Green when positive
-  if (pts < 0) return 'text-[#d32f2f]' // Red when negative
-  return 'text-[#3e2723]'            // Neutral dark brown
-}
+import StatCard from '@/components/profile/StatCard'
+import HouseBanner from '@/components/profile/HouseBanner'
 
 // Build a usable href from either a full URL or a bare @handle.
 function instagramHref(value: string) {
@@ -112,7 +108,6 @@ export default async function ProfilePage() {
   const completedQuests = student.questProgress?.length ?? 0
 
   const groupName = student.group?.name ?? null
-  const groupColor = student.group?.color ?? '#e0b391'
   const mascotImg = mascotSrc(groupName ?? '')
 
   const av = parseAvatarConfig(student.avatarConfig)
@@ -138,85 +133,27 @@ export default async function ProfilePage() {
           avatar={av}
         />
 
-        {/* ── 2×2 stat cards (parchment) ── */}
-        <div className="grid grid-cols-2 gap-2.5" data-tour="profile-stats">
-
-          {/* Total Points */}
-          <div className="rounded border-2 border-[#b08a5e] bg-[#f5e7c6] px-3 py-3.5 flex flex-col items-center justify-center">
-            <p
-              className="font-bytebounce text-[16px] sm:text-[18px] leading-none text-[#7d5a3d] text-center font-bold"
-              style={{ textShadow: '1px 1px 0 #c8a97b' }}
-            >
-              TOTAL POINTS
-            </p>
-            <p
-              className={`font-bytebounce text-[clamp(2.8rem,14vw,4rem)] leading-none mt-1 font-bold ${getPointsColor(student.points)}`}
-            >
-              {student.points}
-            </p>
+        {/* ── Stats: three stacked cards beside the house pennant ── */}
+        <div className="flex items-start gap-2.5" data-tour="profile-stats">
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <StatCard
+              label="Total Points"
+              value={String(student.points)}
+              valueClassName={student.points < 0 ? 'text-[#d6101d]' : ''}
+            />
+            <StatCard label="Quests Completed" value={String(completedQuests)} />
+            <StatCard
+              label="Funfacts Collected"
+              value={String(student.funFactsCollected)}
+              sub={String(totalNPCs)}
+            />
           </div>
 
-          {/* Fun Facts */}
-          <div className="rounded border-2 border-[#b08a5e] bg-[#f5e7c6] px-3 py-3.5 flex flex-col items-center justify-center">
-            <p
-              className="font-bytebounce text-[16px] sm:text-[18px] leading-none text-[#7d5a3d] text-center font-bold"
-              style={{ textShadow: '1px 1px 0 #c8a97b' }}
-            >
-              FUNFACTS COLLECTED
-            </p>
-            <p
-              className="font-bytebounce text-[clamp(2.2rem,11vw,3.2rem)] leading-none text-[#3e2723] font-bold mt-1"
-            >
-              {student.funFactsCollected}
-            </p>
-            <p
-              className="font-bytebounce text-[clamp(1.4rem,6vw,1.8rem)] leading-none text-[#88684e] font-bold"
-            >
-              /{totalNPCs}
-            </p>
-          </div>
-
-          {/* Quests Completed */}
-          <div className="rounded border-2 border-[#b08a5e] bg-[#f5e7c6] px-3 py-3.5 flex flex-col items-center justify-center">
-            <p
-              className="font-bytebounce text-[16px] sm:text-[18px] leading-none text-[#7d5a3d] text-center font-bold"
-              style={{ textShadow: '1px 1px 0 #c8a97b' }}
-            >
-              QUESTS COMPLETED
-            </p>
-            <p
-              className="font-bytebounce text-[clamp(2.8rem,14vw,4rem)] leading-none text-[#3e2723] font-bold mt-1"
-            >
-              {completedQuests}
-            </p>
-          </div>
-
-          {/* House (group) */}
-          <div className="rounded border-2 border-[#b08a5e] bg-[#f5e7c6] px-3 py-3.5 flex flex-col items-center justify-center gap-1">
-            <p
-              className="font-bytebounce text-[16px] sm:text-[18px] leading-none text-[#7d5a3d] text-center font-bold"
-              style={{ textShadow: '1px 1px 0 #c8a97b' }}
-            >
-              HOUSE
-            </p>
-            {mascotImg ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={mascotImg}
-                alt={groupName ?? ''}
-                className="w-16 h-16 object-contain"
-                style={{ imageRendering: 'pixelated' }}
-              />
-            ) : (
-              <span className="text-4xl">🛡️</span>
-            )}
-            <p
-              className="font-bytebounce text-[20px] sm:text-[22px] leading-tight text-center font-bold"
-              style={{ color: groupColor, textShadow: '1px 1px 0 #3e2723' }}
-            >
-              {groupName ?? 'Unassigned'}
-            </p>
-          </div>
+          <HouseBanner
+            groupName={groupName}
+            groupColor={student.group?.color ?? null}
+            mascotSrc={mascotImg}
+          />
         </div>
 
         {/* ── Instagram link (if set) ── */}
