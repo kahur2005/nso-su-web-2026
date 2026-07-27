@@ -24,6 +24,17 @@ export default function ClubForm() {
   const [state, formAction, pending] = useActionState(createClub, initialState)
   const [fileNames, setFileNames] = useState<string[]>([])
   const [fileError, setFileError] = useState<string | null>(null)
+  const [iconError, setIconError] = useState<string | null>(null)
+
+  function handleIconChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file && file.size > MAX_FILE_BYTES) {
+      setIconError(`"${file.name}" is over 5MB and won't be accepted.`)
+      e.target.value = ''
+      return
+    }
+    setIconError(null)
+  }
 
   function handleFilesChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
@@ -115,6 +126,26 @@ export default function ClubForm() {
         </div>
 
         <div>
+          <label className={labelClass}>Icon</label>
+          <input
+            type="file"
+            name="icon"
+            accept="image/*"
+            onChange={handleIconChange}
+            className="w-full text-sm text-slate-600 file:mr-3 file:py-2 file:px-3
+              file:rounded-md file:border file:border-slate-300 file:bg-white
+              file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-50"
+          />
+          <p className="text-xs text-slate-500 mt-1">
+            Shown on the club tile at /info/clubs. Square pixel art works best
+            (transparent PNG, 5MB max). Optional.
+          </p>
+          {iconError && (
+            <p className="text-xs text-red-600 mt-1" aria-live="polite">{iconError}</p>
+          )}
+        </div>
+
+        <div>
           <label className={labelClass}>Images (carousel)</label>
           <input
             type="file"
@@ -144,7 +175,7 @@ export default function ClubForm() {
 
         <button
           type="submit"
-          disabled={pending || Boolean(fileError)}
+          disabled={pending || Boolean(fileError) || Boolean(iconError)}
           className="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white
             text-sm font-medium rounded-md px-4 py-2 transition-colors"
         >

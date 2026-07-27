@@ -55,8 +55,7 @@ export default function CodexPage() {
 
         {/* Header */}
         <div className="text-center mb-6">
-          <h1 className="font-pixel text-2xl text-yellow-400 mb-4"
-            style={{ textShadow: '3px 3px 0 #000' }}>
+          <h1 className="title-gold font-pixel text-2xl mb-4">
             📖 FUN FACT CODEX
           </h1>
           <ProgressBar

@@ -1,5 +1,5 @@
 'use client'
-import { signIn } from 'next-auth/react'
+import { signIn, signOut, getSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
@@ -30,6 +30,34 @@ export default function LoginPage() {
 
     router.push('/dashboard')
     router.refresh()
+  }
+
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    const res = await signIn('credentials', {
+      email,
+      password,
+      redirect: false,
+    })
+
+    if (res?.error) {
+      setError('Wrong email or password!')
+      setLoading(false)
+      return
+    }
+
+    const session = await getSession()
+    if (session?.user?.isAdmin || (session?.user as any)?.role === 'admin') {
+      router.push('/admin/dashboard')
+      router.refresh()
+    } else {
+      await signOut({ redirect: false })
+      setError('Access denied: You do not have admin privileges.')
+      setLoading(false)
+    }
   }
 
   return (
@@ -66,20 +94,6 @@ export default function LoginPage() {
             New Student!
           </span>
         </h1>
-
-        {/* Register banner line */}
-        <p className="mt-4 text-center font-bytebounce text-[16px] leading-none">
-          <Link
-            href="/register"
-            className="wood-plank inline-block px-3 py-2 text-[#7aff06] hover:brightness-110"
-            style={{ textShadow: '1.5px 1.3px 0 #4e342e' }}
-          >
-            Create a new account
-          </Link>{' '}
-          <span className="text-[#24e9d5]" style={{ textShadow: '1.5px 1.3px 0 #4e342e' }}>
-            or login to get started
-          </span>
-        </p>
 
         {/* Login form */}
         <form onSubmit={handleLogin} className="mt-auto w-full pt-10">
@@ -142,6 +156,24 @@ export default function LoginPage() {
             style={{ textShadow: '2.7px 1.8px 0 #4e342e' }}
           >
             {loading ? <span className="blink">Loading...</span> : 'Login'}
+          </button>
+
+          <Link
+            href="/register"
+            className="wood-plank mt-4 block h-[52px] w-full text-center font-bytebounce text-[28px] leading-[52px] text-[#7aff06] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5"
+            style={{ textShadow: '2.7px 1.8px 0 #4e342e' }}
+          >
+            Create a new account
+          </Link>
+
+          <button
+            type="button"
+            onClick={handleAdminLogin}
+            disabled={loading}
+            className="wood-plank mt-4 block h-[52px] w-full font-bytebounce text-[28px] text-[#24e9d5] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+            style={{ textShadow: '2.7px 1.8px 0 #4e342e' }}
+          >
+            Login as an admin
           </button>
         </form>
       </div>

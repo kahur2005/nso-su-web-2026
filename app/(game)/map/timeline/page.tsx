@@ -2,8 +2,15 @@
 import PageWrapper from '@/components/layout/PageWrapper'
 import Timeline from '@/components/dashboard/Timeline'
 import Link from 'next/link'
+import { getTimelineDays } from '@/lib/timeline-data'
 
-export default function TimelinePage() {
+// Same reason as /info/timeline: the agenda is admin-editable, so it must be
+// read per request rather than frozen into the build.
+export const dynamic = 'force-dynamic'
+
+export default async function TimelinePage() {
+  const days = await getTimelineDays()
+
   return (
     <PageWrapper>
       <div className="max-w-4xl mx-auto px-4 py-6">
@@ -18,7 +25,7 @@ export default function TimelinePage() {
           </h1>
           <span className="w-12" />
         </div>
-        <Timeline />
+        <Timeline days={days} />
       </div>
     </PageWrapper>
   )

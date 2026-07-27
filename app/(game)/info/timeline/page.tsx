@@ -1,52 +1,46 @@
 // app/(game)/info/timeline/page.tsx
-// NSO 2026 day-by-day event agenda page.
-'use client'
-import { useRouter } from 'next/navigation'
+// NSO 2026 day-by-day event agenda, built to the Figma "TIMELINE" frame
+// (VCnH1k8cwo2dWaLjL7YRVS, node 2:6). The frame's sky backdrop is the one
+// PageWrapper already paints for every logged-in page, so this page adds no
+// background of its own; the calendar pad itself lives in <Timeline>.
+//
+// A server component so the agenda can be read from the database — the rows
+// are maintained at /admin/timeline. The days and dates themselves are fixed
+// in lib/timeline.ts. The back control is a plain <Link> rather than a
+// useRouter push, which is what lets this page stay server-side.
+import Link from 'next/link'
 import PageWrapper from '@/components/layout/PageWrapper'
 import Timeline from '@/components/dashboard/Timeline'
+import { getTimelineDays } from '@/lib/timeline-data'
 
-const OUTLINE_GOLD = {
-  color: '#ffd23f',
-  textShadow:
-    '3px 3px 0 #4e342e, -3px 3px 0 #4e342e, 3px -3px 0 #4e342e, -3px -3px 0 #4e342e, 0 5px 0 #4e342e',
-}
+// Rendered per request. Without this the agenda is baked in at build time and
+// an admin's edit would not reach students until the next deploy. Valid here
+// because Cache Components is not enabled in next.config.ts — see
+// node_modules/next/dist/docs/01-app/02-guides/caching-without-cache-components.md.
+export const dynamic = 'force-dynamic'
 
-export default function TimelinePage() {
-  const router = useRouter()
+export default async function TimelinePage() {
+  const days = await getTimelineDays()
 
   return (
     <PageWrapper>
-      <div
-        className="fixed inset-0 -z-10 bg-cover bg-bottom"
-        style={{ backgroundImage: 'url(/images/scan/bg.png)' }}
-      />
-
-      <div className="relative game-column pb-28 pt-12">
+      <div className="relative game-column pb-28 pt-10">
         {/* Back button */}
-        <button
-          type="button"
-          onClick={() => router.push('/info')}
+        <Link
+          href="/info"
           aria-label="Back to info station"
-          className="absolute left-2 top-0 z-20 w-[64px] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5"
+          className="absolute left-2 top-0 z-20 block w-[64px] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5"
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/login/back-button.png" alt="" className="w-full" />
-        </button>
+        </Link>
 
         {/* Title */}
-        <h1
-          className="text-center font-bytebounce text-[clamp(2.4rem,12vw,3.2rem)] leading-[0.85] mb-1"
-          style={OUTLINE_GOLD}
-        >
+        <h1 className="title-gold mb-1 text-center font-bytebounce text-[clamp(2.4rem,16vw,4rem)] leading-[0.9]">
           TIMELINE
         </h1>
-        <p
-          className="mb-4 text-center font-bytebounce text-[18px] leading-tight text-white"
-          style={{ textShadow: '2px 2px 0 #4e342e' }}
-        >
-          Day-by-day event agenda
-        </p>
 
-        <Timeline />
+        <Timeline days={days} />
       </div>
     </PageWrapper>
   )

@@ -58,6 +58,9 @@ export default function ScanPage() {
   // stop() throws synchronously unless the camera is fully running, and a start()
   // that resolves after teardown would leave the camera streaming forever.
   const startPromiseRef = useRef<Promise<unknown> | null>(null)
+  // Set by the unmount cleanup. A start() that was already in flight resolves
+  // after the page is gone, and without this it would leave the camera light on.
+  const unmountedRef = useRef(false)
 
   const fetchRecentScans = useCallback(async () => {
     try {
@@ -132,6 +135,8 @@ export default function ScanPage() {
     setCameraError(null)
     try {
       const scanner = await getScanner()
+      // getScanner() awaits a dynamic import; the page can be gone by now.
+      if (unmountedRef.current) return
       try { await scanner.stop() } catch {}
       const startPromise = scanner.start(
         { facingMode: mode },
@@ -148,6 +153,14 @@ export default function ScanPage() {
       )
       startPromiseRef.current = startPromise
       await startPromise
+      // Unmounted while the camera was opening — the teardown already ran and
+      // found nothing to stop, so shut the stream down here instead.
+      if (unmountedRef.current) {
+        try { await scanner.stop() } catch {}
+        try { scanner.clear() } catch {}
+        qrRef.current = null
+        return
+      }
       setCameraOn(true)
     } catch (e) {
       console.error('camera start failed:', e)
@@ -159,6 +172,59 @@ export default function ScanPage() {
     }
   }, [getScanner, handleDecoded])
 
+  // Tear down the scanner instance once, on unmount. Everything is awaited
+  // inside try/catch: stop() throws *synchronously* when the camera isn't
+  // running, and a start() still in flight must settle before we stop it,
+  // or the camera stream would keep running after navigation.
+  useEffect(() => {
+    unmountedRef.current = false
+
+    // html5-qrcode calls videoElement.play() and drops the promise it returns
+    // (esm/camera/core-impl.js — `this.surface.play();`, no .catch). React
+    // removes #qr-reader and the <video> inside it the moment you navigate off
+    // /scan, so leaving mid-start makes Chrome reject that promise with
+    // "AbortError: The play() request was interrupted because the media was
+    // removed from the document." Nothing upstream keeps a reference to it, so
+    // there is no .catch() we can add after the fact, and it surfaces as a
+    // Runtime AbortError overlay on whatever page the student landed on.
+    //
+    // Attaching the handler at call time is the only race-free fix. This does
+    // not swallow anything: `play()` still returns the original promise, so a
+    // caller that awaits it sees the rejection exactly as before — the promise
+    // simply now has a handler, which is all "unhandled rejection" means.
+    const nativePlay = HTMLMediaElement.prototype.play
+    function playWithHandler(this: HTMLMediaElement) {
+      const playing = nativePlay.call(this)
+      playing?.catch(() => {})
+      return playing
+    }
+    HTMLMediaElement.prototype.play = playWithHandler
+
+    return () => {
+      unmountedRef.current = true
+      // Safe to restore immediately: the handler is attached when play() is
+      // *called*, which already happened, so a rejection arriving later is
+      // still covered. Only unwind our own patch — a StrictMode remount can
+      // have layered another one on top.
+      if (HTMLMediaElement.prototype.play === playWithHandler) {
+        HTMLMediaElement.prototype.play = nativePlay
+      }
+      const teardown = async () => {
+        try { await startPromiseRef.current } catch {}
+        const scanner = qrRef.current
+        if (!scanner) return
+        try { await scanner.stop() } catch {}
+        try { scanner.clear() } catch {}
+        qrRef.current = null
+      }
+      teardown()
+    }
+  }, [])
+
+  // Declared *after* the teardown effect on purpose: effects run in source
+  // order, so the play() interception above is installed before this one can
+  // reach scanner.start().
+  //
   // Auto-open the camera on the scanner view; stop it while a result is shown.
   // The #qr-reader element stays mounted (just hidden) so the scanner instance
   // keeps a valid DOM node across result toggles.
@@ -173,24 +239,6 @@ export default function ScanPage() {
     // startingRef guards against overlapping starts (incl. StrictMode double-mount).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result])
-
-  // Tear down the scanner instance once, on unmount. Everything is awaited
-  // inside try/catch: stop() throws *synchronously* when the camera isn't
-  // running, and a start() still in flight must settle before we stop it,
-  // or the camera stream would keep running after navigation.
-  useEffect(() => {
-    return () => {
-      const teardown = async () => {
-        try { await startPromiseRef.current } catch {}
-        const scanner = qrRef.current
-        if (!scanner) return
-        try { await scanner.stop() } catch {}
-        try { scanner.clear() } catch {}
-        qrRef.current = null
-      }
-      teardown()
-    }
-  }, [])
 
   const flipCamera = useCallback(async () => {
     const next = facingMode === 'environment' ? 'user' : 'environment'
@@ -236,7 +284,7 @@ export default function ScanPage() {
       />
 
       <div className="max-w-lg mx-auto px-4 py-4">
-        <h1 className="font-bytebounce text-[56px] leading-none text-[#ffecb3] text-center mb-4">
+        <h1 className="title-gold font-bytebounce text-[56px] leading-none text-center mb-4">
           Scan QR Code
         </h1>
 

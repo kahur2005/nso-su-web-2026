@@ -84,13 +84,6 @@ const zones: MapZone[] = [
   },
 ]
 
-/** Gold outline shared across all Figma-style pages */
-const OUTLINE_GOLD = {
-  color: '#ffd23f',
-  textShadow:
-    '3px 3px 0 #4e342e, -3px 3px 0 #4e342e, 3px -3px 0 #4e342e, -3px -3px 0 #4e342e, 0 5px 0 #4e342e',
-}
-
 export default function CampusMapPage() {
   const router = useRouter()
   const [selected, setSelected] = useState<MapZone | null>(null)
@@ -111,10 +104,7 @@ export default function CampusMapPage() {
         </button>
 
         {/* Title */}
-        <h1
-          className="text-center font-bytebounce text-[clamp(2.4rem,12vw,3.2rem)] leading-[0.85]"
-          style={OUTLINE_GOLD}
-        >
+        <h1 className="title-gold text-center font-bytebounce text-[clamp(2.4rem,12vw,3.2rem)] leading-[0.85]">
           WORLD MAP
         </h1>
         <p

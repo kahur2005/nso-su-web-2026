@@ -8,21 +8,15 @@ import { redirect } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PageIntro from '@/components/onboarding/PageIntro'
-import PixelAvatar from '@/components/ui/PixelAvatar'
-import { parseAvatarConfig, hairKey } from '@/lib/avatar'
+import { parseAvatarConfig } from '@/lib/avatar'
 import { levelProgress } from '@/lib/leveling'
-
-function getPointsColor(pts: number): string {
-  if (pts > 0) return 'text-[#1b8a34]' // Green when positive
-  if (pts < 0) return 'text-[#d32f2f]' // Red when negative
-  return 'text-[#3e2723]'            // Neutral dark brown
-}
-
-// Build a usable href from either a full URL or a bare @handle.
-function instagramHref(value: string) {
-  if (/^https?:\/\//i.test(value)) return value
-  return `https://instagram.com/${value.replace(/^@/, '')}`
-}
+import PlayerBanner from '@/components/profile/PlayerBanner'
+import StatCard from '@/components/profile/StatCard'
+import HouseBanner from '@/components/profile/HouseBanner'
+import SectionHeading from '@/components/profile/SectionHeading'
+import AchievementStrip from '@/components/profile/AchievementStrip'
+import ActivityLog, { type ActivityRow } from '@/components/profile/ActivityLog'
+import { CHAPTER_TITLES } from '@/lib/guidebook/quiz'
 
 const MASCOTS = new Set([
   'chimera','faerie','fenrir','griffin','harpy','kitsune','kraken',
@@ -49,21 +43,30 @@ async function getProfileData(studentId: string, studentDbId?: string) {
   ])
 
   if (student) {
-    const [scanLogs, questProgress] = await Promise.all([
+    const [scanLogs, questProgress, quizClaims] = await Promise.all([
       supabase
         .from('ScanLog')
         .select('*, npc:NPC(*)')
         .eq('studentId', student.id)
         .order('scannedAt', { ascending: false })
-        .limit(8),
+        .limit(30),
       supabase
         .from('QuestProgress')
         .select('*, quest:Quest(*)')
         .eq('studentId', student.id)
         .eq('status', 'completed'),
+      // Claimed guidebook quizzes. Tolerates the table not existing yet —
+      // supabase-js returns the error rather than throwing, and the rest of
+      // the profile must still render if the migration has not been applied.
+      supabase
+        .from('GuidebookQuizAttempt')
+        .select('id, chapterId, pointsAwarded, claimedAt')
+        .eq('studentId', student.id)
+        .not('claimedAt', 'is', null),
     ])
     student.scanLogs = scanLogs.data ?? []
     student.questProgress = questProgress.data ?? []
+    student.quizClaims = quizClaims.data ?? []
   }
 
   return { student, totalNPCs: totalNPCs ?? 0 }
@@ -88,13 +91,6 @@ async function getAchievements(studentInternalId: string) {
   }))
 }
 
-/* ── Shared text shadow values (match leaderboard / committee) ─────────── */
-const OUTLINE_GOLD = {
-  color: '#ffd23f',
-  textShadow:
-    '3px 3px 0 #4e342e, -3px 3px 0 #4e342e, 3px -3px 0 #4e342e, -3px -3px 0 #4e342e, 0 5px 0 #4e342e',
-}
-
 /* ── Level display names ────────────────────────────────────────────────── */
 const LEVEL_TITLES = [
   '', 'Freshman', 'Explorer', 'Veteran', 'Champion', 'Legend'
@@ -117,13 +113,30 @@ export default async function ProfilePage() {
 
   const { level, into, span } = levelProgress(student.xp)
   const completedQuests = student.questProgress?.length ?? 0
-  const xpPct = Math.max(0, Math.min(100, (into / (span || 1)) * 100))
 
   const groupName = student.group?.name ?? null
-  const groupColor = student.group?.color ?? '#e0b391'
   const mascotImg = mascotSrc(groupName ?? '')
 
   const av = parseAvatarConfig(student.avatarConfig)
+
+  // Point history is two sources now — committee scans and claimed guidebook
+  // quizzes — merged newest-first so the feed reads as one timeline.
+  const activityRows: ActivityRow[] = [
+    ...(student.scanLogs ?? []).map((log: any) => ({
+      id: log.id,
+      title: log.npc?.committeeName ?? 'Committee',
+      points: log.pointsAwarded ?? 0,
+      scannedAt: log.scannedAt,
+      kind: 'scan' as const,
+    })),
+    ...(student.quizClaims ?? []).map((claim: any) => ({
+      id: claim.id,
+      title: CHAPTER_TITLES[claim.chapterId] ?? 'Guidebook chapter',
+      points: claim.pointsAwarded ?? 0,
+      scannedAt: claim.claimedAt,
+      kind: 'guidebook' as const,
+    })),
+  ].sort((a, b) => new Date(b.scannedAt).getTime() - new Date(a.scannedAt).getTime())
 
   return (
     <PageWrapper>
@@ -137,277 +150,57 @@ export default async function ProfilePage() {
 
       <div className="game-column pt-3 sm:pt-5 pb-28 sm:pb-32 md:pb-12 flex flex-col gap-3.5 sm:gap-4 md:gap-5">
 
-        {/* ── Player header banner (wood plank) ── */}
-        <div className="wood-plank px-4 py-3 flex items-center gap-4" data-tour="profile-header">
-          <div className="shrink-0 border-2 border-[#3e2723]">
-            <PixelAvatar
-              skin={av.skin}
-              clothes={av.clothes ?? undefined}
-              hair={hairKey(av) ?? undefined}
-              hijab={av.hijab ?? undefined}
-              eyes={av.eyes ?? undefined}
-              brow={av.brows ?? undefined}
-              mouth={av.mouth ?? undefined}
-              size={64}
+        <PlayerBanner
+          name={student.name}
+          level={level}
+          title={levelTitle(level)}
+          into={into}
+          span={span}
+          avatar={av}
+        />
+
+        {/* ── Stats: three stacked cards beside the house pennant ── */}
+        <div className="flex items-start gap-2.5" data-tour="profile-stats">
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <StatCard
+              label="Total Points"
+              value={String(student.points)}
+              valueClassName={student.points < 0 ? 'text-[#d6101d]' : ''}
+            />
+            <StatCard label="Quests Completed" value={String(completedQuests)} />
+            <StatCard
+              label="Funfacts Collected"
+              value={String(student.funFactsCollected)}
+              sub={String(totalNPCs)}
             />
           </div>
-          <div className="flex-1 min-w-0">
-            <p
-              className="font-bytebounce text-[18px] sm:text-[20px] leading-none text-[#e0b391]"
-              style={{ textShadow: '1.5px 1.5px 0 #3e2723' }}
-            >
-              WELCOME BACK, PLAYER
-            </p>
-            <h1
-              className="font-bytebounce text-[clamp(2.4rem,10vw,3.4rem)] leading-tight truncate my-0.5"
-              style={OUTLINE_GOLD}
-            >
-              {student.name.split(' ')[0].toUpperCase()} !
-            </h1>
-            <p
-              className="font-bytebounce text-[18px] sm:text-[20px] leading-none text-[#fff3d9]"
-              style={{ textShadow: '1.5px 1.5px 0 #3e2723' }}
-            >
-              LEVEL {level} — {levelTitle(level)}
-            </p>
-            {/* XP bar */}
-            <div className="mt-2 relative h-[12px] w-full rounded-sm overflow-hidden border border-[#3e2723]">
-              <div className="absolute inset-0 bg-[#5d3a1a]" />
-              <div
-                className="absolute inset-y-0 left-0 bg-[#ffd23f]"
-                style={{ width: `${xpPct}%` }}
-              />
-            </div>
-            <p
-              className="font-bytebounce text-[14px] sm:text-[15px] leading-none text-[#e0b391] mt-1"
-              style={{ textShadow: '1px 1px 0 #3e2723' }}
-            >
-              {into}/{span} XP
-            </p>
-          </div>
+
+          <HouseBanner
+            groupName={groupName}
+            groupColor={student.group?.color ?? null}
+            mascotSrc={mascotImg}
+          />
         </div>
 
-        {/* ── 2×2 stat cards (parchment) ── */}
-        <div className="grid grid-cols-2 gap-2.5" data-tour="profile-stats">
-
-          {/* Total Points */}
-          <div className="rounded border-2 border-[#b08a5e] bg-[#f5e7c6] px-3 py-3.5 flex flex-col items-center justify-center">
-            <p
-              className="font-bytebounce text-[16px] sm:text-[18px] leading-none text-[#7d5a3d] text-center font-bold"
-              style={{ textShadow: '1px 1px 0 #c8a97b' }}
-            >
-              TOTAL POINTS
-            </p>
-            <p
-              className={`font-bytebounce text-[clamp(2.8rem,14vw,4rem)] leading-none mt-1 font-bold ${getPointsColor(student.points)}`}
-            >
-              {student.points}
-            </p>
-          </div>
-
-          {/* Fun Facts */}
-          <div className="rounded border-2 border-[#b08a5e] bg-[#f5e7c6] px-3 py-3.5 flex flex-col items-center justify-center">
-            <p
-              className="font-bytebounce text-[16px] sm:text-[18px] leading-none text-[#7d5a3d] text-center font-bold"
-              style={{ textShadow: '1px 1px 0 #c8a97b' }}
-            >
-              FUNFACTS COLLECTED
-            </p>
-            <p
-              className="font-bytebounce text-[clamp(2.2rem,11vw,3.2rem)] leading-none text-[#3e2723] font-bold mt-1"
-            >
-              {student.funFactsCollected}
-            </p>
-            <p
-              className="font-bytebounce text-[clamp(1.4rem,6vw,1.8rem)] leading-none text-[#88684e] font-bold"
-            >
-              /{totalNPCs}
-            </p>
-          </div>
-
-          {/* Quests Completed */}
-          <div className="rounded border-2 border-[#b08a5e] bg-[#f5e7c6] px-3 py-3.5 flex flex-col items-center justify-center">
-            <p
-              className="font-bytebounce text-[16px] sm:text-[18px] leading-none text-[#7d5a3d] text-center font-bold"
-              style={{ textShadow: '1px 1px 0 #c8a97b' }}
-            >
-              QUESTS COMPLETED
-            </p>
-            <p
-              className="font-bytebounce text-[clamp(2.8rem,14vw,4rem)] leading-none text-[#3e2723] font-bold mt-1"
-            >
-              {completedQuests}
-            </p>
-          </div>
-
-          {/* House (group) */}
-          <div className="rounded border-2 border-[#b08a5e] bg-[#f5e7c6] px-3 py-3.5 flex flex-col items-center justify-center gap-1">
-            <p
-              className="font-bytebounce text-[16px] sm:text-[18px] leading-none text-[#7d5a3d] text-center font-bold"
-              style={{ textShadow: '1px 1px 0 #c8a97b' }}
-            >
-              HOUSE
-            </p>
-            {mascotImg ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={mascotImg}
-                alt={groupName ?? ''}
-                className="w-16 h-16 object-contain"
-                style={{ imageRendering: 'pixelated' }}
-              />
-            ) : (
-              <span className="text-4xl">🛡️</span>
-            )}
-            <p
-              className="font-bytebounce text-[20px] sm:text-[22px] leading-tight text-center font-bold"
-              style={{ color: groupColor, textShadow: '1px 1px 0 #3e2723' }}
-            >
-              {groupName ?? 'Unassigned'}
-            </p>
-          </div>
-        </div>
-
-        {/* ── Instagram link (if set) ── */}
-        {student.instagram && (
-          <a
-            href={instagramHref(student.instagram)}
-            target="_blank"
-            rel="noreferrer"
-            className="wood-plank px-4 py-2.5 flex items-center gap-3 transition-opacity hover:opacity-90"
-          >
-            <span className="text-xl">📸</span>
-            <span
-              className="font-bytebounce text-[17px] leading-none text-[#fff3d9] flex-1 truncate"
-              style={{ textShadow: '1px 1px 0 #3e2723' }}
-            >
-              {student.instagram}
-            </span>
-            <span
-              className="font-bytebounce text-[18px] text-[#ffd23f]"
-              style={{ textShadow: '1px 1px 0 #3e2723' }}
-            >
-              ▶
-            </span>
-          </a>
-        )}
-
-        {/* ── Achievements section ── */}
-        <div className="flex flex-col gap-2" data-tour="profile-achievements">
-          {/* Section header */}
-          <div className="wood-plank px-4 py-2.5 flex items-center gap-3">
-            <span className="text-[22px]">🏅</span>
-            <h2
-              className="font-bytebounce text-[26px] leading-none text-[#ffd23f]"
-              style={{ textShadow: '2.5px 2.5px 0 #3e2723' }}
-            >
-              Achievements
-            </h2>
-            <span
-              className="ml-auto font-bytebounce text-[16px] text-[#e0b391]"
-              style={{ textShadow: '1px 1px 0 #3e2723' }}
-            >
-              {unlockedCount}/{achievements.length}
-            </span>
-          </div>
-
-          {achievements.length === 0 ? (
-            <div className="wood-plank px-4 py-4 text-center">
-              <p
-                className="font-bytebounce text-[16px] text-[#e0b391]"
-                style={{ textShadow: '1px 1px 0 #3e2723' }}
+        {/* ── Achievements ── */}
+        <section data-tour="profile-achievements">
+          <SectionHeading
+            icon="/images/profile/medal-achevement-logo.svg"
+            title="Achievements"
+            right={
+              <span
+                className="font-bytebounce text-[17px] leading-none text-[#e0b391]"
+                style={{ textShadow: '1.5px 1.5px 0 #3e2723' }}
               >
-                No achievements yet
-              </p>
-            </div>
-          ) : (
-            achievements.map((ach) => (
-              <div
-                key={ach.id}
-                className="wood-plank px-4 py-3 flex items-center gap-3"
-                style={{ opacity: ach.unlocked ? 1 : 0.5 }}
-              >
-                {/* Badge icon */}
-                <div className="w-10 h-10 shrink-0 flex items-center justify-center rounded border-2 border-[#3e2723] bg-[#5d3a1a]">
-                  {ach.unlocked ? (
-                    ach.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={ach.imageUrl} alt="" className="w-8 h-8 object-contain" />
-                    ) : (
-                      <span className="text-xl">🏅</span>
-                    )
-                  ) : (
-                    <span className="text-xl">🔒</span>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p
-                    className="font-bytebounce text-[18px] leading-tight text-[#fff3d9] truncate"
-                    style={{ textShadow: '1.5px 1.5px 0 #3e2723' }}
-                  >
-                    {ach.name}
-                  </p>
-                  <p
-                    className="font-bytebounce text-[13px] leading-tight text-[#e0b391] truncate"
-                    style={{ textShadow: '1px 1px 0 #3e2723' }}
-                  >
-                    {ach.description}
-                  </p>
-                </div>
-                {ach.unlocked && (
-                  <span
-                    className="font-bytebounce text-[18px] text-[#ffd23f] shrink-0"
-                    style={{ textShadow: '1px 1px 0 #3e2723' }}
-                  >
-                    ✓
-                  </span>
-                )}
-              </div>
-            ))
-          )}
-        </div>
+                {unlockedCount}/{achievements.length}
+              </span>
+            }
+          />
+          <AchievementStrip achievements={achievements} />
+        </section>
 
         {/* ── Activity log ── */}
-        <div className="flex flex-col gap-2" data-tour="profile-activity">
-          <div className="wood-plank px-4 py-2.5 flex items-center gap-3">
-            <span className="text-[22px]">📋</span>
-            <h2
-              className="font-bytebounce text-[26px] leading-none text-[#ffd23f]"
-              style={{ textShadow: '2.5px 2.5px 0 #3e2723' }}
-            >
-              Activity Log
-            </h2>
-          </div>
-          {student.scanLogs?.length > 0 ? (
-            student.scanLogs.map((log: any) => (
-              <div
-                key={log.id}
-                className="rounded border-2 border-[#3a2418] bg-[#fdf6e3] p-3.5 flex items-center justify-between gap-3"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="font-bytebounce text-[18px] leading-tight text-[#3e2723] truncate font-bold">
-                    ✅ {log.npc?.committeeName ?? 'Committee'}
-                  </p>
-                  <p className="font-bytebounce text-[14px] leading-tight text-[#8a5a37] mt-0.5">
-                    Fun Fact collected ·{' '}
-                    {new Date(log.scannedAt).toLocaleDateString('en', {
-                      month: 'short', day: 'numeric',
-                    })}
-                  </p>
-                </div>
-                <span className="font-bytebounce text-[18px] text-[#b8860b] font-bold shrink-0">
-                  +{log.pointsAwarded}pts
-                </span>
-              </div>
-            ))
-          ) : (
-            <div className="rounded border-2 border-[#3a2418] bg-[#fdf6e3] p-3.5 text-center">
-              <p className="font-bytebounce text-[16px] text-[#8a5a37]">
-                No scans yet — go scan a committee member!
-              </p>
-            </div>
-          )}
-        </div>
+        <ActivityLog rows={activityRows} />
 
       </div>
     </PageWrapper>
