@@ -33,12 +33,6 @@ interface Quest {
   isLocked: boolean   // window hasn't opened yet
 }
 
-/** Cream display text on the jungle backdrop (Figma #ffecb3 + brown shadow). */
-const CREAM_HEADING = {
-  color: '#ffecb3',
-  textShadow: '3px 3px 0 #3e2723',
-}
-
 /** Keeps light text legible against the wood grain, as BottomNav's labels do. */
 const PLANK_TEXT_SHADOW = '2px 2px 0 #4e342e'
 
@@ -277,10 +271,7 @@ export default function QuestsPage() {
             alt=""
             className="h-9 w-8 shrink-0 object-contain"
           />
-          <h1
-            className="font-bytebounce text-[30px] leading-none sm:text-[34px]"
-            style={CREAM_HEADING}
-          >
+          <h1 className="title-gold font-bytebounce text-[30px] leading-none sm:text-[34px]">
             Active Quests
           </h1>
         </div>

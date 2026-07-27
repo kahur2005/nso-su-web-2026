@@ -94,10 +94,7 @@ export default function CommitteePage() {
         </button>
 
         {/* Header */}
-        <h1
-          className="text-center font-bytebounce text-[clamp(2.6rem,13vw,3.4rem)] leading-[0.85]"
-          style={OUTLINE_GOLD}
-        >
+        <h1 className="title-gold text-center font-bytebounce text-[clamp(2.6rem,13vw,3.4rem)] leading-[0.85]">
           COMMITTEE
         </h1>
         <p

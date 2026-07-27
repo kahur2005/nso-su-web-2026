@@ -16,6 +16,7 @@ import HouseBanner from '@/components/profile/HouseBanner'
 import SectionHeading from '@/components/profile/SectionHeading'
 import AchievementStrip from '@/components/profile/AchievementStrip'
 import ActivityLog, { type ActivityRow } from '@/components/profile/ActivityLog'
+import { CHAPTER_TITLES } from '@/lib/guidebook/quiz'
 
 const MASCOTS = new Set([
   'chimera','faerie','fenrir','griffin','harpy','kitsune','kraken',
@@ -42,7 +43,7 @@ async function getProfileData(studentId: string, studentDbId?: string) {
   ])
 
   if (student) {
-    const [scanLogs, questProgress] = await Promise.all([
+    const [scanLogs, questProgress, quizClaims] = await Promise.all([
       supabase
         .from('ScanLog')
         .select('*, npc:NPC(*)')
@@ -54,9 +55,18 @@ async function getProfileData(studentId: string, studentDbId?: string) {
         .select('*, quest:Quest(*)')
         .eq('studentId', student.id)
         .eq('status', 'completed'),
+      // Claimed guidebook quizzes. Tolerates the table not existing yet —
+      // supabase-js returns the error rather than throwing, and the rest of
+      // the profile must still render if the migration has not been applied.
+      supabase
+        .from('GuidebookQuizAttempt')
+        .select('id, chapterId, pointsAwarded, claimedAt')
+        .eq('studentId', student.id)
+        .not('claimedAt', 'is', null),
     ])
     student.scanLogs = scanLogs.data ?? []
     student.questProgress = questProgress.data ?? []
+    student.quizClaims = quizClaims.data ?? []
   }
 
   return { student, totalNPCs: totalNPCs ?? 0 }
@@ -109,12 +119,24 @@ export default async function ProfilePage() {
 
   const av = parseAvatarConfig(student.avatarConfig)
 
-  const activityRows: ActivityRow[] = (student.scanLogs ?? []).map((log: any) => ({
-    id: log.id,
-    title: log.npc?.committeeName ?? 'Committee',
-    points: log.pointsAwarded ?? 0,
-    scannedAt: log.scannedAt,
-  }))
+  // Point history is two sources now — committee scans and claimed guidebook
+  // quizzes — merged newest-first so the feed reads as one timeline.
+  const activityRows: ActivityRow[] = [
+    ...(student.scanLogs ?? []).map((log: any) => ({
+      id: log.id,
+      title: log.npc?.committeeName ?? 'Committee',
+      points: log.pointsAwarded ?? 0,
+      scannedAt: log.scannedAt,
+      kind: 'scan' as const,
+    })),
+    ...(student.quizClaims ?? []).map((claim: any) => ({
+      id: claim.id,
+      title: CHAPTER_TITLES[claim.chapterId] ?? 'Guidebook chapter',
+      points: claim.pointsAwarded ?? 0,
+      scannedAt: claim.claimedAt,
+      kind: 'guidebook' as const,
+    })),
+  ].sort((a, b) => new Date(b.scannedAt).getTime() - new Date(a.scannedAt).getTime())
 
   return (
     <PageWrapper>

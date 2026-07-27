@@ -163,6 +163,14 @@ export async function toggleNpcActive(npcId: string) {
 
 export type ClubFormState = { warning: string | null }
 
+// /info/clubs is the page students actually reach from the nav; /map/clubs is
+// the older duplicate that still routes. Revalidate both after every club write.
+function revalidateClubs() {
+  revalidatePath('/admin/clubs')
+  revalidatePath('/info/clubs')
+  revalidatePath('/map/clubs')
+}
+
 // Signature required by React's `useActionState`: previous state first, then
 // FormData (see node_modules/next/dist/docs/01-app/02-guides/forms.md:194).
 export async function createClub(
@@ -190,17 +198,49 @@ export async function createClub(
   const images = uploaded.filter((url): url is string => Boolean(url))
   const failedCount = files.length - images.length
 
+  // The club's tile icon on /info/clubs. Optional — a club without one falls
+  // back to the bundled pixel art keyed by name.
+  const iconFile = formData.get('icon')
+  const iconUrl = iconFile instanceof File
+    ? await uploadImage('club-icons', iconFile)
+    : null
+
   await supabase.from('Club').insert({
-    name, category, description, instagram, registrationUrl, images,
+    name, category, description, instagram, registrationUrl, images, iconUrl,
   })
 
-  revalidatePath('/admin/clubs')
-  revalidatePath('/map/clubs')
+  revalidateClubs()
 
+  const warnings: string[] = []
   if (failedCount > 0) {
-    return { warning: `${failedCount} of ${files.length} image(s) failed to upload and were skipped.` }
+    warnings.push(`${failedCount} of ${files.length} carousel image(s) failed to upload and were skipped.`)
+  }
+  if (iconFile instanceof File && iconFile.size > 0 && !iconUrl) {
+    warnings.push('The icon failed to upload — the club was created without one.')
   }
 
+  return { warning: warnings.length > 0 ? warnings.join(' ') : null }
+}
+
+// Replaces just the tile icon on an existing club, so a club created before
+// icon uploads existed (or with the wrong art) can be fixed without re-entering
+// the whole record.
+export async function updateClubIcon(
+  _prevState: ClubFormState,
+  formData: FormData
+): Promise<ClubFormState> {
+  await requireAdmin()
+
+  const id = String(formData.get('id') || '')
+  const file = formData.get('icon')
+  if (!id || !(file instanceof File) || file.size === 0) return { warning: null }
+
+  const iconUrl = await uploadImage('club-icons', file)
+  if (!iconUrl) return { warning: 'Icon upload failed — the club is unchanged.' }
+
+  await supabase.from('Club').update({ iconUrl }).eq('id', id)
+
+  revalidateClubs()
   return { warning: null }
 }
 
@@ -212,8 +252,7 @@ export async function deleteClub(formData: FormData) {
 
   await supabase.from('Club').delete().eq('id', id)
 
-  revalidatePath('/admin/clubs')
-  revalidatePath('/map/clubs')
+  revalidateClubs()
 }
 
 // --- Committee (stored as NPC rows; see docs plan 2) ---

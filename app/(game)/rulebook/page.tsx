@@ -2,12 +2,6 @@
 import PageWrapper from '@/components/layout/PageWrapper'
 import Link from 'next/link'
 
-const OUTLINE_GOLD = {
-  color: '#ffd23f',
-  textShadow:
-    '3px 3px 0 #4e342e, -3px 3px 0 #4e342e, 3px -3px 0 #4e342e, -3px -3px 0 #4e342e, 0 5px 0 #4e342e',
-}
-
 const rarities = [
   { name: 'COMMON', stars: '★', color: '#8a5a37', points: '10 PTS' },
   { name: 'RARE', stars: '★★', color: '#1d4ed8', points: '25 PTS' },
@@ -37,10 +31,7 @@ export default function RulebookPage() {
         <div>
           {/* Header */}
           <div className="text-center mb-6">
-            <h1
-              className="font-bytebounce text-[clamp(2.2rem,10vw,3.2rem)] leading-none"
-              style={OUTLINE_GOLD}
-            >
+            <h1 className="title-gold font-bytebounce text-[clamp(2.2rem,10vw,3.2rem)] leading-none">
               GAME RULEBOOK
             </h1>
             <p

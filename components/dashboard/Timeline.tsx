@@ -14,95 +14,14 @@
 // expressed in `cqw` against the container-query root on the pad wrapper. The
 // whole calendar therefore scales as a single unit at any column width, exactly
 // as the design does.
+//
+// The agenda rows are editable from /admin/timeline and arrive as a prop; the
+// six days and their dates are fixed in lib/timeline.ts. Type-only import, so
+// nothing from the server-side data layer reaches this bundle.
 'use client'
 
 import { useState } from 'react'
-
-type AgendaRow = { time: string; activity: string }
-
-type TimelineDay = {
-  tabLabel: string
-  headerTitle: string
-  date: string
-  agenda: AgendaRow[]
-}
-
-const TIMELINE_DATA: TimelineDay[] = [
-  {
-    tabLabel: 'TM',
-    headerTitle: 'TECHNICAL MEETING (ONLINE)',
-    date: '11 Aug 2026',
-    agenda: [
-      { time: '09:00 - 09:05', activity: 'Opening Greetings' },
-      { time: '09:05 - 09:55', activity: 'NSO Technical Meeting' },
-      { time: '09:55 - 10:15', activity: 'Games Session' },
-      { time: '10:15 - 10:45', activity: 'Gem Sorting Ceremony' },
-      { time: '10:45 - 11:00', activity: 'Web Explanation' },
-      { time: '11:00 - 11:35', activity: 'Gems Discussion' },
-    ],
-  },
-  {
-    tabLabel: '1',
-    headerTitle: 'DAY 1',
-    date: '18 Aug 2026',
-    agenda: [
-      { time: '09:00 - 09:05', activity: 'Opening Greetings' },
-      { time: '09:05 - 09:55', activity: 'NSO Technical Meeting' },
-      { time: '09:55 - 10:15', activity: 'Games Session' },
-      { time: '10:15 - 10:45', activity: 'Gem Sorting Ceremony' },
-      { time: '10:45 - 11:00', activity: 'Web Explanation' },
-      { time: '11:00 - 11:35', activity: 'Gems Discussion' },
-      { time: '09:00 - 09:05', activity: 'Opening Greetings' },
-      { time: '09:05 - 09:55', activity: 'NSO Technical Meeting' },
-      { time: '09:55 - 10:15', activity: 'Games Session' },
-      { time: '10:15 - 10:45', activity: 'Gem Sorting Ceremony' },
-      { time: '10:45 - 11:00', activity: 'Web Explanation' },
-    ],
-  },
-  {
-    tabLabel: '2',
-    headerTitle: 'DAY 2',
-    date: '19 Aug 2026',
-    agenda: [
-      { time: '08:00 - 09:00', activity: 'Morning Assembly & Briefing' },
-      { time: '09:00 - 12:00', activity: 'Faculty & Campus Exploration' },
-      { time: '12:00 - 13:00', activity: 'Lunch Break & Club Booths' },
-      { time: '13:00 - 16:00', activity: 'Team Building Challenges' },
-    ],
-  },
-  {
-    tabLabel: '3',
-    headerTitle: 'DAY 3',
-    date: '20 Aug 2026',
-    agenda: [
-      { time: '08:00 - 09:00', activity: 'Morning Warm-up' },
-      { time: '09:00 - 12:00', activity: 'Quest Rally & QR Scanning' },
-      { time: '12:00 - 13:00', activity: 'Lunch Break' },
-      { time: '13:00 - 16:00', activity: 'Talent Showcase & Games' },
-    ],
-  },
-  {
-    tabLabel: '4',
-    headerTitle: 'DAY 4',
-    date: '21 Aug 2026',
-    agenda: [
-      { time: '08:00 - 09:00', activity: 'Group Reflection' },
-      { time: '09:00 - 12:00', activity: 'UKM Clubs Exhibition' },
-      { time: '12:00 - 13:00', activity: 'Lunch Break' },
-      { time: '13:00 - 16:00', activity: 'Closing Ceremony Preparation' },
-    ],
-  },
-  {
-    tabLabel: '5',
-    headerTitle: 'DAY 5',
-    date: '22 Aug 2026',
-    agenda: [
-      { time: '09:00 - 12:00', activity: 'Final Leaderboard Announcement' },
-      { time: '12:00 - 13:00', activity: 'Celebration Lunch' },
-      { time: '13:00 - 17:00', activity: 'NSO 2026 Grand Closing Ceremony' },
-    ],
-  },
-]
+import type { TimelineDay } from '@/lib/timeline'
 
 /* ── Figma palette (node 2:36) ─────────────────────────────────────────── */
 const INK = '#3e2723' // pad border + agenda text
@@ -132,9 +51,13 @@ function padSlice(file: string): React.CSSProperties {
   }
 }
 
-export default function Timeline() {
+export default function Timeline({ days }: { days: TimelineDay[] }) {
   const [selectedDay, setSelectedDay] = useState<number>(0)
-  const current = TIMELINE_DATA[selectedDay] ?? TIMELINE_DATA[0]
+  const current = days[selectedDay] ?? days[0]
+
+  // Nothing to draw without at least one day. Only reachable if lib/timeline.ts
+  // is emptied, since the six days are code rather than data.
+  if (!current) return null
 
   // "DAY 1" is set enormous in the design, on leading so tight the glyphs
   // overflow their line box up over the flat red of the cap — which is exactly
@@ -208,7 +131,7 @@ export default function Timeline() {
       >
         {/* Day selector — the active tab sits 6px proud of the rest */}
         <div className="flex items-start justify-between" role="tablist" aria-label="Event day">
-          {TIMELINE_DATA.map((day, idx) => {
+          {days.map((day, idx) => {
             const isActive = idx === selectedDay
             const isMeeting = idx === 0
             return (
@@ -258,8 +181,8 @@ export default function Timeline() {
             {current.headerTitle} agenda, {current.date}
           </caption>
           <tbody>
-            {current.agenda.map((row, rIdx) => (
-              <tr key={`${row.time}-${rIdx}`}>
+            {current.agenda.map((row) => (
+              <tr key={row.id}>
                 <th
                   scope="row"
                   className="text-center font-normal"

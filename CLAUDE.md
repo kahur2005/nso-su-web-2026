@@ -36,6 +36,7 @@ Database is **Supabase** (hosted PostgreSQL, project ref `ndezlikvpsjmbvuptlfc`,
 |---|---|
 | `20260725_blockers_and_gaps.sql` | **Applied.** `Student.role`, `Student.gender`, `NPC.maxScans`, `Quest.availableFrom`/`availableUntil` all exist; `complete_quest` was redefined to also bump `Group.totalPoints`. |
 | `20260725_single_use_tokens.sql` | **NOT applied.** The `SingleUseToken` table does not exist. |
+| `20260727_guidebook_quiz.sql` | **Applied** (verified 2026-07-27). `GuidebookQuizAttempt` exists with its `unique ("studentId", "chapterId")` — that constraint *is* the one-try rule for the `/info/guidebook` end-of-chapter quizzes, so never drop it. RLS on, no policies, like every other table. |
 
 **Live-vs-file drift, verified against the live DB on 2026-07-25** — check this before trusting either file:
 

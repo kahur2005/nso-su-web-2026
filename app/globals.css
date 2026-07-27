@@ -46,6 +46,18 @@
   --pixel-orange: #FF9800;
   --pixel-sky: #87CEEB;
   --pixel-brown: #795548;
+
+  /* Height of the fixed top Navbar. Single source of truth: the header sets
+     its height from this and PageWrapper pads <main> by the same amount, so
+     the two can never drift apart. Mobile fits the 28px logo; from md the bar
+     also carries the icon+label nav rail (32px icon + 4px gap + 17px label). */
+  --nav-h: 44px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --nav-h: 72px;
+  }
 }
 
 @theme {
@@ -131,17 +143,61 @@ body {
   );
 }
 
-/* Parchment Card with inner decorations from Figma paper assets */
+/* ── Dashboard sprite panels ──────────────────────────────────────────────
+   The three Figma backgrounds in public/images/dashboard/, stretched to the
+   element box the same way /scan's paper panels and BottomNav's plank are.
+   Each sprite carries its own border, corner nicks and bottom shadow band, so
+   these classes add no border/radius/box-shadow of their own — only padding
+   belongs on the element. Sizes are chosen to land near the sprite's natural
+   dimensions, which keeps the pixel edges crisp:
+     background-card.png   364×87   wide sheet — announcements + quest rows
+     background-btn.png    103×97   wooden plaque — the 2×2 quick actions
+     background-stats.png  142×209  tall sheet — the points/fun-facts tally */
+/* The wide sheet is the one that has to survive real stretching — a long
+   announcement runs to 3× the sprite's 87px — so it is 9-sliced instead of
+   scaled, which holds the pixel rule at 2px and the tan shadow band at 4px
+   whatever the row height. Slices measured off the sprite: 6px clears the lit
+   top row, 10px covers the bottom band + rule, 6/8px are the side rules. */
 .parchment-card {
-  border: 2px solid #3e2723;
-  border-radius: 4px;
-  background-color: #fdf3e3;
-  background-image: url('/images/dashboard/paper-1.png');
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  box-shadow: 3px 3px 0px #3e2723;
   position: relative;
+  border-style: solid;
+  border-width: 6px 8px 10px 6px;
+  border-image-source: url('/images/dashboard/background-card.png');
+  border-image-slice: 6 8 10 6 fill;
+  border-image-repeat: stretch;
+}
+
+/* The tally sheet is 9-sliced for the same reason: its height is whatever the
+   tile grid beside it comes to, which moves every time a tile is resized.
+   Slices measured off background-stats.png (142×209): 9px clears the top
+   rule, 13px the bottom band, 8px the shaded side rules. */
+.parchment-panel {
+  position: relative;
+  border-style: solid;
+  border-width: 9px 8px 13px 8px;
+  border-image-source: url('/images/dashboard/background-stats.png');
+  border-image-slice: 9 8 13 8 fill;
+  border-image-repeat: stretch;
+}
+
+/* The plaque keeps a fixed aspect close to its 103×97 sprite, so a plain
+   stretch stays pixel-accurate and leaves the whole box free for the icon. */
+.wood-tile {
+  position: relative;
+  background-image: url('/images/dashboard/background-btn.png');
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
   image-rendering: pixelated;
+}
+
+/* Solid "go" triangle used on the parchment rows (a real triangle rather than
+   the ▶ glyph, which renders at a different weight per platform) */
+.pixel-arrow {
+  width: 0;
+  height: 0;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-left: 10px solid #5d4037;
 }
 
 /* Notched pixel row frame — replaces public/images/leaderboard/row-frame.png.
@@ -301,6 +357,19 @@ body {
 /* Pixel Text Shadow */
 .pixel-text-shadow {
   text-shadow: 3px 3px 0px #000;
+}
+
+/* Gold page title with the four-way pixel outline, as on /info/committee.
+   Colour + outline only — each page keeps its own size/leading classes, so
+   this is the single knob for every student page heading. */
+.title-gold {
+  color: #ffd23f;
+  text-shadow:
+    3px 3px 0 #000,
+    -3px 3px 0 #000,
+    3px -3px 0 #000,
+    -3px -3px 0 #000,
+    0 5px 0 #000;
 }
 
 /* ── Standardized Retro Pixel Design System ────────────────────────────── */

@@ -12,6 +12,8 @@ export interface ActivityRow {
   title: string
   points: number
   scannedAt: string
+  /** What earned the points. Drives the headline verb and the sub-line. */
+  kind?: 'scan' | 'guidebook'
 }
 
 /** Rows shown before "See All" is pressed — the frame shows a short feed. */
@@ -61,14 +63,17 @@ export default function ActivityLog({ rows }: { rows: ActivityRow[] }) {
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          {visible.map((row) => (
+          {visible.map((row) => {
+            const isQuiz = row.kind === 'guidebook'
+            return (
             <div key={row.id} className="flex items-center gap-3 px-5 py-3.5" style={PAPER}>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-bytebounce text-[21px] leading-none text-[#3e2723]">
-                  Scanned {row.title}
+                  {isQuiz ? row.title : `Scanned ${row.title}`}
                 </p>
                 <p className="mt-1.5 font-bytebounce text-[17px] leading-none text-[#6d4c41]">
-                  <span aria-hidden>💡</span> FunFact collected · {formatDate(row.scannedAt)}
+                  <span aria-hidden>{isQuiz ? '📖' : '💡'}</span>{' '}
+                  {isQuiz ? 'Guidebook quiz' : 'FunFact collected'} · {formatDate(row.scannedAt)}
                 </p>
               </div>
               <p
@@ -79,7 +84,8 @@ export default function ActivityLog({ rows }: { rows: ActivityRow[] }) {
                 {row.points < 0 ? '−' : '+'} {Math.abs(row.points)} Points
               </p>
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </section>

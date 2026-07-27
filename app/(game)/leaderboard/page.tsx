@@ -86,18 +86,6 @@ function medalTrim(i: number): { className: string; style?: CSSProperties } {
 }
 
 /** Page title: golden yellow on a hard black pixel drop shadow. */
-const TITLE_GOLD = {
-  color: '#ffd23f',
-  textShadow: '3px 3px 0 #000',
-}
-
-/** Gold display text with the design's brown pixel outline (committee page). */
-const OUTLINE_GOLD = {
-  color: '#ffd23f',
-  textShadow:
-    '3px 3px 0 #4e342e, -3px 3px 0 #4e342e, 3px -3px 0 #4e342e, -3px -3px 0 #4e342e, 0 5px 0 #4e342e',
-}
-
 /* The fifteen mascot close-ups shipped in public/images/group/. */
 const MASCOTS = new Set([
   'chimera', 'faerie', 'fenrir', 'griffin', 'harpy', 'kitsune', 'kraken',
@@ -305,10 +293,7 @@ export default function LeaderboardPage() {
                     centre column the red body only spans rows 51..85, so the
                     name is centred at 67% — not on the sprite's midpoint, which
                     would float it above the ribbon in the tail area. */}
-                <p
-                  className="absolute inset-x-0 top-[67%] -translate-y-1/2 truncate px-[16%] text-center font-bytebounce text-[clamp(21px,7.2vw,31px)] uppercase leading-none"
-                  style={OUTLINE_GOLD}
-                >
+                <p className="title-gold absolute inset-x-0 top-[67%] -translate-y-1/2 truncate px-[16%] text-center font-bytebounce text-[clamp(21px,7.2vw,31px)] uppercase leading-none">
                   {activeTab === 'groups' ? leaderGroup.name : leaderStudent.name}
                 </p>
               </div>
@@ -368,10 +353,7 @@ export default function LeaderboardPage() {
           <div className="relative" style={{ paddingTop: '22%', paddingBottom: '22%' }} data-tour="lb-list">
             {/* The record tab is an activity feed, not a ranking — no title. */}
             {activeTab !== 'record' && (
-              <h1
-                className="text-center font-bytebounce text-[clamp(34px,11vw,46px)] leading-none"
-                style={TITLE_GOLD}
-              >
+              <h1 className="title-gold text-center font-bytebounce text-[clamp(34px,11vw,46px)] leading-none">
                 LEADERBOARD
               </h1>
             )}
