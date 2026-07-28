@@ -74,7 +74,7 @@ const quickTiles = [
     iconClass: TILE_ICON,
   },
   {
-    href: "/info/clubs",
+    href: "/lunch",
     icon: "/images/dashboard/food.svg",
     label: "Food",
     iconClass: TILE_ICON,

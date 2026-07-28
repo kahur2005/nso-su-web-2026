@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Smartphone, Users, Star, Megaphone, Building2, IdCard,
-  Swords, Award, BookOpen, CalendarDays,
+  Swords, Award, BookOpen, CalendarDays, UtensilsCrossed,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -25,6 +25,10 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: '/admin/points', label: 'Points', icon: Star },
   { href: '/admin/announcements', label: 'Announcements', icon: Megaphone },
   { href: '/admin/timeline', label: 'Timeline', icon: CalendarDays },
+  // One entry only: /admin/lunch/menu and /admin/lunch/settings are reached
+  // through the tab strip in app/admin/lunch/LunchTabs.tsx, because a second
+  // rail entry would prefix-collide with this one.
+  { href: '/admin/lunch', label: 'Lunch', icon: UtensilsCrossed },
   { href: '/admin/clubs', label: 'Clubs', icon: Building2 },
   { href: '/admin/guide', label: 'Guide', icon: BookOpen },
 ]
