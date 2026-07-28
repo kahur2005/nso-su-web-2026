@@ -27,7 +27,7 @@ export default function GroupEmblem({
   }
   return (
     <span
-      className={`inline-block align-middle leading-none ${className}`}
+      className={`inline-block align-middle leading-none border-2 border-black ${className}`}
       style={{ fontSize: size }}
     >
       {emblem || '🛡️'}

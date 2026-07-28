@@ -19,6 +19,16 @@ export default async function AdminCommitteePage() {
 
   const members = membersData ?? []
 
+  // Sort head of division to top within each division
+  members.sort((a: any, b: any) => {
+    if (a.division === b.division) {
+      const aIsHead = /head|ketua/i.test(a.role ?? '')
+      const bIsHead = /head|ketua/i.test(b.role ?? '')
+      if (aIsHead !== bIsHead) return aIsHead ? -1 : 1
+    }
+    return 0
+  })
+
   return (
     <div className="space-y-6">
       <div>
