@@ -50,7 +50,7 @@ export default function InfoHubPage() {
       <PageIntro page="info" />
       <div className="mx-auto flex min-h-[calc(100dvh-11rem)] w-full max-w-md flex-col justify-center px-3 py-2 lg:max-w-lg">
         {/* Header */}
-        <h1 className="text-center font-bytebounce text-[clamp(2.75rem,15vw,4rem)] leading-none text-[#d7a717]">
+        <h1 className="title-gold text-center font-bytebounce text-[clamp(2.75rem,15vw,4rem)] leading-none">
           INFO STATION
         </h1>
         <p className="mx-auto mt-1 max-w-[280px] text-center font-bytebounce text-[17px] leading-tight text-[#7d5a3d]">

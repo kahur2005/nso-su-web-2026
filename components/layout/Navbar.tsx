@@ -3,8 +3,8 @@
 //   – "NSO 2026" gold pixel logo on the left
 //   – wood-plank navigation rail with icon + label items (hidden on mobile, where BottomNav takes over)
 //   – "EXIT" red logout button on the right
-// On scroll the bar picks up a darkened wood background so content below it
-// doesn't bleed through.
+// Pinned with position:fixed and a height of --nav-h; PageWrapper reserves the
+// same amount of top padding on <main> so nothing renders underneath it.
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -31,8 +31,8 @@ export default function Navbar() {
   const av = parseAvatarConfig(avatarConfig)
 
   return (
-    <header className="sticky top-0 z-40 w-full wood-plank rounded-none border-x-0 border-t-0 border-b-2 border-[#3e2723] shadow-md">
-      <div className="game-column py-1.5 md:py-2 flex items-center justify-between">
+    <header className="fixed top-0 left-0 right-0 z-40 h-[var(--nav-h)] wood-plank rounded-none border-x-0 border-t-0 border-b-2 border-[#3e2723] shadow-md">
+      <div className="game-column h-full flex items-center justify-between">
         {/* ── Logo ─────────────────────────────────────────────────────── */}
         <Link
           href="/dashboard"

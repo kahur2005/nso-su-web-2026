@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Smartphone, Users, Star, Megaphone, Building2, IdCard,
-  Swords, Award, BookOpen,
+  Swords, Award, BookOpen, CalendarDays,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -24,6 +24,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: '/admin/groups', label: 'Groups', icon: Users },
   { href: '/admin/points', label: 'Points', icon: Star },
   { href: '/admin/announcements', label: 'Announcements', icon: Megaphone },
+  { href: '/admin/timeline', label: 'Timeline', icon: CalendarDays },
   { href: '/admin/clubs', label: 'Clubs', icon: Building2 },
   { href: '/admin/guide', label: 'Guide', icon: BookOpen },
 ]

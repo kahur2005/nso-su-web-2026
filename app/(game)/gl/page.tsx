@@ -16,12 +16,6 @@ interface StudentItem {
   group?: { name: string } | null
 }
 
-const OUTLINE_GOLD = {
-  color: '#ffd23f',
-  textShadow:
-    '3px 3px 0 #4e342e, -3px 3px 0 #4e342e, 3px -3px 0 #4e342e, -3px -3px 0 #4e342e, 0 5px 0 #4e342e',
-}
-
 export default function GlPanelPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -108,7 +102,7 @@ export default function GlPanelPage() {
     return (
       <PageWrapper>
         <div className="game-column py-12 text-center">
-          <h1 className="font-bytebounce text-[28px] text-[#ffd23f]" style={OUTLINE_GOLD}>
+          <h1 className="title-gold font-bytebounce text-[28px]">
             RESTRICTED AREA
           </h1>
           <p className="mt-2 font-bytebounce text-[18px] text-white">
@@ -122,10 +116,7 @@ export default function GlPanelPage() {
   return (
     <PageWrapper>
       <div className="game-column pb-6 pt-3">
-        <h1
-          className="text-center font-bytebounce text-[clamp(2.4rem,12vw,3.2rem)] leading-[0.85]"
-          style={OUTLINE_GOLD}
-        >
+        <h1 className="title-gold text-center font-bytebounce text-[clamp(2.4rem,12vw,3.2rem)] leading-[0.85]">
           GL POINT PANEL
         </h1>
         <p

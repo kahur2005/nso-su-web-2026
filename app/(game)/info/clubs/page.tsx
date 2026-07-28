@@ -1,7 +1,7 @@
 // app/(game)/info/clubs/page.tsx
 // UKM CLUBS page — parchment tiles grid matching Figma pixel art reference.
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import PageWrapper from '@/components/layout/PageWrapper'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
@@ -69,13 +69,23 @@ const DEFAULT_CLUBS: Club[] = [
 
 function ClubDetailModal({ club, onClose }: { club: Club; onClose: () => void }) {
   const icon = getClubIcon(club)
+  const [slide, setSlide] = useState(0)
+  // A club row written before the images column existed can come back null.
+  const images = club.images ?? []
+  const count = images.length
+
+  // `count` is 0 for a club with no uploaded images; the modulo would be NaN,
+  // so bail out and let the carousel block render nothing instead.
+  const prev = () => count && setSlide((s) => (s - 1 + count) % count)
+  const next = () => count && setSlide((s) => (s + 1) % count)
+
   return (
     <div
       className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm rounded border-2 border-[#b08a5e] bg-[#f5e7c6] p-5 shadow-2xl relative"
+        className="w-full max-w-sm max-h-[90vh] overflow-y-auto rounded border-2 border-[#b08a5e] bg-[#f5e7c6] p-5 shadow-2xl relative"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -98,6 +108,63 @@ function ClubDetailModal({ club, onClose }: { club: Club; onClose: () => void })
           <span className="font-bytebounce text-[14px] text-[#8a5c2e] uppercase mt-0.5">
             {club.category}
           </span>
+          {/* Photo carousel — hidden entirely when the club has no images */}
+          {count > 0 && (
+            <div className="relative mt-4 w-full">
+              <img
+                src={images[slide]}
+                alt={`${club.name} photo ${slide + 1} of ${count}`}
+                className="w-full h-44 object-cover rounded-sm border-2 border-[#3a2418]"
+              />
+              {count > 1 && (
+                <>
+                  {/* Same pixel arrows the committee/guidebook pagers use.
+                      They sit on a parchment chip so the dark pixel art stays
+                      readable over an arbitrary photo. */}
+                  <button
+                    type="button"
+                    onClick={prev}
+                    aria-label="Previous photo"
+                    className="absolute left-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-sm border-2 border-[#3a2418] bg-[#f5e7c6]/90 transition-transform hover:bg-[#fdf6e3] active:translate-y-[calc(-50%+2px)]"
+                  >
+                    <img
+                      src="/images/committee/page-prev.png"
+                      alt=""
+                      className="h-4 w-4 object-contain"
+                      style={{ imageRendering: 'pixelated' }}
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={next}
+                    aria-label="Next photo"
+                    className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-sm border-2 border-[#3a2418] bg-[#f5e7c6]/90 transition-transform hover:bg-[#fdf6e3] active:translate-y-[calc(-50%+2px)]"
+                  >
+                    <img
+                      src="/images/committee/page-next.png"
+                      alt=""
+                      className="h-4 w-4 object-contain"
+                      style={{ imageRendering: 'pixelated' }}
+                    />
+                  </button>
+                  <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
+                    {images.map((src, i) => (
+                      <button
+                        key={src}
+                        type="button"
+                        onClick={() => setSlide(i)}
+                        aria-label={`Go to photo ${i + 1}`}
+                        aria-current={i === slide}
+                        className="h-2.5 w-2.5 border border-[#3a2418]"
+                        style={{ backgroundColor: i === slide ? '#ffd23f' : '#5d4330' }}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           <p className="font-bytebounce text-[15px] text-[#5d4330] leading-snug mt-3">
             {club.description || 'Join UKM clubs to connect with fellow students and develop your skills.'}
           </p>
@@ -135,6 +202,7 @@ export default function UkmClubsPage() {
   const [selected, setSelected] = useState<Club | null>(null)
   const [clubs, setClubs] = useState<Club[]>([])
   const [loading, setLoading] = useState(true)
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     fetch('/api/clubs')
@@ -146,6 +214,17 @@ export default function UkmClubsPage() {
       .catch(() => setClubs(DEFAULT_CLUBS))
       .finally(() => setLoading(false))
   }, [])
+
+  const visibleClubs = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return clubs
+    return clubs.filter(
+      (club) =>
+        club.name.toLowerCase().includes(q) ||
+        club.category.toLowerCase().includes(q) ||
+        club.description.toLowerCase().includes(q),
+    )
+  }, [clubs, query])
 
   return (
     <PageWrapper>
@@ -166,30 +245,64 @@ export default function UkmClubsPage() {
         </button>
 
         {/* Title */}
-        <h1
-          className="text-center font-bytebounce text-[clamp(2.4rem,12vw,3.2rem)] leading-[0.85] text-[#43F6FF]"
-          style={{
-            textShadow:
-              '3px 3px 0 #3e2723, -3px 3px 0 #3e2723, 3px -3px 0 #3e2723, -3px -3px 0 #3e2723, 0 5px 0 #3e2723',
-          }}
-        >
+        <h1 className="title-gold text-center font-bytebounce text-[clamp(2.4rem,12vw,3.2rem)] leading-[0.85]">
           UKM CLUBS
         </h1>
+
+        {/* Search */}
+        <div className="relative mt-4">
+          <span
+            aria-hidden
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-bytebounce text-[18px] text-[#8a5c2e]"
+          >
+            🔍
+          </span>
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search clubs..."
+            aria-label="Search clubs"
+            className="w-full rounded-md border-2 border-[#3a2418] bg-[#fdf6e3] py-2 pl-10 pr-10 font-bytebounce text-[18px] text-[#3e2723] placeholder:text-[#a08a6e] focus:outline-none"
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery('')}
+              aria-label="Clear search"
+              className="absolute right-3 top-1/2 -translate-y-1/2 font-bytebounce text-[18px] text-[#5d4330] hover:text-[#a04040]"
+            >
+              ✕
+            </button>
+          )}
+        </div>
 
         {loading ? (
           <div className="py-16">
             <LoadingSpinner text="LOADING CLUBS..." />
           </div>
+        ) : visibleClubs.length === 0 ? (
+          <p className="mt-10 text-center font-bytebounce text-[20px] text-[#fff3d9]">
+            NO CLUBS MATCH &quot;{query.trim()}&quot;
+          </p>
         ) : (
           <div className="mt-4 grid grid-cols-2 gap-2.5">
-            {clubs.map((club) => {
+            {visibleClubs.map((club) => {
               const icon = getClubIcon(club)
               return (
                 <button
                   key={club.id}
                   onClick={() => setSelected(club)}
-                  className="rounded border-2 border-[#b08a5e] bg-[#fdf3e3] p-4 flex flex-col items-center justify-center transition-all hover:scale-[1.02] hover:brightness-105 active:scale-[0.97]"
-                  style={{ boxShadow: '2px 2px 0 #3e2723' }}
+                  className="p-4 flex flex-col items-center justify-center transition-all hover:scale-[1.02] hover:brightness-105 active:scale-[0.97]"
+                  style={{
+                    // The parchment frame is baked into the art (border + fill),
+                    // so it is stretched to the tile rather than tiled or
+                    // cropped — the pixel border must reach every edge.
+                    backgroundImage: 'url(/images/clubs/background-clubs.png)',
+                    backgroundSize: '100% 100%',
+                    backgroundRepeat: 'no-repeat',
+                    imageRendering: 'pixelated',
+                  }}
                 >
                   <img
                     src={icon}
@@ -207,7 +320,11 @@ export default function UkmClubsPage() {
         )}
       </div>
 
-      {selected && <ClubDetailModal club={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        // Keyed on the club so the carousel's slide index resets when a
+        // different club is opened rather than carrying over.
+        <ClubDetailModal key={selected.id} club={selected} onClose={() => setSelected(null)} />
+      )}
     </PageWrapper>
   )
 }

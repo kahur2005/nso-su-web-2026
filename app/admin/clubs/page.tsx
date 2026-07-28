@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import DataTable from '@/components/admin/DataTable'
 import ClubForm from '@/components/admin/ClubForm'
 import DeleteClubButton from '@/components/admin/DeleteClubButton'
+import ClubIconCell from '@/components/admin/ClubIconCell'
 
 export default async function AdminClubsPage() {
   const session = await getServerSession(authOptions)
@@ -15,7 +16,7 @@ export default async function AdminClubsPage() {
 
   const { data: clubsData } = await supabase
     .from('Club')
-    .select('id, name, category, images, instagram, registrationUrl')
+    .select('id, name, category, images, instagram, registrationUrl, iconUrl')
     .order('name', { ascending: true })
 
   const clubs = clubsData ?? []
@@ -25,18 +26,22 @@ export default async function AdminClubsPage() {
       <div>
         <h1 className="text-lg font-semibold text-slate-900">Clubs</h1>
         <p className="text-sm text-slate-500 mt-1">
-          Manage the student society directory shown at /map/clubs. New clubs
-          appear there immediately.
+          Manage the student society directory shown at /info/clubs. New clubs
+          appear there immediately. The icon is what students see on each club
+          tile — clubs without one fall back to bundled pixel art.
         </p>
       </div>
 
       <ClubForm />
 
-      <DataTable headers={['Club', 'Category', 'Images', 'Instagram', 'Registration', '']}>
+      <DataTable headers={['Club', 'Icon', 'Category', 'Images', 'Instagram', 'Registration', '']}>
         {clubs.map((club) => (
           <tr key={club.id}>
             <td className="px-4 py-2.5 font-medium text-slate-800 align-top whitespace-nowrap">
               {club.name}
+            </td>
+            <td className="px-4 py-2.5 align-top whitespace-nowrap">
+              <ClubIconCell id={club.id} name={club.name} iconUrl={club.iconUrl} />
             </td>
             <td className="px-4 py-2.5 text-slate-600 align-top whitespace-nowrap">
               {club.category}
@@ -80,7 +85,7 @@ export default async function AdminClubsPage() {
 
         {clubs.length === 0 && (
           <tr>
-            <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-400">
+            <td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-400">
               No clubs yet.
             </td>
           </tr>

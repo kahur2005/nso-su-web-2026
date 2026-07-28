@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import DataTable from '@/components/admin/DataTable'
 import StudentPicker from '@/components/admin/StudentPicker'
 import GroupEmblem from '@/components/ui/GroupEmblem'
+import { groupLevel } from '@/lib/leveling'
 import { assignStudentToGroup, unassignStudent } from '../actions'
 
 const inputClass = `w-full bg-white border border-slate-300 rounded-md text-slate-800
@@ -94,7 +95,9 @@ export default async function AdminGroupsPage() {
             >
               <GroupEmblem emblem={group.emblem} emblemUrl={group.emblemUrl} size={56} />
               <p className="text-sm font-medium text-slate-800 truncate w-full">{group.name}</p>
-              <p className="text-xs text-slate-500">{group.totalPoints} pts</p>
+              <p className="text-xs text-slate-500">
+                LV {groupLevel(group.totalPoints)} · {group.totalPoints} pts
+              </p>
             </div>
           ))}
         </div>
@@ -134,7 +137,7 @@ export default async function AdminGroupsPage() {
         <div className="space-y-4">
           <div>
             <h2 className="text-sm font-semibold text-slate-800 mb-3">Group rankings</h2>
-            <DataTable headers={['#', 'Group', 'Points', 'Members']}>
+            <DataTable headers={['#', 'Group', 'Level', 'Points', 'Members']}>
               {groups.map((group, index) => (
                 <tr key={group.id}>
                   <td className="px-4 py-2.5 text-slate-500 whitespace-nowrap">{index + 1}</td>
@@ -143,6 +146,9 @@ export default async function AdminGroupsPage() {
                       <GroupEmblem emblem={group.emblem} emblemUrl={group.emblemUrl} size={24} />
                       <span className="font-medium text-slate-800">{group.name}</span>
                     </div>
+                  </td>
+                  <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">
+                    LV {groupLevel(group.totalPoints)}
                   </td>
                   <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">{group.totalPoints}</td>
                   <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">
