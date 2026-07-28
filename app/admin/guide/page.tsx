@@ -11,7 +11,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
   LayoutDashboard, QrCode, Swords, Award, Users, Star, Megaphone,
-  Building2, IdCard, type LucideIcon,
+  Building2, IdCard, UtensilsCrossed, type LucideIcon,
 } from 'lucide-react'
 
 interface GuideSection {
@@ -103,6 +103,19 @@ const SECTIONS: GuideSection[] = [
     icon: Building2,
     what: 'The student society directory students browse at /map/clubs.',
     steps: ['Add a club with its name, category, photos, Instagram and sign-up link.'],
+  },
+  {
+    href: '/admin/lunch',
+    label: 'Lunch',
+    icon: UtensilsCrossed,
+    what: 'Lunch pre-orders. Students pick a day and one restaurant at /lunch, pay by scanning a QRIS code for their exact total, and upload a screenshot of the payment. This tab is where you check that screenshot and approve it.',
+    steps: [
+      'Payment & Days: paste the static QRIS payload for the account collecting the money. Nothing can be paid for until you do.',
+      'Payment & Days: open the days you are running lunch on and set each one’s ordering deadline.',
+      'Restaurants & Menu: add each restaurant, its dishes with prices, and any add-ons.',
+      'Orders: compare each payment screenshot against the total, then Approve — or Reject with a reason the student will see.',
+    ],
+    note: 'Approving is one-way and the student sees it instantly, so check the amount before you click. Editing a price later never changes an order that was already placed.',
   },
 ]
 
