@@ -30,7 +30,7 @@ export default function AchievementStrip({
 
   return (
     <>
-      <ul className="-mx-1 flex list-none gap-2.5 overflow-x-auto px-1 pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+      <ul className="-mx-1 flex list-none gap-2.5 overflow-x-auto px-1 pb-1 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#8a5a37] [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin]">
         {achievements.map((a) => (
           <li key={a.id} className="w-[82px] shrink-0">
             <button

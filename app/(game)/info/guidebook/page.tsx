@@ -30,8 +30,8 @@ const TINT = {
   paper: 'rgba(255,255,255,0.55)',
 } as const
 
-const INK_TITLE = '#543631' // section headings on the cream page
-const INK_BODY = '#7d5a3d'  // list + notes copy
+const INK_TITLE = '#3e2218' // section headings on the cream page
+const INK_BODY = '#5d3a20'  // list + notes copy
 const INK_PAGER = '#88684e' // "1/7"
 
 // The book art is 387px wide in Figma. Everything below is that px value as a

@@ -83,6 +83,15 @@ export async function GET() {
       isScanned,
     }
   })
+  members.sort((a, b) => {
+    // Head of Division first within same division
+    if (a.division === b.division) {
+      const aIsHead = /head|ketua/i.test(a.role)
+      const bIsHead = /head|ketua/i.test(b.role)
+      if (aIsHead !== bIsHead) return aIsHead ? -1 : 1
+    }
+    return 0  // preserve existing order otherwise
+  })
 
   return NextResponse.json({ members })
 }

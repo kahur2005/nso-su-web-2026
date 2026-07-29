@@ -87,7 +87,7 @@ export async function adjustPoints(formData: FormData) {
 
   const { data: student } = await supabase
     .from('Student')
-    .select('id')
+    .select('id, name')
     .eq('studentId', studentId)
     .maybeSingle()
   if (!student) return
@@ -96,6 +96,12 @@ export async function adjustPoints(formData: FormData) {
   await supabase.rpc('adjust_points', {
     p_student_id: student.id,
     p_amount: amount,
+  })
+
+  await supabase.from('Announcement').insert({
+    title: `Points ${amount > 0 ? 'Awarded' : 'Deducted'}`,
+    content: `${amount > 0 ? '+' : ''}${amount} points ${amount > 0 ? 'awarded to' : 'deducted from'} ${student.name ?? 'a student'}`,
+    type: 'points',
   })
 
   revalidatePath('/admin/points')

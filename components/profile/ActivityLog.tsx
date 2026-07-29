@@ -71,7 +71,7 @@ export default function ActivityLog({ rows }: { rows: ActivityRow[] }) {
                 <p className="truncate font-bytebounce text-[21px] leading-none text-[#3e2723]">
                   {isQuiz ? row.title : `Scanned ${row.title}`}
                 </p>
-                <p className="mt-1.5 font-bytebounce text-[17px] leading-none text-[#6d4c41]">
+                <p className="mt-1.5 font-bytebounce text-[17px] leading-none text-[#4e342e]">
                   <span aria-hidden>{isQuiz ? '📖' : '💡'}</span>{' '}
                   {isQuiz ? 'Guidebook quiz' : 'FunFact collected'} · {formatDate(row.scannedAt)}
                 </p>

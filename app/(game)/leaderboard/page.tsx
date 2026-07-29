@@ -136,7 +136,7 @@ function GroupIcon({ name, emblem, emblemUrl, className = '' }: {
       <img
         src={src}
         alt={name}
-        className={`object-contain ${className}`}
+        className={`object-contain border-2 border-black ${className}`}
         style={{ imageRendering: 'pixelated' }}
       />
     )
@@ -210,7 +210,7 @@ export default function LeaderboardPage() {
           of sitting still behind it. The negative insets cancel <main>'s
           px-2/4/6 padding so it reaches the viewport edges and covers the sky
           underneath; min-h-screen keeps it covering on short viewports. */}
-      <div className="relative min-h-screen">
+      <div className="relative">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-y-0 -left-2 -right-2 -z-10 sm:-left-4 sm:-right-4 md:-left-6 md:-right-6"
@@ -578,7 +578,7 @@ export default function LeaderboardPage() {
             {/* ── Record Tab ── */}
             {activeTab === 'record' && (
               <div className="mx-auto w-[78%] space-y-[6px]">
-                <p className="text-center font-bytebounce text-[13px] text-[#8a7355]">
+                <p className="text-center font-bytebounce text-[13px] text-[#5d4330]">
                   Latest points events
                 </p>
                 {feed.length === 0 && (
@@ -593,8 +593,8 @@ export default function LeaderboardPage() {
                   >
                     <span className="flex-shrink-0 text-lg">{typeIcon[ev.questType] ?? '📋'}</span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-bytebounce text-[15px] leading-tight text-[#5d4330]">{ev.studentName}</p>
-                      <p className="truncate font-bytebounce text-[12px] leading-tight text-[#8a7355]">{ev.label}</p>
+                      <p className="truncate font-bytebounce text-[15px] leading-tight text-[#3e2723]">{ev.studentName}</p>
+                      <p className="truncate font-bytebounce text-[12px] leading-tight text-[#5d4330]">{ev.label}</p>
                     </div>
                     <div className="flex-shrink-0 text-right">
                       <p className="font-bytebounce text-[15px] leading-none text-[#b8860b]">+{ev.points} pts</p>
