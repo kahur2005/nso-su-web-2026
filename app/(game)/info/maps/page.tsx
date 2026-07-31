@@ -114,15 +114,6 @@ export default function CampusMapPage() {
           Explore campus zones &amp; find NPCs
         </p>
 
-        {/* Interactive Campus Map Button */}
-        <a
-          href="/map/campus"
-          className="mt-3 block text-center wood-plank py-3 px-4 font-bytebounce text-[20px] leading-none text-[#ffd23f] hover:brightness-110 active:translate-y-0.5 transition-transform"
-          style={{ textShadow: '2px 2px 0 #3e2723' }}
-        >
-          🗺️ Open Interactive Campus Map →
-        </a>
-
         {/* Selected zone detail (parchment panel) */}
         {selected && (
           <div className="mt-4 rounded border-2 border-[#b08a5e] bg-[#f5e7c6] px-4 py-4">

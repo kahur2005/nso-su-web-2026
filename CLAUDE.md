@@ -9,7 +9,7 @@ The warning above is real: this repo uses **Next.js 16.2.11** (React 19.2.4), wh
 ## Commands
 
 - `npm run dev` — start dev server (http://localhost:3000)
-- `npm run build` — production build; **this is the only working check in the repo** (no separate `tsc` script — the build is the de-facto type check). It passes on a clean checkout as of 2026-07-28.
+- `npm run build` — production build; **this is the only working check in the repo** (no separate `tsc` script — the build is the de-facto type check). It passes on a clean checkout as of 2026-07-31.
 - `npm run lint` — **currently broken; do not use it to judge your changes.** ESLint 10.8.0 is incompatible with the `eslint-plugin-react` bundled inside `eslint-config-next`, so it crashes on the first file and lints *nothing*:
   ```
   TypeError: Error while loading rule 'react/display-name': contextOrFilename.getFilename is not a function
@@ -18,9 +18,13 @@ The warning above is real: this repo uses **Next.js 16.2.11** (React 19.2.4), wh
 
 No test framework is configured. No Prettier config exists either, despite branch names suggesting otherwise.
 
-`README.md` has a "Key Files to Change" table, the design-system CSS class/color reference, and the team's branch workflow (branch from `main` as `dev/<yourname>`, push, PR with base `main`). **The README is stale** — it still documents `components/IntroSequence.tsx`, `/admin/quests/onboarding`, `/admin/qr`, and `createQuest()` in `app/admin/actions.ts`, none of which exist anymore. Trust this file over the README on architecture; the branch workflow and design-system tables are still accurate.
+`README.md` has a "Key Files to Change" table, the design-system CSS class/color reference, and the team's branch workflow (branch from `main` as `dev/<yourname>`, push, PR with base `main`). **The README is stale** — it still documents `components/IntroSequence.tsx`, `/admin/quests/onboarding`, and `createQuest()` in `app/admin/actions.ts`, none of which exist anymore, and it presents `/admin/qr` as the QR page when that path is now only a redirect to `/admin/committee`. Trust this file over the README on architecture; the branch workflow and design-system tables are still accurate.
 
-`docs/PROD_TESTING_AND_DATA_GUIDE.md` covers Vercel env setup, seeding committee/quest data from the `.docx` specs, and a production test checklist (its route references are partly stale — it says `/map/committee` where the app now uses `/info/committee`). `docs/SUPABASE_MIGRATION.md` is the long-form Supabase walkthrough.
+`docs/PROD_TESTING_AND_DATA_GUIDE.md` covers Vercel env setup, seeding committee/quest data from the `.docx` specs, and a production test checklist (its route references are partly stale — it says `/map/committee` where the app now uses `/info/committee`). `docs/SUPABASE_MIGRATION.md` is the long-form Supabase walkthrough. `docs/superpowers/specs/` and `docs/superpowers/plans/` hold the design specs and implementation plans written before the bigger features (ERP admin panel, QR quests/achievements, profile redesign) — they record intent at the time of writing and are **not** kept in sync with the code, so read them for rationale, never as current fact.
+
+`scripts/` holds two re-runnable asset scripts, neither wired into an npm script: `extract-group-logos.mjs` slices the 15 group logos out of `REFERENCE/group-logo.svg` into `public/images/group/`, and `downscale-pixel-art.mjs` returns upscaled pixel art in `public/images/` to its native grid (see "Pixel avatars" below).
+
+`REFERENCE/` has been reduced to exactly the two files something depends on — `group-logo.svg` (read by the script above) and `qris-generator.tsx.txt` (the source reference cited in `lib/qris.ts`). The other ~165 MB of design source art was deleted; it is still recoverable from git history if anyone needs it.
 
 ## What this app is
 
@@ -30,21 +34,21 @@ A gamified New Student Orientation (NSO 2026) web app. Students scan QR codes ca
 
 Database is **Supabase** (hosted PostgreSQL, project ref `ndezlikvpsjmbvuptlfc`, Postgres 17), accessed via `@supabase/supabase-js`. There is no ORM. The schema lives in `supabase/schema.sql`, which you run by hand in the Supabase dashboard; you browse/edit data in the **Table Editor**, not a local studio. See **"Supabase setup (step by step)"** below.
 
-`supabase/migrations/` is **no longer empty** — it holds two hand-written, hand-applied SQL files (they are not `supabase db push` artifacts; the CLI migration workflow is still unused):
+`supabase/migrations/` is **no longer empty** — it holds seven hand-written, hand-applied SQL files (they are not `supabase db push` artifacts; the CLI migration workflow is still unused). `supabase/` also carries two seed scripts, `seed_committee_and_quests.sql` and `seed_nso_points.sql`:
 
-| File | Status in the live DB (verified 2026-07-25) |
+| File | Status in the live DB (table existence re-verified 2026-07-31) |
 |---|---|
 | `20260725_blockers_and_gaps.sql` | **Applied.** `Student.role`, `Student.gender`, `NPC.maxScans`, `Quest.availableFrom`/`availableUntil` all exist; `complete_quest` was redefined to also bump `Group.totalPoints`. |
 | `20260725_single_use_tokens.sql` | **NOT applied.** The `SingleUseToken` table does not exist. |
 | `20260727_guidebook_quiz.sql` | **Applied** (verified 2026-07-27). `GuidebookQuizAttempt` exists with its `unique ("studentId", "chapterId")` — that constraint *is* the one-try rule for the `/info/guidebook` end-of-chapter quizzes, so never drop it. RLS on, no policies, like every other table. |
-| `20260727_timeline_events.sql` | **Applied.** `TimelineEvent` exists (32 rows). |
+| `20260727_timeline_events.sql` | **Applied.** `TimelineEvent` exists. |
 | `20260728_lunch_ordering.sql` | **Applied.** All eight `Lunch*` tables exist. |
 | `20260728_lunch_order_note.sql` | **Applied.** `LunchOrder.note`. |
 | `20260729_password_reset_tokens.sql` | **Applied** (verified 2026-07-29). `PasswordResetToken` exists. Backs the "Forgot password?" flow; every query against it checks its error, so if it ever goes missing the feature fails loudly instead of silently accepting tokens. |
 
 Each migration file opens with a long comment explaining *why* its shape is what it is (money as integer rupiah, order-line snapshots, the single-row `LunchSetting` check constraint, the seed guard on `TimelineEvent`). Read the file before changing anything it created — the rationale is not repeated here.
 
-**Live-vs-file drift, verified against the live DB on 2026-07-28** — check this before trusting either file:
+**Live-vs-file drift, re-verified against the live DB on 2026-07-31 via the Supabase MCP `list_tables`** — check this before trusting either file:
 
 - **`SingleUseToken` is missing from the live DB.** `/api/qr/scan` wraps its nonce lookup and its "mark consumed" insert in `try {} catch {}`, and supabase-js *returns* errors rather than throwing — so both silently no-op. **Single-use QR codes are therefore currently re-scannable by different students.** Applying `20260725_single_use_tokens.sql` in the SQL Editor is what fixes it.
 - **`PointAdjustment` is missing from the live DB** even though `schema.sql` creates it. `/api/gl/points` inserts an audit row into it without checking the error, so GL point awards succeed but leave no audit trail.
@@ -62,15 +66,15 @@ Three atomic multi-row operations are **Postgres functions** called via `supabas
 
 **Route areas** (App Router). `app/(game)/*` and `app/(auth)/*` are route groups — the parenthesized segment does NOT appear in the URL (pages live at `/dashboard`, `/scan`, `/login`). `app/admin/*` is a literal path segment.
 
-- `app/(game)/*` — student-facing: `dashboard`, `scan`, `quests`, `leaderboard`, `codex`, `profile`, `rulebook`, plus two hubs and one unlinked tool:
+- `app/(game)/*` — student-facing: `dashboard`, `scan`, `quests`, `leaderboard`, `profile`, `rulebook`, plus two hubs and one unlinked tool. (The `codex` page was **deleted**; a successful fun-fact scan now routes to `/info/committee`, and a quest scan to `/quests`.)
   - **`info/`** is the canonical content hub (Navbar/BottomNav point at `/info`): `info/guidebook`, `info/committee`, `info/timeline`, `info/clubs`, `info/maps`.
-  - **`map/`** is the older duplicate of that hub and **still routes** (`/map`, `/map/guidebook`, `/map/committee`, `/map/timeline`, `/map/clubs`, `/map/zones`). Nothing in the nav links to it. `app/admin/actions.ts` revalidates `/map/committee` from **every** committee write but `/info/committee` from only some of them (`updateCommitteeMember` and `deactivateCommitteeMember` do; `createCommitteeMember` and the QR-regenerate paths do not) — so some admin edits leave the page students actually visit stale. Clubs are fine (`/info/clubs` *and* `/map/clubs`). Fix the missing `/info/*` targets (or delete `map/`) if you touch this area. `/info/maps` also links to `/map/campus`, which does not exist.
+  - **`map/`** was the older duplicate of that hub. All six pages (`/map`, `/map/guidebook`, `/map/committee`, `/map/timeline`, `/map/clubs`, `/map/zones`) are now **one-line redirects** into their `/info/*` counterparts (`/map/zones` → `/info/maps`) — kept only so old bookmarks and printed URLs resolve. Don't add content back to them. Note `public/images/map/` is **not** part of this and must stay: `/info` uses its `tile-*.png`/`scroll.png` and `/leaderboard` uses its `scroll-top|mid|bottom.png`.
   - **`gl/`** — Group Leader / IT-Logi point panel (search a student, award or deduct points). Gated on `session.user.role` being `gl`/`committee` or `isAdmin`. **Not linked from any nav** — you reach it by typing `/gl`.
   - **`lunch/`** — the pre-order feature (see "Lunch pre-ordering" below): `/lunch`, `/lunch/[dayKey]`, `/lunch/[dayKey]/[restaurantId]`, `/lunch/[dayKey]/cart`, `/lunch/order/[orderId]`. Reached from a tile on `dashboard`, not from Navbar/BottomNav.
   - `clubs/` is a redirect to `/info/clubs`.
 - `app/(auth)/login`, `app/(auth)/register`
 - `app/admin/*` — `dashboard`, `committee`, `present`, `quests`, `achievements`, `groups`, `points`, `announcements`, `timeline`, `lunch` (+ `lunch/menu`, `lunch/recap`, `lunch/settings`), `clubs`, `guide` (a static page describing every admin tab). The left rail is driven by `components/admin/ADMIN_NAV.ts`; `AdminShell` highlights via `pathname.startsWith(href)`, so entry order matters — which is why lunch gets **one** rail entry and its sub-pages are reached through the tab strip in `app/admin/lunch/LunchTabs.tsx` (a second entry would prefix-collide). Legacy paths kept as redirects: `/admin/qr` → `/admin/committee`, `/admin/daily-qr` → `/admin/quests`, and top-level `/present` → `/admin/present`.
-- `app/api/*` — route handlers: `leaderboard`, `leaderboard/feed`, `quests`, `quests/qr`, `codex`, `committee`, `clubs`, `qr/scan`, `qr/generate`, `qr/live`, `qr/single-use`, `qr/recent`, `gl/points`, `me/avatar`, `guidebook/quiz`, `guidebook/quiz/claim`, `lunch/menu`, `lunch/orders`, `lunch/orders/[id]`, `lunch/orders/[id]/proof`, `lunch/recap`, `auth/register`, `auth/[...nextauth]`. (`app/api/admin/` and `app/api/profile/` are empty leftover directories.)
+- `app/api/*` — route handlers: `leaderboard`, `leaderboard/feed`, `quests`, `quests/qr`, `committee`, `clubs`, `qr/scan`, `qr/generate`, `qr/live`, `qr/single-use`, `qr/recent`, `gl/points`, `me/avatar`, `guidebook/quiz`, `guidebook/quiz/claim`, `lunch/menu`, `lunch/orders`, `lunch/orders/[id]`, `lunch/orders/[id]/proof`, `lunch/recap`, `auth/register`, `auth/forgot-password`, `auth/reset-password`, `auth/[...nextauth]`. (The orphaned `codex` route and the empty `app/api/admin/`, `app/api/profile/`, `components/game/` directories have been removed.)
 - `app/font-test` — dev-only font preview, not linked.
 
 **Leveling / XP**: `lib/leveling.ts` derives level from stored `xp` with a doubling curve (step cost `10·2^(L-1)`; total XP to reach level L is `10·(2^(L-1)−1)`). The same curve is duplicated as the `level_from_xp` Postgres function — change **both**.
@@ -87,7 +91,9 @@ There are now **two overlapping authorization concepts**:
 
 To grant admin: flip `isAdmin` on the `Student` row (Table Editor, or `update "Student" set "isAdmin" = true where email = '…';`) and have them log in again — the flag is read into the JWT at sign-in.
 
-There is no `middleware.ts` and no shared protected layout — auth is enforced **inline, per file**, and inconsistently: most `app/admin/*` server components open with `getServerSession` + `redirect(...)`; most route handlers check `getServerSession` and return 401; a few (`/api/leaderboard`, `/api/leaderboard/feed`) are intentionally public; `'use client'` pages (`scan`, `quests`, `gl`, `admin/present`) do their check client-side against `useSession` and rely on the API route behind them. When adding a protected page or route, copy the pattern from a sibling file in the same directory — protection is never inherited from a layout.
+**`proxy.ts` (root) is the one global guard.** Next 16 renamed the `middleware` file convention to **`proxy`** — `middleware.ts` is deprecated, the exported function is `proxy(request)`, and the build reports it as `ƒ Proxy (Middleware)` (see `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`). Ours reads the next-auth JWT with `getToken({ req })` and redirects to `/dashboard` unless `token.isAdmin`. Its `matcher` is **`/admin/:path*` and nothing else**, so it covers no API route, not `/gl`, and not the top-level `/present` redirect — every one of those still guards itself. Note it gates on `isAdmin` only, never on `Student.role`.
+
+Beyond that there is no shared protected layout — auth is enforced **inline, per file**, and inconsistently: most `app/admin/*` server components open with `getServerSession` + `redirect(...)`; most route handlers check `getServerSession` and return 401; a few (`/api/leaderboard`, `/api/leaderboard/feed`) are intentionally public; `'use client'` pages (`scan`, `quests`, `gl`, `admin/present`) do their check client-side against `useSession` and rely on the API route behind them. When adding a protected page or route, copy the pattern from a sibling file in the same directory — protection is never inherited from a layout.
 
 **Login & registration**:
 - `app/(auth)/login` — calls `signIn('credentials', { redirect: false })` then routes to `/dashboard`.
@@ -100,7 +106,9 @@ There is no `middleware.ts` and no shared protected layout — auth is enforced 
 - `parseAvatarConfig(raw)` → fully-defaulted `ParsedAvatar`
 - `hairKey({ hair, hairColor })` → the combined key (`'hairb1'` + `'.2'` → `'hairb1.2'`)
 
-Never flatten `avatarConfig` by hand. `lib/hooks/useStudentAvatar.ts` is the client-side fetch hook (used by Navbar/BottomNav). The older `Avatar.tsx` + uploaded-image `avatarUrl` path predates this and still exists. Source art for new parts lives in `REFERENCE/` (design references only — nothing there is imported; usable assets go in `public/images/`).
+Never flatten `avatarConfig` by hand. `lib/hooks/useStudentAvatar.ts` is the client-side fetch hook (used by Navbar/BottomNav). The older `components/ui/Avatar.tsx` (uploaded-image `avatarUrl`) has been **deleted** — `PixelAvatar` is the only avatar component now.
+
+The avatar PNGs in `public/images/avatar/` are **32×32 pixel art**, and most other game art is on a similar small grid. They used to ship upscaled 50× as 1600×1600 files; `scripts/downscale-pixel-art.mjs` brought them back to native size (`public/` went 8.1 MB → 2.0 MB). This is safe only because `app/globals.css` sets `* { image-rendering: pixelated }` app-wide, so the browser upscales them back with nearest-neighbour. **Export new art at its native grid** — if you must add an upscaled export, re-run that script, which verifies every rewrite is lossless before replacing a file and skips anything antialiased.
 
 **Image uploads**: `lib/storage.ts` `uploadImage(bucket, file)` lazily creates a **public** Supabase Storage bucket on first use and returns the public URL (or `null`). Used for student avatars (`avatars` bucket) and admin-supplied art. `next.config.ts` raises the server-action body size limit for committee/club photo uploads.
 
@@ -180,7 +188,7 @@ Tailwind CSS 4 (via `@tailwindcss/postcss`, no `tailwind.config`; theme tokens a
 
 `app/globals.css` defines **`--game-font-family`** as the single knob for the whole game UI's typeface (`--font-bytebounce` and `.font-bytebounce` both resolve to it) — change that one variable to re-test typography app-wide. Alongside it are the `--pixel-*` colour tokens and the standardized retro type/icon-size tokens.
 
-Shared components in `components/ui/` (PixelButton, WoodButton, PixelCard, ProgressBar, CountdownTimer, LoadingSpinner, Avatar, PixelAvatar, GroupEmblem) and `components/layout/`. The student app has **no route-group `layout.tsx`** — each student page wraps its own content in `<PageWrapper>` (Navbar + BottomNav). `app/admin/*` is the exception: `app/admin/layout.tsx` wraps every admin page in `<AdminShell>`, an ERP-style shell with a collapsible left rail, so admin pages do **not** render their own header. (`components/layout/AdminHeader.tsx` is an older, unrelated header.) The admin panel deliberately uses none of the student app's pixel/RPG classes — white cards, slate text, `border-slate-200`. Also available: framer-motion, zustand, recharts, lucide-react, html5-qrcode (client-side QR scanning).
+Shared components in `components/ui/` (PixelButton, WoodButton, PixelCard, CountdownTimer, LoadingSpinner, PixelAvatar, GroupEmblem) and `components/layout/`. The student app has **no route-group `layout.tsx`** — each student page wraps its own content in `<PageWrapper>` (Navbar + BottomNav). `app/admin/*` is the exception: `app/admin/layout.tsx` wraps every admin page in `<AdminShell>`, an ERP-style shell with a collapsible left rail, so admin pages do **not** render their own header. (The older, unrelated `components/layout/AdminHeader.tsx` has been deleted.) The admin panel deliberately uses none of the student app's pixel/RPG classes — white cards, slate text, `border-slate-200`. Also available: framer-motion, zustand, recharts, lucide-react, html5-qrcode (client-side QR scanning).
 
 **Env vars** (in `.env`, not committed): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `QR_SECRET_KEY`, `NEXT_PUBLIC_BASE_URL`, plus the mailer set `MAIL_USER`, `MAIL_PASSWORD`, `MAIL_FROM` (optional `MAIL_HOST`/`MAIL_PORT`, defaulting to `smtp.gmail.com:465`). `MAIL_PASSWORD` is a Google **App Password** (16 lowercase letters), not the account password — Gmail has blocked plain-password SMTP since 2022 and answers anything else with `535-5.7.8`. `lib/mailer.ts` strips spaces from it, since Google displays it as four space-separated groups.
 
