@@ -133,12 +133,15 @@ export default function LoginPage() {
             className="mt-1 h-[52px] w-full rounded-[13px] border-2 border-[#e0b391] bg-white px-4 font-bytebounce text-[22px] text-[#4e342e] placeholder:text-[#c9b6a4] focus:border-[#fbc94c] focus:outline-none"
           />
 
-          <p
-            className="mt-2 text-right font-bytebounce text-[16px] text-[#d6101d]"
-            style={{ textShadow: '1.2px 0.7px 0 #e0b391' }}
-          >
-            Forgot password?
-          </p>
+          <div className="mt-2 text-right">
+            <Link
+              href="/forgot-password"
+              className="font-bytebounce text-[16px] text-[#d6101d] underline-offset-4 hover:underline"
+              style={{ textShadow: '1.2px 0.7px 0 #e0b391' }}
+            >
+              Forgot password?
+            </Link>
+          </div>
 
           {error && (
             <p
