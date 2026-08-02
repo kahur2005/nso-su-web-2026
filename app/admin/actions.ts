@@ -87,7 +87,7 @@ export async function adjustPoints(formData: FormData) {
 
   const { data: student } = await supabase
     .from('Student')
-    .select('id')
+    .select('id, name')
     .eq('studentId', studentId)
     .maybeSingle()
   if (!student) return
@@ -96,6 +96,12 @@ export async function adjustPoints(formData: FormData) {
   await supabase.rpc('adjust_points', {
     p_student_id: student.id,
     p_amount: amount,
+  })
+
+  await supabase.from('Announcement').insert({
+    title: `Points ${amount > 0 ? 'Awarded' : 'Deducted'}`,
+    content: `${amount > 0 ? '+' : ''}${amount} points ${amount > 0 ? 'awarded to' : 'deducted from'} ${student.name ?? 'a student'}`,
+    type: 'points',
   })
 
   revalidatePath('/admin/points')
@@ -153,22 +159,21 @@ export async function toggleNpcActive(npcId: string) {
 
   // Reachable from both /admin/qr and /admin/committee (used there to
   // reactivate a deactivated member), and it always affects student-facing
-  // visibility on /map/committee.
+  // visibility on /info/committee.
   revalidatePath('/admin/qr')
   revalidatePath('/admin/committee')
-  revalidatePath('/map/committee')
+  revalidatePath('/info/committee')
 }
 
 // --- Clubs ---
 
 export type ClubFormState = { warning: string | null }
 
-// /info/clubs is the page students actually reach from the nav; /map/clubs is
-// the older duplicate that still routes. Revalidate both after every club write.
+// /info/clubs is the page students reach from the nav. (/map/clubs is now just a
+// redirect to it, so there is nothing there to revalidate.)
 function revalidateClubs() {
   revalidatePath('/admin/clubs')
   revalidatePath('/info/clubs')
-  revalidatePath('/map/clubs')
 }
 
 // Signature required by React's `useActionState`: previous state first, then
@@ -289,7 +294,7 @@ export async function createCommitteeMember(
 
   revalidatePath('/admin/committee')
   revalidatePath('/admin/qr')
-  revalidatePath('/map/committee')
+  revalidatePath('/info/committee')
 
   return { warning: null }
 }
@@ -298,7 +303,7 @@ export async function createCommitteeMember(
 // would destroy the audit trail behind students' points/xp/funFactsCollected
 // and, if the member were ever re-added, would let the ScanLog unique
 // constraint award the same student a second time for the same person.
-// Deactivating instead just hides the member from /map/committee (filtered
+// Deactivating instead just hides the member from /info/committee (filtered
 // via app/api/committee/route.ts .eq('isActive', true)) while preserving
 // everything.
 export async function deactivateCommitteeMember(formData: FormData) {
@@ -311,7 +316,7 @@ export async function deactivateCommitteeMember(formData: FormData) {
 
   revalidatePath('/admin/committee')
   revalidatePath('/admin/qr')
-  revalidatePath('/map/committee')
+  revalidatePath('/info/committee')
 }
 
 export async function updateCommitteeMemberPhoto(formData: FormData) {
@@ -335,7 +340,6 @@ export async function updateCommitteeMemberPhoto(formData: FormData) {
   revalidatePath('/admin/committee')
   revalidatePath('/admin/qr')
   revalidatePath('/info/committee')
-  revalidatePath('/map/committee')
 }
 
 export async function updateCommitteeMember(formData: FormData) {
@@ -378,5 +382,4 @@ export async function updateCommitteeMember(formData: FormData) {
   revalidatePath('/admin/committee')
   revalidatePath('/admin/qr')
   revalidatePath('/info/committee')
-  revalidatePath('/map/committee')
 }

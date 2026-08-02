@@ -6,6 +6,19 @@ import PixelAvatar from '@/components/ui/PixelAvatar'
 
 const TOTAL_STEPS = 5
 
+interface RegisterForm {
+  name: string
+  email: string
+  password: string
+  confirmPassword: string
+  instagram: string
+  major: string
+  hobby: string
+  achievements: string
+  medicalNote: string
+  gender: 'M' | 'F' | 'other' | ''
+}
+
 const STEP_TITLES: [string, string][] = [
   ["Let's get", 'started'],
   ['About', 'you'],
@@ -65,6 +78,50 @@ const MOUTHS: Array<string | null> = [
 ]
 // ───────────────────────────────────────────────────────────────────────────
 
+// Per-step validation. The form is `noValidate` so the browser never blocks a
+// submit silently: relying on native `required` meant a missed field just moved
+// focus back up the form with no message, which reads as "the Next button did
+// nothing" (or worse, as a page refresh). Every rule here has a visible reason.
+// Mirrors the server-side checks in app/api/auth/register/route.ts.
+type StepProblem = { field: string; message: string }
+
+function validateStep(step: number, form: RegisterForm): StepProblem | null {
+  const blank = (v: string) => !v.trim()
+
+  if (step === 0) {
+    if (blank(form.email)) return { field: 'email', message: 'Please enter your email.' }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
+      return { field: 'email', message: 'That email address looks invalid.' }
+    if (blank(form.password)) return { field: 'password', message: 'Please choose a password.' }
+    if (form.password.length < 6)
+      return { field: 'password', message: 'Password must be at least 6 characters.' }
+    if (blank(form.confirmPassword))
+      return { field: 'confirmPassword', message: 'Please confirm your password.' }
+    if (form.password !== form.confirmPassword)
+      return { field: 'confirmPassword', message: 'Passwords do not match!' }
+  }
+
+  if (step === 1) {
+    if (blank(form.name)) return { field: 'fullName', message: 'Please enter your name.' }
+    if (blank(form.major)) return { field: 'major', message: 'Please enter your major.' }
+  }
+
+  if (step === 2) {
+    if (blank(form.hobby)) return { field: 'hobby', message: 'Please tell us a hobby.' }
+    if (blank(form.achievements))
+      return { field: 'achievements', message: 'Please answer the achievement question — type "none" to skip.' }
+  }
+
+  // Step 3 is the avatar builder: every part has a default, so nothing to check.
+
+  if (step === 4) {
+    if (blank(form.medicalNote))
+      return { field: 'medicalNote', message: 'Please answer the health question — type "none" if it does not apply.' }
+  }
+
+  return null
+}
+
 function CarouselWrapper({ children }: { children: React.ReactNode }) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -106,7 +163,7 @@ function CarouselWrapper({ children }: { children: React.ReactNode }) {
 export default function RegisterPage() {
   const router = useRouter()
   const [step, setStep] = useState(0)
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<RegisterForm>({
     name: '',
     email: '',
     password: '',
@@ -116,7 +173,7 @@ export default function RegisterPage() {
     hobby: '',
     achievements: '',
     medicalNote: '',
-    gender: '' as 'M' | 'F' | 'other' | '',
+    gender: '',
   })
   const [avatarSkin, setAvatarSkin] = useState('skin1')
   const [avatarClothes, setAvatarClothes] = useState<string | null>('roundshirt1')
@@ -189,8 +246,12 @@ export default function RegisterPage() {
     e.preventDefault()
     setError('')
 
-    if (step === 0 && form.password !== form.confirmPassword) {
-      setError('Passwords do not match!')
+    // Show the first problem instead of letting the submit die quietly, and put
+    // the cursor on the offending field so it's obvious which one is missing.
+    const problem = validateStep(step, form)
+    if (problem) {
+      setError(problem.message)
+      document.getElementById(problem.field)?.focus()
       return
     }
 
@@ -298,7 +359,10 @@ export default function RegisterPage() {
           Step {step + 1} of {TOTAL_STEPS}
         </p>
 
-        <form onSubmit={handleNext} className="mt-5 flex w-full flex-1 flex-col">
+        {/* noValidate: validateStep() owns validation so a missing field always
+            produces a visible message (see the comment on validateStep). The
+            `required` attributes below stay for accessibility semantics. */}
+        <form noValidate onSubmit={handleNext} className="mt-5 flex w-full flex-1 flex-col">
           {/* ── Step 0: Credentials ── */}
           {step === 0 && (
             <div className="space-y-5">
