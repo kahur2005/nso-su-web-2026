@@ -11,7 +11,6 @@
 // are split across pages so no single page runs past roughly one screen.
 'use client'
 import { useCallback, useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import PageWrapper from '@/components/layout/PageWrapper'
 import ChapterQuiz, { type Attempt } from '@/components/guidebook/ChapterQuiz'
 import { QUIZZES, MAX_GUIDEBOOK_POINTS } from '@/lib/guidebook/quiz'
@@ -932,7 +931,6 @@ const chapters: Chapter[] = [
 /* ── Page ────────────────────────────────────────────────────────────────── */
 
 export default function GuideBookPage() {
-  const router = useRouter()
   // Two independent cursors: which bookmark is open, and where inside it.
   const [chapterIdx, setChapterIdx] = useState(0)
   const [pageIdx, setPageIdx] = useState(0)
@@ -990,18 +988,6 @@ export default function GuideBookPage() {
   return (
     <PageWrapper>
       <div className="relative game-column pb-4 pt-8">
-        {/* Back to the info hub — not in the Figma frame, kept so the /info
-            hierarchy stays reachable on mobile where the navbar is collapsed. */}
-        <button
-          type="button"
-          onClick={() => router.push('/info')}
-          aria-label="Back to info station"
-          className="absolute left-2 top-6 z-30 w-[52px] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5"
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/login/back-button.png" alt="" className="w-full" />
-        </button>
-
         {/* Title */}
         <h1 className="title-gold text-center font-bytebounce text-[clamp(2.6rem,16vw,4rem)] leading-[0.9]">
           GUIDEBOOK

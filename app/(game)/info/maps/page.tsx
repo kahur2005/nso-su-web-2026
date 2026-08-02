@@ -2,7 +2,6 @@
 // Primary Campus Map & Zones view — parchment/wood design system matching committee & leaderboard.
 'use client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import PageWrapper from '@/components/layout/PageWrapper'
 
 interface MapZone {
@@ -85,24 +84,11 @@ const zones: MapZone[] = [
 ]
 
 export default function CampusMapPage() {
-  const router = useRouter()
   const [selected, setSelected] = useState<MapZone | null>(null)
 
   return (
     <PageWrapper>
       <div className="relative game-column pb-4 pt-12">
-
-        {/* Back button */}
-        <button
-          type="button"
-          onClick={() => router.push('/info')}
-          aria-label="Back to info station"
-          className="absolute left-2 top-0 z-20 w-[64px] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5"
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/login/back-button.png" alt="" className="w-full" />
-        </button>
-
         {/* Title */}
         <h1 className="title-gold text-center font-bytebounce text-[clamp(2.4rem,12vw,3.2rem)] leading-[0.85]">
           WORLD MAP
