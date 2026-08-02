@@ -6,9 +6,7 @@
 //
 // A server component so the agenda can be read from the database — the rows
 // are maintained at /admin/timeline. The days and dates themselves are fixed
-// in lib/timeline.ts. The back control is a plain <Link> rather than a
-// useRouter push, which is what lets this page stay server-side.
-import Link from 'next/link'
+// in lib/timeline.ts. The back control lives in Navbar, not here.
 import PageWrapper from '@/components/layout/PageWrapper'
 import Timeline from '@/components/dashboard/Timeline'
 import { getTimelineDays } from '@/lib/timeline-data'
@@ -25,16 +23,6 @@ export default async function TimelinePage() {
   return (
     <PageWrapper>
       <div className="relative game-column pb-28 pt-10">
-        {/* Back button */}
-        <Link
-          href="/info"
-          aria-label="Back to info station"
-          className="absolute left-2 top-0 z-20 block w-[64px] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5"
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/login/back-button.png" alt="" className="w-full" />
-        </Link>
-
         {/* Title */}
         <h1 className="title-gold mb-1 text-center font-bytebounce text-[clamp(2.4rem,16vw,4rem)] leading-[0.9]">
           TIMELINE

@@ -2,7 +2,6 @@
 // UKM CLUBS page — parchment tiles grid matching Figma pixel art reference.
 'use client'
 import { useEffect, useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import PageWrapper from '@/components/layout/PageWrapper'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
@@ -198,7 +197,6 @@ function ClubDetailModal({ club, onClose }: { club: Club; onClose: () => void })
 }
 
 export default function UkmClubsPage() {
-  const router = useRouter()
   const [selected, setSelected] = useState<Club | null>(null)
   const [clubs, setClubs] = useState<Club[]>([])
   const [loading, setLoading] = useState(true)
@@ -234,16 +232,6 @@ export default function UkmClubsPage() {
       />
 
       <div className="relative game-column pb-28 pt-12">
-        {/* Back button */}
-        <button
-          type="button"
-          onClick={() => router.push('/info')}
-          aria-label="Back to info station"
-          className="absolute left-2 top-0 z-20 w-[64px] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5"
-        >
-          <img src="/images/login/back-button.png" alt="" className="w-full" />
-        </button>
-
         {/* Title */}
         <h1 className="title-gold text-center font-bytebounce text-[clamp(2.4rem,12vw,3.2rem)] leading-[0.85]">
           UKM CLUBS

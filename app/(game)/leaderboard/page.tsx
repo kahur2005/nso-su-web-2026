@@ -268,15 +268,25 @@ export default function LeaderboardPage() {
 
               {/* Leader portrait: group mascot, or the top player's avatar.
                   The mascot is object-contain, so its rendered size is capped
-                  by the SHORTER axis — widening alone does nothing, the height
-                  has to grow with it. */}
+                  by the SHORTER axis — resizing means changing BOTH numbers by
+                  the same factor, since changing one alone may not move the
+                  binding constraint. The pair below is the 62%/full box scaled
+                  to 85%, which also keeps the mascot off the points line that
+                  sits above it. */}
               <div className="absolute inset-x-0 top-[21%] flex h-[50%] items-center justify-center">
                 {activeTab === 'groups' ? (
                   <GroupIcon
                     name={leaderGroup.name}
                     emblem={leaderGroup.emblem}
                     emblemUrl={leaderGroup.emblemUrl}
-                    className="h-full w-[62%]"
+                    // Sits between the points line above and the red name
+                    // ribbon below, with little room either side — the mascot
+                    // sprites have no transparent padding at their base to hide
+                    // an overlap. Note `translate-y` is a share of the mascot's
+                    // own height, so resizing it also moves it: the offset was
+                    // trimmed from 15% to 13.5% when the size went up, to hold
+                    // the same centre.
+                    className="h-[95%] w-[59%] translate-y-[13.5%]"
                   />
                 ) : (
                   <PixelAvatar
