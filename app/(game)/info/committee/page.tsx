@@ -4,7 +4,6 @@
 'use client'
 import PageWrapper from '@/components/layout/PageWrapper'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import { DIVISIONS, type DivisionId } from '@/lib/divisions'
 
@@ -28,17 +27,82 @@ const OUTLINE_GOLD = {
     '3px 3px 0 #4e342e, -3px 3px 0 #4e342e, 3px -3px 0 #4e342e, -3px -3px 0 #4e342e, 0 5px 0 #4e342e',
 }
 
-const CARD_PORTRAIT = { left: '3.16%', top: '-4.08%', width: '35.82%', height: '96.79%' }
-const CARD_PLAQUE = { left: '16.94%', top: '-0.86%', width: '60.40%', height: '33.12%' }
-const CARD_PILL = { left: '5.16%', top: '24.28%', width: '62.61%', height: '19.52%' }
-const CARD_IG = { left: '76.14%', top: '-1.32%', width: '15.78%', height: '30.89%' }
-const CARD_NAME = { left: '26.52%', right: '34.43%', top: '16.13%' }
-const CARD_ROLE = { left: '18.17%', right: '35.89%', top: '32.34%' }
+// Card metrics. The card is no longer a fixed 245:115 box — it grows downward
+// to fit its fun fact, which runs anywhere from 11 to 260 characters and used
+// to overflow the frame and draw over the member below. Everything here was
+// originally a percentage of the card's *height*, which drifts once the height
+// is content-driven, so vertical values are `cqw` instead: 1cqw = 1% of the
+// card's width, which is what the art actually scales with. To convert an old
+// value: oldPercentOfHeight * 115 / 245.
+const CARD_MIN_ASPECT = '46.94%' // 115/245 — the frame's drawn proportions, now a floor
+// Anchored top *and* bottom rather than given a height, so the portrait
+// stretches with the card instead of floating at a fixed size on a tall one:
+// the head stays tucked under the name plaque, the feet stay on the card's
+// floor, and the person scales up with everything else. The committee photos
+// are near-square cut-outs (640x640) whose subject sits in a tall centre strip
+// with 17-45% of the width transparent, so `object-cover` scales them by the
+// box height and eats that empty margin rather than the person.
+const CARD_PORTRAIT = { left: '3.16%', top: '-1.92cqw', bottom: '3.42cqw', width: '35.82%' }
+const CARD_PLAQUE = { left: '16.94%', top: '-0.40cqw', width: '60.40%', height: '15.55cqw' }
+const CARD_PILL = { left: '5.16%', top: '11.40cqw', width: '62.61%', height: '9.16cqw' }
+const CARD_IG = { left: '76.14%', top: '-0.62cqw', width: '15.78%', height: '14.50cqw' }
+const CARD_NAME = { left: '26.52%', right: '34.43%', top: '7.57cqw' }
+const CARD_ROLE = { left: '18.17%', right: '35.89%', top: '15.18cqw' }
+// The fun fact is the one thing in normal flow, so it is what sets the height.
+// The top padding clears the name plaque and division pill above it. The bottom
+// padding is 7cqw rather than the old 6%-of-height, because the original box
+// ended *inside* the frame's 14px bottom border — harmless when the text was
+// short and vertically centred, but now that a long fact fills the box to the
+// last line, that last line would sit on the border.
+const CARD_FACT = { marginLeft: '41%', marginRight: '5%', paddingTop: '21.12cqw', paddingBottom: '7cqw' }
 
-const RIBBON = { left: '16.46%', width: '68.63%' }
-const CARD_COLUMN = { marginLeft: '22.45%', width: '58.29%', marginTop: '-2.5%' }
-const SCROLL_PAD_TOP = '16.07%'
+// `card-frame.png` 9-sliced, so the card can be any height without the border
+// stretching. Slices are source px, in CSS order top/right/bottom/left: 31 is
+// the 17px transparent strip above the frame plus its 8px border, 4px gap and
+// 2px inner line; 14 is that same border/gap/line on the left. Right and bottom
+// are larger (25/26) on purpose — the little triangle ornament sits at
+// x=220..230, y=89..95, so those slices pull it into the bottom-right *corner*
+// piece, which is drawn at a fixed size, instead of leaving it in an edge piece
+// that stretches. Border widths are cqw so the frame keeps its pixel
+// proportions at every card size.
+const CARD_FRAME = {
+  borderStyle: 'solid',
+  borderColor: 'transparent',
+  borderWidth: '12.65cqw 10.20cqw 10.61cqw 5.71cqw',
+  borderImageSource: 'url(/images/committee/card-frame.png)',
+  borderImageSlice: '31 25 26 14 fill',
+  borderImageRepeat: 'stretch',
+} as const
+
+// The scroll art is mostly transparent padding: `scroll-mid.png` is 420px wide
+// but its parchment body is only x=58..364 of that, 73%. Rendered at the block
+// width, that wasted ~27% is why the parchment looked narrow on a phone — the
+// block was already 350px on a 390px screen, the parchment just drew 255px of
+// it. So the art layer is stretched past the block by SCROLL_ART_BLEED on each
+// side, sized so the *parchment body* lines up with the block edges instead:
+// 100 / 72.86 = 1.3717x wider, i.e. 18.59% beyond each edge.
+//
+// Everything below is therefore a percentage of the parchment, not of the
+// image. Converting an old value: (old% - 13.81) / 72.86 * 100. The vertical
+// paddings scale by the same 1.3717, because they exist to clear the top and
+// bottom rolls, and those rolls grew with the art.
+const SCROLL_ART_BLEED = '18.59%'
+const RIBBON = { left: '3.64%', width: '94.14%' }
+const CARD_COLUMN = { marginLeft: '11.86%', width: '80.04%', marginTop: '-3.43%' }
+const SCROLL_PAD_TOP = '22.04%'
+const SCROLL_PAD_BOTTOM = '20.58%'
 const RIBBON_TITLE_CENTRE = '38.1%'
+
+// Room the scroll has to leave itself, as a share of the game column. The art
+// overhangs the parchment on both sides and neither overhang scales with it:
+// the bottom roll's curl sticks out 7.8% of the parchment width to the left,
+// and the division bookmarks are a fixed 52px hanging off the right edge. The
+// two edges are set by different viewports: the bookmarks are tightest on the
+// narrowest phone (360px, where they land ~4px clear of the screen), the curl
+// is tightest at 448px, where the game column stops growing but its own offset
+// from the screen edge does not yet.
+const SCROLL_MARGIN_LEFT = '2.6%'
+const SCROLL_MARGIN_RIGHT = '11.5%'
 
 function instagramHref(value: string | null): string | null {
   const trimmed = value?.trim()
@@ -48,7 +112,6 @@ function instagramHref(value: string | null): string | null {
 }
 
 export default function CommitteePage() {
-  const router = useRouter()
   const [activeDivision, setActiveDivision] = useState<DivisionId>(DIVISIONS[0].id)
   const [currentPage, setCurrentPage] = useState(0)
   const [members, setMembers] = useState<CommitteeMember[]>([])
@@ -83,16 +146,6 @@ export default function CommitteePage() {
   return (
     <PageWrapper>
       <div className="relative game-column pb-4 pt-12">
-        {/* Back to info station */}
-        <button
-          type="button"
-          onClick={() => router.push('/info')}
-          aria-label="Back to info station"
-          className="absolute left-2 top-0 z-20 w-[64px] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5"
-        >
-          <img src="/images/login/back-button.png" alt="" className="w-full" />
-        </button>
-
         {/* Header */}
         <h1 className="title-gold text-center font-bytebounce text-[clamp(2.6rem,13vw,3.4rem)] leading-[0.85]">
           COMMITTEE
@@ -105,8 +158,15 @@ export default function CommitteePage() {
         </p>
 
         {/* Parchment scroll */}
-        <div className="relative mt-2">
-          <div aria-hidden className="absolute inset-0 flex flex-col">
+        <div
+          className="relative mt-2"
+          style={{ marginLeft: SCROLL_MARGIN_LEFT, marginRight: SCROLL_MARGIN_RIGHT }}
+        >
+          <div
+            aria-hidden
+            className="absolute inset-y-0 flex flex-col"
+            style={{ left: `-${SCROLL_ART_BLEED}`, right: `-${SCROLL_ART_BLEED}` }}
+          >
             <img src="/images/committee/scroll-top.png" alt="" className="w-full" />
             <div
               className="-my-px flex-1"
@@ -121,7 +181,9 @@ export default function CommitteePage() {
 
           {/* Division bookmarks */}
           <div
-            className="absolute left-[86.67%] top-[25.7%] z-20 flex flex-col gap-[10px]"
+            // `left-full` — the parchment now ends at the block's right edge,
+            // and these tabs hang off it exactly as before.
+            className="absolute left-full top-[25.7%] z-20 flex flex-col gap-[10px]"
             role="tablist"
             aria-label="Committee divisions"
           >
@@ -152,7 +214,7 @@ export default function CommitteePage() {
           </div>
 
           {/* Scroll contents */}
-          <div className="relative" style={{ paddingTop: SCROLL_PAD_TOP, paddingBottom: '15%' }}>
+          <div className="relative" style={{ paddingTop: SCROLL_PAD_TOP, paddingBottom: SCROLL_PAD_BOTTOM }}>
             <div className="relative z-0" style={{ marginLeft: RIBBON.left, width: RIBBON.width }}>
               <img
                 src={`/images/committee/banner-${active.id}.png`}
@@ -185,15 +247,31 @@ export default function CommitteePage() {
                   const href = instagramHref(member.instagram)
                   const portrait = member.imageUrl ?? '/images/committee/portrait-placeholder.png'
                   return (
-                    <article key={member.id} className="relative aspect-[245/115] w-full">
-                      <img
-                        src="/images/committee/card-frame.png"
-                        alt=""
+                    // `grid` with both flow children in the same cell: the row is
+                    // as tall as the taller of the two, so the spacer sets a
+                    // floor and the fun fact pushes past it when it needs to.
+                    // `@container` makes the card the reference for every cqw
+                    // inside it.
+                    <article key={member.id} className="@container relative grid w-full">
+                      {/* Height floor. Percentage padding resolves against this
+                          card's width, so it is an aspect ratio, not a fixed
+                          height — short fun facts keep the original card. */}
+                      <div
                         aria-hidden
-                        className="absolute inset-0 h-full w-full"
+                        className="col-start-1 row-start-1 w-0"
+                        style={{ paddingTop: CARD_MIN_ASPECT }}
                       />
 
-                      <div className="absolute bottom-[6%] left-[41%] right-[5%] top-[45%] flex items-center justify-center">
+                      <div aria-hidden className="absolute inset-0" style={CARD_FRAME} />
+
+                      {/* `relative` is load-bearing: the frame beside it is
+                          positioned, so an unpositioned sibling would paint
+                          underneath the frame's `fill` and the fact would
+                          disappear behind the parchment. */}
+                      <div
+                        className="relative col-start-1 row-start-1 flex flex-col justify-center"
+                        style={CARD_FACT}
+                      >
                         <p
                           className={`text-center font-bytebounce text-[13px] leading-[1.05] ${
                             member.isScanned ? 'text-[#5d4330]' : 'text-[#b3a184]'
@@ -230,12 +308,18 @@ export default function CommitteePage() {
                         {member.role}
                       </div>
 
-                      <img
-                        src={portrait}
-                        alt={member.name}
-                        className="absolute object-cover object-top"
-                        style={CARD_PORTRAIT}
-                      />
+                      {/* The wrapper is what stretches. An absolutely positioned
+                          replaced element with `height: auto` takes its intrinsic
+                          height and ignores `bottom`, so the bare <img> stayed
+                          small on a tall card; a plain div honours top+bottom and
+                          the image fills it. */}
+                      <div className="absolute" style={CARD_PORTRAIT}>
+                        <img
+                          src={portrait}
+                          alt={member.name}
+                          className="h-full w-full object-cover object-top"
+                        />
+                      </div>
 
                       {href ? (
                         <a

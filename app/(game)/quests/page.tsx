@@ -9,7 +9,6 @@
 // the window opens.
 'use client'
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import PageWrapper from '@/components/layout/PageWrapper'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import Link from 'next/link'
@@ -225,7 +224,6 @@ function QuestCard({ quest }: { quest: Quest }) {
 }
 
 export default function QuestsPage() {
-  const router = useRouter()
   const [quests, setQuests] = useState<Quest[]>([])
   const [loading, setLoading] = useState(true)
   const [showDone, setShowDone] = useState(true)
@@ -252,17 +250,6 @@ export default function QuestsPage() {
       />
 
       <div className="relative game-column pb-4 pt-14">
-        {/* Back button — same sprite, size and placement as the /info pages */}
-        <button
-          type="button"
-          onClick={() => router.push('/dashboard')}
-          aria-label="Back to dashboard"
-          className="absolute left-2 top-0 z-20 w-[64px] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5"
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/login/back-button.png" alt="" className="w-full" />
-        </button>
-
         {/* Section header: scroll icon + title */}
         <div className="flex items-center gap-2.5 px-1">
           {/* eslint-disable-next-line @next/next/no-img-element */}

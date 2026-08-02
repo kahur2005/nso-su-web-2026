@@ -85,7 +85,7 @@ export default function PlayerBanner({
 
         <div className="flex items-baseline justify-between gap-2">
           <p className="min-w-0 truncate font-bytebounce text-[17px] leading-none sm:text-[18px]" style={CREAM}>
-            LEVEL {level} – {title}
+            LEVEL {level} ✤ {title}
           </p>
           <p className="shrink-0 font-bytebounce text-[14px] leading-none sm:text-[15px]" style={TAN}>
             {into}/{span} xp
