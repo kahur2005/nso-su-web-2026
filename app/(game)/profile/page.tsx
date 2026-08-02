@@ -22,11 +22,31 @@ const MASCOTS = new Set([
   'chimera','faerie','fenrir','griffin','harpy','kitsune','kraken',
   'minotaur','nymph','pegasus','phoenix','siren','sphinx','unicorn','wyvern',
 ])
-function mascotSrc(name: string | undefined): string | null {
+
+/** Canonical mascot key for a group name, or null if it isn't one of the 15. */
+function groupKey(name: string | null | undefined): string | null {
   if (!name) return null
   let key = name.trim().toLowerCase().replace(/[^a-z]/g, '')
   if (key === 'nympth') key = 'nymph'
-  return MASCOTS.has(key) ? `/images/group/${key}.png` : null
+  return MASCOTS.has(key) ? key : null
+}
+
+function mascotSrc(name: string | undefined): string | null {
+  const key = groupKey(name)
+  return key ? `/images/group/${key}.png` : null
+}
+
+// The house backdrop behind the profile avatar. Files follow `<group>-bg.png`,
+// with one exception: the design spells Nymph "NYMPTH" (same quirk the
+// leaderboard normalizes), so its artwork shipped as `nympth-bg.png` while the
+// Group row is named "Nymph". Map it here rather than renaming the asset.
+const BG_FILENAME: Record<string, string> = { nymph: 'nympth' }
+
+/** Falls back to the neutral backdrop until a student is placed in a house. */
+function avatarBgSrc(name: string | null | undefined): string {
+  const key = groupKey(name)
+  if (!key) return '/images/profile/avatar-bg.png'
+  return `/images/profile/${BG_FILENAME[key] ?? key}-bg.png`
 }
 
 async function getProfileData(studentId: string, studentDbId?: string) {
@@ -116,6 +136,7 @@ export default async function ProfilePage() {
 
   const groupName = student.group?.name ?? null
   const mascotImg = mascotSrc(groupName ?? '')
+  const avatarBg = avatarBgSrc(groupName)
 
   const av = parseAvatarConfig(student.avatarConfig)
 
@@ -157,6 +178,7 @@ export default async function ProfilePage() {
           into={into}
           span={span}
           avatar={av}
+          avatarBg={avatarBg}
         />
 
         {/* ── Stats: three stacked cards beside the house pennant ── */}
