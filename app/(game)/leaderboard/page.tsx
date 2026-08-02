@@ -136,7 +136,7 @@ function GroupIcon({ name, emblem, emblemUrl, className = '' }: {
       <img
         src={src}
         alt={name}
-        className={`object-contain border-2 border-black ${className}`}
+        className={`object-contain ${className}`}
         style={{ imageRendering: 'pixelated' }}
       />
     )

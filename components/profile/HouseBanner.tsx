@@ -23,8 +23,10 @@ interface HouseBannerProps {
 export default function HouseBanner({ groupName, groupColor, mascotSrc }: HouseBannerProps) {
   const fill = groupColor || PENNANT_FALLBACK
 
+  // -translate-x nudges the pennant left without changing the flex layout, so
+  // the stat cards beside it keep their width.
   return (
-    <div className="relative w-[180px] shrink-0 -mt-3 -mr-12 sm:-mr-16 sm:-mt-4 sm:w-[200px]">
+    <div className="relative w-[180px] shrink-0 -mt-3 -mr-12 -translate-x-3 sm:-mr-16 sm:-mt-4 sm:w-[200px] sm:-translate-x-4">
       {/* Shape layer: using the uploaded group banner image. */}
       <div
         className="absolute inset-0"
@@ -65,7 +67,9 @@ export default function HouseBanner({ groupName, groupColor, mascotSrc }: HouseB
           className="w-full break-words text-center font-bytebounce text-[26px] leading-none text-[#ffecb3] sm:text-[28px]"
           style={{ textShadow: '2px 2px 0 rgba(0,0,0,0.45)' }}
         >
-          {groupName ?? 'Unassigned'}
+          {/* "None", not "Unassigned" — the long word wraps and overflows the
+              pennant, which is only ~180px wide. */}
+          {groupName ?? 'None'}
         </p>
       </div>
     </div>

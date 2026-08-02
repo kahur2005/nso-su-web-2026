@@ -18,6 +18,12 @@ interface PlayerBannerProps {
   into: number
   span: number
   avatar: ParsedAvatar
+  /**
+   * Backdrop behind the avatar — the student's house artwork once they're in a
+   * group, or the neutral `avatar-bg.png` until then. Resolved by the page so
+   * this stays a presentational component (see avatarBgSrc in profile/page.tsx).
+   */
+  avatarBg: string
 }
 
 export default function PlayerBanner({
@@ -27,6 +33,7 @@ export default function PlayerBanner({
   into,
   span,
   avatar,
+  avatarBg,
 }: PlayerBannerProps) {
   const firstName = (name.split(' ')[0] || name).toUpperCase()
   const pct = span > 0 ? Math.max(0, Math.min(100, (into / span) * 100)) : 0
@@ -42,11 +49,11 @@ export default function PlayerBanner({
       }}
       data-tour="profile-header"
     >
-      {/* Gold-framed avatar on the frame's red backing */}
+      {/* Gold-framed avatar on its house backdrop */}
       <div
         className="shrink-0 border-[3px] border-[#fcf940]"
-        style={{ 
-          backgroundImage: 'url(/images/profile/avatar-bg.png)',
+        style={{
+          backgroundImage: `url(${avatarBg})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           imageRendering: 'pixelated'

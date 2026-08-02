@@ -20,6 +20,9 @@
 # production
 /build
 
+# local backups written by scripts/shrink-storage-images.mjs
+/.backup/
+
 # misc
 .DS_Store
 *.pem
