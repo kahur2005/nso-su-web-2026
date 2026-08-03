@@ -7,8 +7,12 @@
 // the Claim button only exists once the server has said both were right.
 'use client'
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { QuizQuestion } from '@/lib/guidebook/quiz'
 import { POINTS_PER_CHAPTER } from '@/lib/guidebook/quiz'
+// This renders inside the guidebook's `container-type: inline-size` book, so it
+// is sized on the same 387px design grid as the page around it. See scale.ts.
+import { cqw, TYPE } from '@/lib/guidebook/scale'
 
 /** What the server knows about this student's attempt at this chapter. */
 export type Attempt = {
@@ -105,42 +109,50 @@ export default function ChapterQuiz({ chapterId, questions, attempt, onAttemptCh
 
   return (
     <section
-      className="rounded-[11px] px-2 py-2.5"
-      style={{ backgroundColor: 'rgba(252,249,64,0.46)' }}
+      style={{
+        backgroundColor: 'rgba(252,249,64,0.46)',
+        borderRadius: cqw(11),
+        padding: `${cqw(10)} ${cqw(8)}`,
+      }}
       data-tour="guidebook-quiz"
     >
       <h2
-        className="text-center font-bytebounce text-[clamp(22px,7.6vw,30px)] leading-[0.78]"
-        style={{ color: INK_TITLE }}
+        className="text-center font-bytebounce leading-[0.78]"
+        style={{ color: INK_TITLE, fontSize: cqw(30, TYPE) }}
       >
         Chapter Quiz
       </h2>
       <p
-        className="mt-1.5 text-center font-bytebounce text-[15px] leading-[0.95]"
-        style={{ color: INK_BODY }}
+        className="text-center font-bytebounce leading-[0.95]"
+        style={{ color: INK_BODY, fontSize: cqw(15, TYPE), marginTop: cqw(6) }}
       >
         Answer both correctly for +{POINTS_PER_CHAPTER} points. You only get one try.
       </p>
 
       {questions.map((q, qi) => (
-        <fieldset key={q.prompt} className="mt-3 border-0 p-0">
+        <fieldset key={q.prompt} className="border-0 p-0" style={{ marginTop: cqw(12) }}>
           <legend
-            className="font-bytebounce text-[17px] leading-[0.95]"
-            style={{ color: INK_TITLE }}
+            className="font-bytebounce leading-[0.95]"
+            style={{ color: INK_TITLE, fontSize: cqw(17, TYPE) }}
           >
             {qi + 1}. {q.prompt}
           </legend>
-          <div className="mt-1.5 flex flex-col gap-1">
+          <div className="flex flex-col" style={{ marginTop: cqw(6), gap: cqw(4) }}>
             {q.options.map((opt, oi) => {
               const selected = picked[qi] === oi
               return (
                 <label
                   key={opt}
-                  className={`flex cursor-pointer items-start gap-2 rounded-[7px] px-2 py-1.5 transition-colors ${
+                  className={`flex cursor-pointer items-start transition-colors ${
                     locked ? 'cursor-default opacity-70' : 'hover:bg-white/40'
                   }`}
                   style={{
                     backgroundColor: selected ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.25)',
+                    borderRadius: cqw(7),
+                    gap: cqw(8),
+                    // The whole row is the tap target, so this padding is what
+                    // keeps an option comfortably tappable on a phone.
+                    padding: `${cqw(6)} ${cqw(8)}`,
                   }}
                 >
                   <input
@@ -151,11 +163,12 @@ export default function ChapterQuiz({ chapterId, questions, attempt, onAttemptCh
                     onChange={() =>
                       setPicked((prev) => prev.map((p, i) => (i === qi ? oi : p)))
                     }
-                    className="mt-1 shrink-0 accent-[#543631]"
+                    className="shrink-0 accent-[#543631]"
+                    style={{ marginTop: cqw(4) }}
                   />
                   <span
-                    className="font-bytebounce text-[16px] leading-[0.95]"
-                    style={{ color: INK_BODY }}
+                    className="font-bytebounce leading-[0.95]"
+                    style={{ color: INK_BODY, fontSize: cqw(16, TYPE) }}
                   >
                     {opt}
                   </span>
@@ -167,18 +180,27 @@ export default function ChapterQuiz({ chapterId, questions, attempt, onAttemptCh
       ))}
 
       {error && (
-        <p className="mt-2 font-bytebounce text-[15px] leading-[0.95] text-[#c62828]">{error}</p>
+        <p
+          className="font-bytebounce leading-[0.95] text-[#c62828]"
+          style={{ fontSize: cqw(15, TYPE), marginTop: cqw(8) }}
+        >
+          {error}
+        </p>
       )}
 
       {/* ── Controls ────────────────────────────────────────────────────── */}
-      <div className="mt-3 flex flex-col gap-2">
+      <div className="flex flex-col" style={{ marginTop: cqw(12), gap: cqw(8) }}>
         {!locked && (
           <button
             type="button"
             onClick={submit}
             disabled={!bothPicked || busy}
-            className="wood-plank px-3 py-2 font-bytebounce text-[22px] leading-none text-[#fff3d9] transition-transform active:translate-y-0.5 disabled:opacity-40"
-            style={{ textShadow: '2px 2px 0 #3e2723' }}
+            className="wood-plank font-bytebounce leading-none text-[#fff3d9] transition-transform active:translate-y-0.5 disabled:opacity-40"
+            style={{
+              textShadow: '2px 2px 0 #3e2723',
+              fontSize: cqw(22, TYPE),
+              padding: `${cqw(8)} ${cqw(12)}`,
+            }}
           >
             {busy ? 'Submitting…' : 'Submit Answers'}
           </button>
@@ -191,8 +213,12 @@ export default function ChapterQuiz({ chapterId, questions, attempt, onAttemptCh
             type="button"
             onClick={claim}
             disabled={busy}
-            className="wood-plank px-3 py-2 font-bytebounce text-[22px] leading-none text-[#ffd23f] transition-transform active:translate-y-0.5 disabled:opacity-40"
-            style={{ textShadow: '2px 2px 0 #3e2723' }}
+            className="wood-plank font-bytebounce leading-none text-[#ffd23f] transition-transform active:translate-y-0.5 disabled:opacity-40"
+            style={{
+              textShadow: '2px 2px 0 #3e2723',
+              fontSize: cqw(22, TYPE),
+              padding: `${cqw(8)} ${cqw(12)}`,
+            }}
           >
             {busy ? 'Claiming…' : `Claim +${POINTS_PER_CHAPTER} Points`}
           </button>
@@ -200,8 +226,8 @@ export default function ChapterQuiz({ chapterId, questions, attempt, onAttemptCh
 
         {attempt?.claimedAt && (
           <p
-            className="text-center font-bytebounce text-[17px] leading-none"
-            style={{ color: '#2e7d32' }}
+            className="text-center font-bytebounce leading-none"
+            style={{ color: '#2e7d32', fontSize: cqw(17, TYPE) }}
           >
             ✓ +{attempt.pointsAwarded || POINTS_PER_CHAPTER} points claimed
           </p>
@@ -209,60 +235,71 @@ export default function ChapterQuiz({ chapterId, questions, attempt, onAttemptCh
 
         {locked && !attempt?.isCorrect && (
           <p
-            className="text-center font-bytebounce text-[17px] leading-[0.95]"
-            style={{ color: '#c62828' }}
+            className="text-center font-bytebounce leading-[0.95]"
+            style={{ color: '#c62828', fontSize: cqw(17, TYPE) }}
           >
             Attempt used — no points for this chapter.
           </p>
         )}
       </div>
 
-      {/* ── Result popup ────────────────────────────────────────────────── */}
-      {popup && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6"
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setPopup(null)}
-        >
+      {/* ── Result popup ──────────────────────────────────────────────────
+          Portalled to <body>, and that is load-bearing, not tidiness: the
+          guidebook book wrapper sets `container-type: inline-size`, which
+          implies `contain: layout`, which makes it the containing block for
+          *fixed* descendants too. Rendered in place, this dialog would be
+          trapped inside the book instead of covering the viewport.
+
+          Also deliberately still in px, not cqw. It is anchored to the viewport,
+          so it must not scale with the book — cqw here would resolve against
+          the book container and shrink the dialog on a phone. */}
+      {popup &&
+        createPortal(
           <div
-            className="parchment-card w-full max-w-[320px] px-4 py-5 text-center"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6"
+            role="dialog"
+            aria-modal="true"
+            onClick={() => setPopup(null)}
           >
-            <p className="font-bytebounce text-[44px] leading-none">
-              {popup === 'wrong' ? '❌' : popup === 'claimed' ? '🏆' : '✅'}
-            </p>
-            <h3
-              className="mt-2 font-bytebounce text-[26px] leading-none"
-              style={{ color: popup === 'wrong' ? '#c62828' : '#2e7d32' }}
+            <div
+              className="parchment-card w-full max-w-[320px] px-4 py-5 text-center"
+              onClick={(e) => e.stopPropagation()}
             >
-              {popup === 'wrong'
-                ? 'Not quite!'
-                : popup === 'claimed'
-                  ? `+${POINTS_PER_CHAPTER} Points!`
-                  : 'Both correct!'}
-            </h3>
-            <p
-              className="mt-2 font-bytebounce text-[17px] leading-[0.95]"
-              style={{ color: INK_BODY }}
-            >
-              {popup === 'wrong'
-                ? 'That was your one try for this chapter. Read on — the other chapters still have points waiting.'
-                : popup === 'claimed'
-                  ? 'The points are on your account and in your activity log.'
-                  : `Press "Claim +${POINTS_PER_CHAPTER} Points" to add them to your account.`}
-            </p>
-            <button
-              type="button"
-              onClick={() => setPopup(null)}
-              className="wood-plank mt-4 w-full px-3 py-2 font-bytebounce text-[22px] leading-none text-[#fff3d9]"
-              style={{ textShadow: '2px 2px 0 #3e2723' }}
-            >
-              OK
-            </button>
-          </div>
-        </div>
-      )}
+              <p className="font-bytebounce text-[44px] leading-none">
+                {popup === 'wrong' ? '❌' : popup === 'claimed' ? '🏆' : '✅'}
+              </p>
+              <h3
+                className="mt-2 font-bytebounce text-[26px] leading-none"
+                style={{ color: popup === 'wrong' ? '#c62828' : '#2e7d32' }}
+              >
+                {popup === 'wrong'
+                  ? 'Not quite!'
+                  : popup === 'claimed'
+                    ? `+${POINTS_PER_CHAPTER} Points!`
+                    : 'Both correct!'}
+              </h3>
+              <p
+                className="mt-2 font-bytebounce text-[19px] leading-[1.05]"
+                style={{ color: INK_BODY }}
+              >
+                {popup === 'wrong'
+                  ? 'That was your one try for this chapter. Read on — the other chapters still have points waiting.'
+                  : popup === 'claimed'
+                    ? 'The points are on your account and in your activity log.'
+                    : `Press "Claim +${POINTS_PER_CHAPTER} Points" to add them to your account.`}
+              </p>
+              <button
+                type="button"
+                onClick={() => setPopup(null)}
+                className="wood-plank mt-4 w-full px-3 py-2 font-bytebounce text-[22px] leading-none text-[#fff3d9]"
+                style={{ textShadow: '2px 2px 0 #3e2723' }}
+              >
+                OK
+              </button>
+            </div>
+          </div>,
+          document.body,
+        )}
     </section>
   )
 }
