@@ -10,10 +10,11 @@
 // titled sections are the eight bookmarks, in document order. Long sections
 // are split across pages so no single page runs past roughly one screen.
 'use client'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type CSSProperties } from 'react'
 import PageWrapper from '@/components/layout/PageWrapper'
 import ChapterQuiz, { type Attempt } from '@/components/guidebook/ChapterQuiz'
 import { QUIZZES, MAX_GUIDEBOOK_POINTS } from '@/lib/guidebook/quiz'
+import { cqw, TYPE } from '@/lib/guidebook/scale'
 
 /* ── Design tokens lifted from the Figma frame ───────────────────────────── */
 
@@ -31,14 +32,41 @@ const TINT = {
 
 const INK_TITLE = '#3e2218' // section headings on the cream page
 const INK_BODY = '#5d3a20'  // list + notes copy
-const INK_PAGER = '#88684e' // "1/7"
+// "1/7". Was #88684e, which measured 4.33:1 on the page cream (#ffecb3) and so
+// missed WCAG AA for normal text; this is 7.16:1 and still reads as faded ink.
+const INK_PAGER = '#63482f'
 
 // The book art is 387px wide in Figma. Everything below is that px value as a
 // percentage of the frame so the whole book scales with `.game-column`.
 const PAGE = {
-  contentLeft: '7.2%',   // x=28  — left edge of the content panels
-  contentRight: '24.3%', // x=293 — panels stop before the tan gutter (x=304)
-  bookmarkRight: '0.8%', // x=384 — ribbons run to the book's outer border
+  contentLeft: '7.2%',  // x=28 — left edge of the content panels
+  // x=293 in the frame, but the gutter only has to clear the ribbon rail. The
+  // ribbons were trimmed below their design width (see BOOKMARK), so the old
+  // 24.3% reserved ~24px of dead gutter — real money when the text column is
+  // only ~250px on a phone. This is sized to the widest (active) ribbon plus a
+  // little air; widen it again if BOOKMARK.activeW grows.
+  contentRight: '20%',
+  // Flush with the book's outer border (x=384). This cannot go negative any
+  // more: the book is full-bleed on phones, so its right edge is the viewport
+  // edge and `body { overflow-x: hidden }` would clip an overhanging tail.
+  bookmarkRight: '0%',
+}
+
+// Ribbon geometry, kept together so the gutter above can be reasoned about.
+// `h` is the visible ribbon; `padY` is transparent hit area on top of it
+// (painted away with background-clip: content-box) so an 8-item rail of ~23px
+// ribbons still offers a ~39px touch target on a phone.
+const RIBBON_H = 25 // visible height, design px
+const RIBBON_PAD_Y = 8.5 // transparent hit area per side, design px
+const BOOKMARK = {
+  w: cqw(58),
+  activeW: cqw(68),
+  hoverW: cqw(63),
+  padY: cqw(RIBBON_PAD_Y),
+  // box-border, so this is the visible ribbon plus both paddings. Derived
+  // rather than written out, so the paint height and the hit height can't drift.
+  totalH: cqw(RIBBON_H + RIBBON_PAD_Y * 2),
+  gap: cqw(3),
 }
 
 /* ── Content ─────────────────────────────────────────────────────────────── */
@@ -1005,7 +1033,7 @@ export default function GuideBookPage() {
         {/* Quiz progress across all eight chapters. */}
         {attemptsLoaded && (
           <p
-            className="mt-0.5 text-center font-bytebounce text-[17px] leading-tight"
+            className="mt-0.5 text-center font-bytebounce text-[19px] leading-tight"
             style={{ color: '#ffd23f', textShadow: '1.5px 1.5px 0 #3e2723' }}
           >
             Quiz points: {claimedPoints}/{MAX_GUIDEBOOK_POINTS}
@@ -1016,7 +1044,17 @@ export default function GuideBookPage() {
             Vertical 3-slice: a fixed top cap, a page tile that repeats (one
             spiral-ring period per tile, so the rings run the full height), and
             a fixed bottom cap. */}
-        <div className="relative mt-3">
+        {/* `-mx-3` cancels .game-column's 0.75rem padding so the book goes
+            full-bleed on a phone — the art is 387px native and was rendering at
+            336px (0.87×) on a 360px screen, which both degrades the 1px ring
+            outlines under `image-rendering: pixelated` and squeezes the text
+            column. The 448px cap stops the other end of that problem: the book
+            used to stretch to 800px (2.07×) on a desktop while the type stayed
+            16px. containerType is what every cqw below resolves against. */}
+        <div
+          className="relative mt-3 -mx-3 max-w-[448px] sm:mx-auto"
+          style={{ containerType: 'inline-size' }}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/guidebook/book-top.png" alt="" aria-hidden className="block w-full" />
 
@@ -1030,8 +1068,8 @@ export default function GuideBookPage() {
           >
             {/* Bookmark ribbons — pinned to the right gutter, over the page. */}
             <div
-              className="absolute top-8 z-20 flex flex-col gap-[14px]"
-              style={{ right: PAGE.bookmarkRight }}
+              className="absolute z-20 flex flex-col"
+              style={{ right: PAGE.bookmarkRight, top: cqw(32), gap: BOOKMARK.gap }}
               role="tablist"
               aria-label="Guide book chapters"
             >
@@ -1045,17 +1083,30 @@ export default function GuideBookPage() {
                     aria-label={entry.title}
                     title={entry.title}
                     onClick={() => openChapter(idx)}
-                    className={`h-[32px] transition-all duration-150 ${
+                    className={`box-border w-[var(--ribbon-w)] transition-all duration-150 ${
                       isActive
-                        ? 'w-[82px] brightness-110'
-                        : 'w-[70px] brightness-90 hover:w-[78px] hover:brightness-105'
+                        ? 'brightness-110'
+                        : 'brightness-90 hover:w-[var(--ribbon-hover-w)] hover:brightness-105'
                     }`}
-                    style={{
-                      // Dark stub where the ribbon disappears under the page,
-                      // then the lighter tail — exactly the two overlapping
-                      // rectangles from the design.
-                      backgroundImage: `linear-gradient(90deg, ${entry.bookmark.dark} 0 28%, ${entry.bookmark.light} 28% 100%)`,
-                    }}
+                    style={
+                      {
+                        // Dark stub where the ribbon disappears under the page,
+                        // then the lighter tail — exactly the two overlapping
+                        // rectangles from the design.
+                        backgroundImage: `linear-gradient(90deg, ${entry.bookmark.dark} 0 28%, ${entry.bookmark.light} 28% 100%)`,
+                        // The padding is pure touch target: content-box clipping
+                        // keeps the paint at BOOKMARK.h so the ribbon still looks
+                        // trimmed while the tappable box is ~1.7× taller.
+                        backgroundClip: 'content-box',
+                        height: BOOKMARK.totalH,
+                        paddingTop: BOOKMARK.padY,
+                        paddingBottom: BOOKMARK.padY,
+                        // Width goes through a variable, not an inline `width`,
+                        // so the hover: class can still win over it.
+                        '--ribbon-w': isActive ? BOOKMARK.activeW : BOOKMARK.w,
+                        '--ribbon-hover-w': BOOKMARK.hoverW,
+                      } as CSSProperties
+                    }
                   />
                 )
               })}
@@ -1063,18 +1114,28 @@ export default function GuideBookPage() {
 
             {/* Page content */}
             <div
-              className="relative z-10 flex min-h-[420px] flex-col gap-3 py-4"
-              style={{ paddingLeft: PAGE.contentLeft, paddingRight: PAGE.contentRight }}
+              className="relative z-10 flex flex-col"
+              style={{
+                paddingLeft: PAGE.contentLeft,
+                paddingRight: PAGE.contentRight,
+                paddingTop: cqw(16),
+                paddingBottom: cqw(16),
+                gap: cqw(12),
+                minHeight: cqw(420),
+              }}
             >
               {page.sections.map((section, sIdx) => (
                 <section
                   key={`${section.title}-${sIdx}`}
-                  className="rounded-[11px] px-2 py-2.5"
-                  style={{ backgroundColor: section.tint }}
+                  style={{
+                    backgroundColor: section.tint,
+                    borderRadius: cqw(11),
+                    padding: `${cqw(10)} ${cqw(8)}`,
+                  }}
                 >
                   <h2
-                    className="whitespace-pre-line text-center font-bytebounce text-[clamp(22px,7.6vw,30px)] leading-[0.78]"
-                    style={{ color: INK_TITLE }}
+                    className="whitespace-pre-line text-center font-bytebounce leading-[0.78]"
+                    style={{ color: INK_TITLE, fontSize: cqw(30, TYPE) }}
                   >
                     {section.title}
                   </h2>
@@ -1082,8 +1143,8 @@ export default function GuideBookPage() {
                   {section.body?.map((para) => (
                     <p
                       key={para}
-                      className="mt-1.5 font-bytebounce text-[16px] leading-[0.95]"
-                      style={{ color: INK_BODY }}
+                      className="font-bytebounce leading-[0.95]"
+                      style={{ color: INK_BODY, fontSize: cqw(16, TYPE), marginTop: cqw(6) }}
                     >
                       {para}
                     </p>
@@ -1091,8 +1152,13 @@ export default function GuideBookPage() {
 
                   {section.items && (
                     <ol
-                      className="mt-1.5 list-decimal ps-6 font-bytebounce text-[16px] leading-[0.92]"
-                      style={{ color: INK_BODY }}
+                      className="list-decimal font-bytebounce leading-[0.92]"
+                      style={{
+                        color: INK_BODY,
+                        fontSize: cqw(16, TYPE),
+                        marginTop: cqw(6),
+                        paddingInlineStart: cqw(24),
+                      }}
                     >
                       {section.items.map((item) => (
                         <li key={item}>{item}</li>
@@ -1101,13 +1167,16 @@ export default function GuideBookPage() {
                   )}
 
                   {section.rows && (
-                    <dl className="mt-1.5 font-bytebounce text-[16px] leading-[0.92]">
-                      {section.rows.map((row) => (
-                        <div key={row.label} className="mt-1.5 first:mt-0">
-                          <dt className="text-[17px]" style={{ color: INK_TITLE }}>
-                            {row.label}
-                          </dt>
-                          <dd className="ps-3" style={{ color: INK_BODY }}>
+                    <dl
+                      className="font-bytebounce leading-[0.92]"
+                      style={{ fontSize: cqw(16, TYPE), marginTop: cqw(6) }}
+                    >
+                      {/* The margin is inline, so it beats a `first:mt-0`
+                          class — the first row has to be zeroed here instead. */}
+                      {section.rows.map((row, rIdx) => (
+                        <div key={row.label} style={{ marginTop: rIdx === 0 ? 0 : cqw(6) }}>
+                          <dt style={{ color: INK_TITLE, fontSize: cqw(17, TYPE) }}>{row.label}</dt>
+                          <dd style={{ color: INK_BODY, paddingInlineStart: cqw(12) }}>
                             {row.detail}
                           </dd>
                         </div>
@@ -1117,12 +1186,19 @@ export default function GuideBookPage() {
 
                   {section.template && (
                     <div
-                      className="mt-2 rounded-[8px] px-2.5 py-2 font-bytebounce text-[15px] leading-[1.05]"
-                      style={{ backgroundColor: TINT.paper, color: INK_BODY }}
+                      className="font-bytebounce leading-[1.05]"
+                      style={{
+                        backgroundColor: TINT.paper,
+                        color: INK_BODY,
+                        fontSize: cqw(15, TYPE),
+                        marginTop: cqw(8),
+                        borderRadius: cqw(8),
+                        padding: `${cqw(8)} ${cqw(10)}`,
+                      }}
                     >
                       {section.template.map((line, i) =>
                         line === '' ? (
-                          <div key={i} className="h-2.5" aria-hidden />
+                          <div key={i} aria-hidden style={{ height: cqw(10) }} />
                         ) : (
                           <p key={i}>{line}</p>
                         ),
@@ -1135,8 +1211,8 @@ export default function GuideBookPage() {
                     <img
                       src={section.image.src}
                       alt={section.image.alt}
-                      className="mt-2 w-full rounded-[6px] border-2 border-[#8d6e63]"
-                      style={{ imageRendering: 'auto' }}
+                      className="w-full border-2 border-[#8d6e63]"
+                      style={{ imageRendering: 'auto', marginTop: cqw(8), borderRadius: cqw(6) }}
                     />
                   )}
                 </section>
@@ -1156,18 +1232,26 @@ export default function GuideBookPage() {
 
               {page.notes && (
                 <section
-                  className="rounded-[11px] px-2 py-2"
-                  style={{ backgroundColor: TINT.yellow }}
+                  style={{
+                    backgroundColor: TINT.yellow,
+                    borderRadius: cqw(11),
+                    padding: `${cqw(8)} ${cqw(8)}`,
+                  }}
                 >
                   <h3
-                    className="font-bytebounce text-[20px] leading-none"
-                    style={{ color: INK_BODY }}
+                    className="font-bytebounce leading-none"
+                    style={{ color: INK_BODY, fontSize: cqw(20, TYPE) }}
                   >
                     📌 Notes
                   </h3>
                   <ul
-                    className="mt-1 list-disc ps-5 font-bytebounce text-[15px] leading-[0.92]"
-                    style={{ color: INK_BODY }}
+                    className="list-disc font-bytebounce leading-[0.92]"
+                    style={{
+                      color: INK_BODY,
+                      fontSize: cqw(15, TYPE),
+                      marginTop: cqw(4),
+                      paddingInlineStart: cqw(20),
+                    }}
                   >
                     {page.notes.map((note) => (
                       <li key={note}>{note}</li>
@@ -1180,20 +1264,27 @@ export default function GuideBookPage() {
                   the open chapter's pages only; changing chapter is the
                   bookmarks' job. The frame only draws a forward arrow; a back
                   arrow is added so a chapter reads in both directions. */}
-              <div className="mt-auto flex items-center justify-end gap-2 pt-1">
+              {/* The arrows keep their 22px design size visually, but sit in a
+                  box-border button with transparent padding so the tap target
+                  is ~36px on a phone rather than 22px. */}
+              <div
+                className="mt-auto flex items-center justify-end"
+                style={{ gap: cqw(4), paddingTop: cqw(4) }}
+              >
                 <button
                   type="button"
                   onClick={() => setPageIdx((i) => Math.max(0, i - 1))}
                   disabled={pageIdx === 0}
                   aria-label="Previous page"
-                  className="w-[22px] shrink-0 transition-transform active:translate-y-0.5 disabled:opacity-25"
+                  className="box-border shrink-0 transition-transform active:translate-y-0.5 disabled:opacity-25"
+                  style={{ width: cqw(38), padding: cqw(8) }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="/images/committee/page-prev.png" alt="" className="w-full" />
                 </button>
                 <span
-                  className="font-bytebounce text-[22px] leading-none"
-                  style={{ color: INK_PAGER }}
+                  className="font-bytebounce leading-none"
+                  style={{ color: INK_PAGER, fontSize: cqw(22, TYPE) }}
                 >
                   {pageIdx + 1}/{totalPages}
                 </span>
@@ -1202,7 +1293,8 @@ export default function GuideBookPage() {
                   onClick={() => setPageIdx((i) => Math.min(totalPages - 1, i + 1))}
                   disabled={pageIdx >= totalPages - 1}
                   aria-label="Next page"
-                  className="w-[22px] shrink-0 transition-transform active:translate-y-0.5 disabled:opacity-25"
+                  className="box-border shrink-0 transition-transform active:translate-y-0.5 disabled:opacity-25"
+                  style={{ width: cqw(38), padding: cqw(8) }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="/images/committee/page-next.png" alt="" className="w-full" />

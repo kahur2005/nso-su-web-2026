@@ -52,14 +52,44 @@ async function getDashboardData(studentId: string) {
 /* ── Quick-action tiles (Figma 2×2 grid with SVG icons) ────────────────── */
 const TILE_ICON = "w-16 h-16 sm:w-[72px] sm:h-[72px]";
 
-const quickTiles = [
+type QuickTile = {
+  href: string;
+  icon: string;
+  label: string;
+  iconClass: string;
+  /** Optional optical-alignment nudge; see the guidebook tile for the why. */
+  iconTransform?: string;
+};
+
+const quickTiles: QuickTile[] = [
   {
     href: "/info/guidebook",
     icon: "/images/dashboard/guidebook.svg",
     label: "Guidebook",
-    // Sized up on its own — the book art carries more transparent padding
-    // than the other three, so it reads small at the shared box size.
-    iconClass: "w-20 h-20 sm:w-[88px] sm:h-[88px]",
+    // The book art needs to render larger than the other three, because inside
+    // its own 64×64 canvas the ink only spans rows 26–58 — barely half the
+    // frame, against 49 of 64 rows for timeline.svg.
+    //
+    // That size boost used to come from a bigger box (w-20 / w-[88px]), which
+    // caused both misalignments on this tile. A taller box made this the
+    // tallest content group in the grid, so `justify-center` stopped absorbing
+    // any slack here while it still did on the other tiles — dropping the label
+    // 8px below its neighbours' — and it also amplified the art's own lopsided
+    // padding (26px empty above vs 5px below, i.e. an ink centre 16.41% below
+    // the canvas centre, against 2.15% for timeline.svg).
+    //
+    // So the box is now the shared TILE_ICON and the size comes from `scale`
+    // instead. Transforms don't affect layout, so all four groups are the same
+    // height and every label lines up; `scale(1.25)` reproduces the old 80/88px
+    // render, and the translate cancels what scaling the off-centre art leaves
+    // over: 1.25 × 16.41% − 2.15% = 18.36%. Being percentages of the box, this
+    // holds at every breakpoint. The lift is transparent padding only — no ink
+    // leaves the plaque.
+    //
+    // The real fix is recentring the art inside guidebook.svg, after which this
+    // whole transform should go away.
+    iconClass: TILE_ICON,
+    iconTransform: "translateY(-18.36%) scale(1.25)",
   },
   {
     href: "/info/timeline",
@@ -172,7 +202,10 @@ export default async function DashboardPage() {
                   src={tile.icon}
                   alt=""
                   className={`${tile.iconClass} object-contain`}
-                  style={{ imageRendering: "pixelated" }}
+                  style={{
+                    imageRendering: "pixelated",
+                    transform: tile.iconTransform,
+                  }}
                 />
                 <span
                   className="font-bytebounce text-[20px] sm:text-[22px] leading-none text-[#e0b391]"

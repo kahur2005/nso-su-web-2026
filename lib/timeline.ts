@@ -19,7 +19,7 @@ export type TimelineDayMeta = {
 }
 
 export const TIMELINE_DAYS: TimelineDayMeta[] = [
-  { key: 'tm', tabLabel: 'TM', headerTitle: 'TECHNICAL MEETING (ONLINE)', date: '11 Aug 2026' },
+  { key: 'tm', tabLabel: 'TM', headerTitle: 'TECHNICAL MEETING (ONLINE)', date: '14 Aug 2026' },
   { key: '1', tabLabel: '1', headerTitle: 'DAY 1', date: '18 Aug 2026' },
   { key: '2', tabLabel: '2', headerTitle: 'DAY 2', date: '19 Aug 2026' },
   { key: '3', tabLabel: '3', headerTitle: 'DAY 3', date: '20 Aug 2026' },
