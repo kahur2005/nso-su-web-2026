@@ -9,16 +9,19 @@ import { authOptions } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import { revalidatePath } from 'next/cache'
 import { isQuestType } from '@/lib/quests'
+import { resolveStudentDbId } from '@/lib/lunch-data'
 
 async function requireAdmin() {
   const session = await getServerSession(authOptions)
   if (!session || !session.user?.isAdmin) {
     throw new Error('Unauthorized')
   }
+  return session
 }
 
 function revalidate() {
   revalidatePath('/admin/quests')
+  revalidatePath('/admin/quests/submissions')
   revalidatePath('/quests')
 }
 
@@ -264,5 +267,130 @@ export async function deleteQuest(formData: FormData) {
   if (!id) return
 
   await supabase.from('Quest').update({ isDeleted: true, isActive: false }).eq('id', id)
+  revalidate()
+}
+
+// -------------------------------------------------------- submission review ----
+
+type QuestReviewRow = {
+  id: string
+  points: number
+  type: string
+  isActive: boolean
+  isDeleted: boolean
+  achievementId: string | null
+}
+
+function relationOne<T>(value: unknown): T | null {
+  if (value == null) return null
+  if (Array.isArray(value)) return (value[0] as T | undefined) ?? null
+  return value as T
+}
+
+export async function approveQuestSubmission(formData: FormData) {
+  const session = await requireAdmin()
+
+  const id = String(formData.get('id') || '')
+  if (!id) return
+
+  const reviewedBy = await resolveStudentDbId(session)
+  if (!reviewedBy) return
+
+  const { data: sub } = await supabase
+    .from('QuestSubmission')
+    .select('id, studentId, questId, status, quest:Quest(id, points, type, isActive, isDeleted, achievementId)')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (!sub || sub.status !== 'awaiting_approval') return
+
+  const quest = relationOne<QuestReviewRow>(sub.quest)
+  if (!quest || quest.type !== 'submission' || quest.isDeleted || !quest.isActive) return
+
+  const { data: updated } = await supabase
+    .from('QuestSubmission')
+    .update({
+      status: 'approved',
+      reviewedAt: new Date().toISOString(),
+      reviewedBy,
+    })
+    .eq('id', id)
+    .eq('status', 'awaiting_approval')
+    .select('id')
+    .maybeSingle()
+
+  if (!updated) return
+
+  await supabase.from('QuestProgress').upsert(
+    {
+      studentId: sub.studentId,
+      questId: sub.questId,
+      status: 'completed',
+      completedAt: new Date().toISOString(),
+    },
+    { onConflict: 'studentId,questId' },
+  )
+
+  const { error: rpcError } = await supabase.rpc('adjust_points', {
+    p_student_id: sub.studentId,
+    p_amount: quest.points,
+  })
+  if (rpcError) console.error('approveQuestSubmission adjust_points:', rpcError)
+
+  if (quest.achievementId) {
+    const { error: achError } = await supabase.from('StudentAchievement').upsert(
+      { studentId: sub.studentId, achievementId: quest.achievementId },
+      { onConflict: 'studentId,achievementId', ignoreDuplicates: true },
+    )
+    if (achError) console.error('approveQuestSubmission StudentAchievement:', achError)
+  }
+
+  revalidate()
+}
+
+export async function rejectQuestSubmission(formData: FormData) {
+  const session = await requireAdmin()
+
+  const id = String(formData.get('id') || '')
+  if (!id) return
+
+  const reviewedBy = await resolveStudentDbId(session)
+  if (!reviewedBy) return
+
+  const { data: sub } = await supabase
+    .from('QuestSubmission')
+    .select('id, studentId, questId, status, quest:Quest(type, isDeleted, isActive)')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (!sub || sub.status !== 'awaiting_approval') return
+
+  const quest = relationOne<{ type: string; isDeleted: boolean; isActive: boolean }>(sub.quest)
+  if (!quest || quest.type !== 'submission' || quest.isDeleted || !quest.isActive) return
+
+  const { data: updated } = await supabase
+    .from('QuestSubmission')
+    .update({
+      status: 'rejected',
+      reviewedAt: new Date().toISOString(),
+      reviewedBy,
+    })
+    .eq('id', id)
+    .eq('status', 'awaiting_approval')
+    .select('id')
+    .maybeSingle()
+
+  if (!updated) return
+
+  await supabase.from('QuestProgress').upsert(
+    {
+      studentId: sub.studentId,
+      questId: sub.questId,
+      status: 'in_progress',
+      completedAt: null,
+    },
+    { onConflict: 'studentId,questId' },
+  )
+
   revalidate()
 }

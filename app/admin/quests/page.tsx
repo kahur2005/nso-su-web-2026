@@ -11,6 +11,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import DataTable from '@/components/admin/DataTable'
 import QuestForm from '@/components/admin/QuestForm'
+import QuestTabs from './QuestTabs'
 import QuestQrButton from '@/components/admin/QuestQrButton'
 import { QuestActiveToggle, DeleteQuestButton } from '@/components/admin/QuestRowActions'
 import { QUEST_TYPE_LABEL, isQuestType, type QuestType } from '@/lib/quests'
@@ -115,6 +116,8 @@ export default async function AdminQuestsPage() {
           .
         </p>
       </div>
+
+      <QuestTabs />
 
       <QuestForm achievements={achievements} />
 
