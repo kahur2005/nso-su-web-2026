@@ -1,14 +1,21 @@
 // components/admin/QuestForm.tsx
-// Create/edit form for a QR quest. Pass a `quest` to edit, omit it to create.
+// Create/edit form for a quest. Pass a `quest` to edit, omit it to create.
 'use client'
 import { useRef, useState } from 'react'
 import { createQuest, updateQuest } from '@/app/admin/quests/actions'
+import QuestQuestionEditor, { type QuestionDraft } from '@/components/admin/QuestQuestionEditor'
+import {
+  QUEST_TYPE_LABEL,
+  type QuestType,
+  isQuestType,
+} from '@/lib/quests'
 
 export interface QuestRow {
   id: string
   title: string
   description: string
   points: number
+  type?: QuestType
   achievementId: string | null
   availableFrom?: string | null
   availableUntil?: string | null
@@ -26,14 +33,24 @@ const labelClass = 'text-xs font-medium text-slate-500 block mb-1'
 export default function QuestForm({
   quest,
   achievements,
+  quizQuestions,
+  questionsFrozen,
 }: {
   quest?: QuestRow
   achievements: AchievementOption[]
+  quizQuestions?: QuestionDraft[]
+  questionsFrozen?: boolean
 }) {
   const isEdit = Boolean(quest)
+  const questType: QuestType =
+    quest?.type && isQuestType(quest.type) ? quest.type : 'qr'
   const formRef = useRef<HTMLFormElement>(null)
   const [open, setOpen] = useState(!isEdit)
+  const [createType, setCreateType] = useState<QuestType>('qr')
   const [pending, setPending] = useState(false)
+
+  const showQuizPointsNote = isEdit ? questType === 'quiz' : createType === 'quiz'
+  const showQrHelp = isEdit ? questType === 'qr' : createType === 'qr'
 
   if (isEdit && !open) {
     return (
@@ -61,9 +78,35 @@ export default function QuestForm({
     >
       {isEdit && <input type="hidden" name="id" value={quest!.id} />}
 
-      <h2 className="text-sm font-semibold text-slate-900">
-        {isEdit ? 'Edit quest' : 'New quest'}
-      </h2>
+      <div className="flex items-center gap-3">
+        <h2 className="text-sm font-semibold text-slate-900">
+          {isEdit ? 'Edit quest' : 'New quest'}
+        </h2>
+        {isEdit && (
+          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
+            {QUEST_TYPE_LABEL[questType]}
+          </span>
+        )}
+      </div>
+
+      {!isEdit && (
+        <div>
+          <label className={labelClass}>Type</label>
+          <select
+            name="type"
+            value={createType}
+            onChange={(e) => {
+              const next = e.target.value
+              setCreateType(isQuestType(next) ? next : 'qr')
+            }}
+            className={inputClass}
+          >
+            <option value="qr">QR — scan a printed code</option>
+            <option value="submission">Submit — upload files for approval</option>
+            <option value="quiz">Quiz — multiple-choice questions</option>
+          </select>
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="sm:col-span-2">
@@ -77,15 +120,26 @@ export default function QuestForm({
           />
         </div>
         <div>
-          <label className={labelClass}>Points</label>
-          <input
-            name="points"
-            type="number"
-            min={1}
-            required
-            defaultValue={quest?.points ?? 10}
-            className={inputClass}
-          />
+          {showQuizPointsNote ? (
+            <>
+              <label className={labelClass}>Points</label>
+              <p className="text-sm text-slate-600 py-2">
+                Sum of questions{isEdit ? `: ${quest?.points ?? 0}` : ''}
+              </p>
+            </>
+          ) : (
+            <>
+              <label className={labelClass}>Points</label>
+              <input
+                name="points"
+                type="number"
+                min={1}
+                required
+                defaultValue={quest?.points ?? 10}
+                className={inputClass}
+              />
+            </>
+          )}
         </div>
       </div>
 
@@ -171,12 +225,28 @@ export default function QuestForm({
           >
             Cancel
           </button>
-        ) : (
+        ) : showQrHelp ? (
           <p className="text-xs text-slate-500">
             New quests start inactive — generate and print the QR, then activate.
           </p>
+        ) : createType === 'quiz' ? (
+          <p className="text-xs text-slate-500">
+            After creating, edit the quest to add quiz questions.
+          </p>
+        ) : (
+          <p className="text-xs text-slate-500">
+            New quests start inactive — activate when students can submit.
+          </p>
         )}
       </div>
+
+      {isEdit && questType === 'quiz' && quest && (
+        <QuestQuestionEditor
+          questId={quest.id}
+          initial={quizQuestions ?? []}
+          frozen={questionsFrozen ?? false}
+        />
+      )}
     </form>
   )
 }

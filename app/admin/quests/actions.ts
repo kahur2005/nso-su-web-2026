@@ -1,12 +1,14 @@
 // app/admin/quests/actions.ts
-// Admin writes for QR quests. See the note in ../achievements/actions.ts on why
-// these live beside their page rather than in app/admin/actions.ts.
+// Admin writes for quests (QR, submission, quiz). See the note in
+// ../achievements/actions.ts on why these live beside their page rather than
+// in app/admin/actions.ts.
 'use server'
 
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import { revalidatePath } from 'next/cache'
+import { isQuestType } from '@/lib/quests'
 
 async function requireAdmin() {
   const session = await getServerSession(authOptions)
@@ -26,23 +28,57 @@ function achievementIdOrNull(formData: FormData): string | null {
   return value || null
 }
 
+type QuestionDraft = {
+  prompt: string
+  points: number
+  options: { label: string; isCorrect: boolean }[]
+}
+
+function validateQuestionDrafts(drafts: QuestionDraft[]): string | null {
+  if (!Array.isArray(drafts) || drafts.length === 0) {
+    return 'Add at least one question.'
+  }
+  for (const d of drafts) {
+    if (!String(d.prompt || '').trim()) return 'Each question needs a prompt.'
+    if (!Number.isFinite(d.points) || d.points <= 0) {
+      return 'Each question needs positive points.'
+    }
+    if (!Array.isArray(d.options) || d.options.length < 2) {
+      return 'Each question needs at least 2 options.'
+    }
+    const correctCount = d.options.filter((o) => o.isCorrect).length
+    if (correctCount !== 1) {
+      return 'Each question must have exactly one correct option.'
+    }
+    for (const o of d.options) {
+      if (!String(o.label || '').trim()) return 'Each option needs a label.'
+    }
+  }
+  return null
+}
+
 export async function createQuest(formData: FormData) {
   await requireAdmin()
 
   const title = String(formData.get('title') || '').trim()
   const description = String(formData.get('description') || '').trim()
-  const points = parseInt(String(formData.get('points') || '0'), 10)
+  const typeRaw = String(formData.get('type') || 'qr')
+  const type = isQuestType(typeRaw) ? typeRaw : 'qr'
+  const points =
+    type === 'quiz' ? 0 : parseInt(String(formData.get('points') || '0'), 10)
   const fromRaw = String(formData.get('availableFrom') || '').trim()
   const untilRaw = String(formData.get('availableUntil') || '').trim()
   const availableFrom = fromRaw ? new Date(fromRaw).toISOString() : null
   const availableUntil = untilRaw ? new Date(untilRaw).toISOString() : null
 
-  if (!title || !description || !Number.isFinite(points) || points <= 0) return
+  if (!title || !description) return
+  if (type !== 'quiz' && (!Number.isFinite(points) || points <= 0)) return
 
   const payload: any = {
     title,
     description,
     points,
+    type,
     achievementId: achievementIdOrNull(formData),
     isActive: false,
   }
@@ -53,6 +89,7 @@ export async function createQuest(formData: FormData) {
   if (error) {
     delete payload.availableFrom
     delete payload.availableUntil
+    delete payload.type
     await supabase.from('Quest').insert(payload)
   }
 
@@ -71,14 +108,24 @@ export async function updateQuest(formData: FormData) {
   const availableFrom = fromRaw ? new Date(fromRaw).toISOString() : null
   const availableUntil = untilRaw ? new Date(untilRaw).toISOString() : null
 
-  if (!id || !title || !description || !Number.isFinite(points) || points <= 0) return
+  if (!id || !title || !description) return
+
+  const { data: existing } = await supabase
+    .from('Quest')
+    .select('type')
+    .eq('id', id)
+    .maybeSingle()
+
+  const questType = isQuestType(existing?.type) ? existing.type : 'qr'
+
+  if (questType !== 'quiz' && (!Number.isFinite(points) || points <= 0)) return
 
   const payload: any = {
     title,
     description,
-    points,
     achievementId: achievementIdOrNull(formData),
   }
+  if (questType !== 'quiz') payload.points = points
   if (availableFrom !== undefined) payload.availableFrom = availableFrom
   if (availableUntil !== undefined) payload.availableUntil = availableUntil
 
@@ -88,6 +135,105 @@ export async function updateQuest(formData: FormData) {
     delete payload.availableUntil
     await supabase.from('Quest').update(payload).eq('id', id)
   }
+
+  revalidate()
+}
+
+export async function saveQuestQuestions(
+  formData: FormData,
+): Promise<{ error?: string } | void> {
+  await requireAdmin()
+
+  const questId = String(formData.get('questId') || '').trim()
+  const questionsRaw = String(formData.get('questions') || '')
+
+  if (!questId) return { error: 'Missing quest ID.' }
+
+  let drafts: QuestionDraft[]
+  try {
+    drafts = JSON.parse(questionsRaw)
+  } catch {
+    return { error: 'Invalid questions data.' }
+  }
+
+  const validationError = validateQuestionDrafts(drafts)
+  if (validationError) return { error: validationError }
+
+  const { data: quest, error: questError } = await supabase
+    .from('Quest')
+    .select('id, type, isDeleted')
+    .eq('id', questId)
+    .maybeSingle()
+
+  if (questError || !quest || quest.isDeleted) {
+    return { error: 'Quest not found.' }
+  }
+  if (quest.type !== 'quiz') {
+    return { error: 'Only quiz quests have questions.' }
+  }
+
+  const { data: existingQuestions } = await supabase
+    .from('QuestQuestion')
+    .select('id')
+    .eq('questId', questId)
+
+  const questionIds = (existingQuestions ?? []).map((q) => q.id)
+
+  if (questionIds.length > 0) {
+    const { count } = await supabase
+      .from('QuestAnswer')
+      .select('id', { count: 'exact', head: true })
+      .in('questionId', questionIds)
+
+    if (count && count > 0) {
+      return { error: 'Questions are frozen after students answer.' }
+    }
+  }
+
+  const { error: deleteError } = await supabase
+    .from('QuestQuestion')
+    .delete()
+    .eq('questId', questId)
+
+  if (deleteError) {
+    return { error: 'Failed to update questions.' }
+  }
+
+  let totalPoints = 0
+
+  for (let i = 0; i < drafts.length; i++) {
+    const d = drafts[i]
+    const { data: question, error: qError } = await supabase
+      .from('QuestQuestion')
+      .insert({
+        questId,
+        prompt: d.prompt.trim(),
+        points: d.points,
+        sortOrder: i,
+      })
+      .select('id')
+      .single()
+
+    if (qError || !question) {
+      return { error: 'Failed to save questions.' }
+    }
+
+    totalPoints += d.points
+
+    const optionRows = d.options.map((o, j) => ({
+      questionId: question.id,
+      label: o.label.trim(),
+      isCorrect: o.isCorrect,
+      sortOrder: j,
+    }))
+
+    const { error: oError } = await supabase.from('QuestQuestionOption').insert(optionRows)
+    if (oError) {
+      return { error: 'Failed to save options.' }
+    }
+  }
+
+  await supabase.from('Quest').update({ points: totalPoints }).eq('id', questId)
 
   revalidate()
 }
