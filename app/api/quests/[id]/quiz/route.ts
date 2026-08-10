@@ -345,10 +345,11 @@ export async function POST(
 
   let awardedThisSubmit = 0
   const newlyCorrectQuestionIds: string[] = []
+  const pointsByQuestionId = new Map<string, number>()
 
   for (const [questionId, optionId] of submittedByQuestion) {
     const existing = existingByQuestion.get(questionId)
-    if (existing?.isCorrect === true) continue
+    if (existing?.isCorrect === true && (existing.awardedPoints ?? 0) > 0) continue
 
     const option = optionsById.get(optionId)
     if (!option || option.questionId !== questionId) {
@@ -357,7 +358,7 @@ export async function POST(
 
     const question = questionsById.get(questionId)!
     const isCorrect = option.isCorrect
-    const awardedPoints = isCorrect ? question.points : 0
+    const alreadyAwarded = (existing?.awardedPoints ?? 0) > 0
 
     const { error: upsertError } = await supabase.from('QuestAnswer').upsert(
       {
@@ -365,7 +366,7 @@ export async function POST(
         questionId,
         optionId,
         isCorrect,
-        awardedPoints,
+        awardedPoints: alreadyAwarded ? existing!.awardedPoints : 0,
         answeredAt: new Date().toISOString(),
       },
       { onConflict: 'studentId,questionId' },
@@ -377,21 +378,63 @@ export async function POST(
       return NextResponse.json({ error: 'Could not save answers' }, { status: 500 })
     }
 
-    if (isCorrect) {
+    if (isCorrect && !alreadyAwarded) {
       newlyCorrectQuestionIds.push(questionId)
+      pointsByQuestionId.set(questionId, question.points)
       awardedThisSubmit += question.points
     }
   }
 
   if (awardedThisSubmit > 0) {
-    const { error: rpcError } = await supabase.rpc('adjust_points', {
-      p_student_id: studentDbId,
-      p_amount: awardedThisSubmit,
-    })
-    if (rpcError) {
-      console.error('quiz: adjust_points failed:', rpcError)
+    const { data: freshAnswers, error: freshError } = await supabase
+      .from('QuestAnswer')
+      .select('questionId, awardedPoints')
+      .eq('studentId', studentDbId)
+      .in('questionId', [...pointsByQuestionId.keys()])
+
+    if (freshError) {
+      console.error('quiz: award idempotency check failed:', freshError)
       await rollbackNewlyCorrectAnswers(studentDbId, newlyCorrectQuestionIds)
-      return NextResponse.json({ error: 'Could not award points' }, { status: 500 })
+      return NextResponse.json({ error: 'Could not verify answers' }, { status: 500 })
+    }
+
+    const payableIds: string[] = []
+    awardedThisSubmit = 0
+    for (const [qid, pts] of pointsByQuestionId) {
+      const row = (freshAnswers ?? []).find((a) => a.questionId === qid)
+      if (row && (row.awardedPoints ?? 0) === 0) {
+        payableIds.push(qid)
+        awardedThisSubmit += pts
+      }
+    }
+
+    const skippedIds = newlyCorrectQuestionIds.filter((qid) => !payableIds.includes(qid))
+    newlyCorrectQuestionIds.length = 0
+    newlyCorrectQuestionIds.push(...payableIds)
+
+    if (awardedThisSubmit > 0) {
+      const { error: rpcError } = await supabase.rpc('adjust_points', {
+        p_student_id: studentDbId,
+        p_amount: awardedThisSubmit,
+      })
+      if (rpcError) {
+        console.error('quiz: adjust_points failed:', rpcError)
+        await rollbackNewlyCorrectAnswers(studentDbId, newlyCorrectQuestionIds)
+        return NextResponse.json({ error: 'Could not award points' }, { status: 500 })
+      }
+
+      for (const qid of payableIds) {
+        const pts = pointsByQuestionId.get(qid)!
+        const { error: markError } = await supabase
+          .from('QuestAnswer')
+          .update({ awardedPoints: pts })
+          .eq('studentId', studentDbId)
+          .eq('questionId', qid)
+          .eq('awardedPoints', 0)
+        if (markError) {
+          console.error('quiz: mark awardedPoints failed:', qid, markError)
+        }
+      }
     }
   }
 
@@ -414,6 +457,16 @@ export async function POST(
   )
   if (progressError) {
     console.error('quiz: progress upsert failed:', progressError)
+    if (awardedThisSubmit > 0) {
+      const { error: reverseError } = await supabase.rpc('adjust_points', {
+        p_student_id: studentDbId,
+        p_amount: -awardedThisSubmit,
+      })
+      if (reverseError) {
+        console.error('quiz: reverse adjust_points after progress fail:', reverseError)
+      }
+      await rollbackNewlyCorrectAnswers(studentDbId, newlyCorrectQuestionIds)
+    }
     return NextResponse.json({ error: 'Could not update progress' }, { status: 500 })
   }
 

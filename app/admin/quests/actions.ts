@@ -321,7 +321,35 @@ export async function approveQuestSubmission(formData: FormData) {
 
   if (!updated) return
 
-  await supabase.from('QuestProgress').upsert(
+  const { error: rpcError } = await supabase.rpc('adjust_points', {
+    p_student_id: sub.studentId,
+    p_amount: quest.points,
+  })
+
+  if (rpcError) {
+    console.error('approveQuestSubmission adjust_points:', rpcError)
+    await supabase
+      .from('QuestSubmission')
+      .update({
+        status: 'awaiting_approval',
+        reviewedAt: null,
+        reviewedBy: null,
+      })
+      .eq('id', id)
+      .eq('status', 'approved')
+    await supabase.from('QuestProgress').upsert(
+      {
+        studentId: sub.studentId,
+        questId: sub.questId,
+        status: 'in_progress',
+        completedAt: null,
+      },
+      { onConflict: 'studentId,questId' },
+    )
+    throw new Error('Could not award points for this submission. Approval was rolled back.')
+  }
+
+  const { error: progressError } = await supabase.from('QuestProgress').upsert(
     {
       studentId: sub.studentId,
       questId: sub.questId,
@@ -330,12 +358,23 @@ export async function approveQuestSubmission(formData: FormData) {
     },
     { onConflict: 'studentId,questId' },
   )
-
-  const { error: rpcError } = await supabase.rpc('adjust_points', {
-    p_student_id: sub.studentId,
-    p_amount: quest.points,
-  })
-  if (rpcError) console.error('approveQuestSubmission adjust_points:', rpcError)
+  if (progressError) {
+    console.error('approveQuestSubmission QuestProgress:', progressError)
+    await supabase.rpc('adjust_points', {
+      p_student_id: sub.studentId,
+      p_amount: -quest.points,
+    })
+    await supabase
+      .from('QuestSubmission')
+      .update({
+        status: 'awaiting_approval',
+        reviewedAt: null,
+        reviewedBy: null,
+      })
+      .eq('id', id)
+      .eq('status', 'approved')
+    throw new Error('Could not update quest progress. Approval was rolled back.')
+  }
 
   if (quest.achievementId) {
     const { error: achError } = await supabase.from('StudentAchievement').upsert(

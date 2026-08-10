@@ -105,11 +105,14 @@ const QUEST_FILE_MIME = new Set([
   'application/pdf',
 ])
 
+export const QUEST_FILE_MAX_BYTES = 10 * 1024 * 1024
+
 /** Images go through shrink/WebP; PDFs are stored as-is. */
 export async function uploadQuestFile(
   file: File,
 ): Promise<{ url: string; fileName: string; mimeType: string } | null> {
   if (!file || file.size === 0) return null
+  if (file.size > QUEST_FILE_MAX_BYTES) return null
   const mime = file.type || 'application/octet-stream'
   if (!QUEST_FILE_MIME.has(mime)) return null
 

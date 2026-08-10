@@ -5,7 +5,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-import { uploadQuestFile } from '@/lib/storage'
+import { QUEST_FILE_MAX_BYTES, uploadQuestFile } from '@/lib/storage'
 import { assertQuestOpenForStudent } from '@/lib/quests-data'
 
 async function resolveStudentDbId(session: {
@@ -133,6 +133,15 @@ export async function POST(
   }
   if (files.length > 10) {
     return NextResponse.json({ error: 'Too many files' }, { status: 400 })
+  }
+
+  for (const file of files) {
+    if (file.size > QUEST_FILE_MAX_BYTES) {
+      return NextResponse.json(
+        { error: `File too large (max 10 MB): ${file.name}` },
+        { status: 400 },
+      )
+    }
   }
 
   const uploaded: { url: string; fileName: string; mimeType: string }[] = []
