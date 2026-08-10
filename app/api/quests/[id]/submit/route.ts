@@ -67,30 +67,40 @@ export async function POST(
     return NextResponse.json({ error: 'You already completed this quest.' }, { status: 409 })
   }
 
-  const { data: approvedSub } = await supabase
+  const { data: approvedRows, error: approvedError } = await supabase
     .from('QuestSubmission')
     .select('id')
     .eq('studentId', studentDbId)
     .eq('questId', id)
     .eq('status', 'approved')
-    .maybeSingle()
+    .limit(1)
 
-  if (approvedSub) {
+  if (approvedError) {
+    console.error('quest submit: approved lookup failed:', approvedError)
+    return NextResponse.json({ error: 'Could not verify submission status' }, { status: 500 })
+  }
+
+  if (approvedRows?.[0]) {
     return NextResponse.json(
       { error: 'You already have an approved submission for this quest.' },
       { status: 409 },
     )
   }
 
-  const { data: latestSub } = await supabase
+  const { data: latestRows, error: latestError } = await supabase
     .from('QuestSubmission')
     .select('status')
     .eq('studentId', studentDbId)
     .eq('questId', id)
     .order('createdAt', { ascending: false })
     .limit(1)
-    .maybeSingle()
 
+  if (latestError) {
+    console.error('quest submit: latest submission lookup failed:', latestError)
+    return NextResponse.json({ error: 'Could not verify submission status' }, { status: 500 })
+  }
+
+  const latestSub = latestRows?.[0]
   if (latestSub?.status === 'approved') {
     return NextResponse.json(
       { error: 'You already have an approved submission for this quest.' },
