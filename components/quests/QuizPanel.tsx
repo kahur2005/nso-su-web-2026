@@ -20,6 +20,7 @@ type QuizData = {
   totalPoints: number
   isPerfect: boolean
   awardedThisSubmit?: number
+  warning?: string
 }
 
 type Props = {
@@ -35,6 +36,7 @@ export default function QuizPanel({ questId, disabled, onSubmitted }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [picks, setPicks] = useState<Record<string, string>>({})
   const [lastAwarded, setLastAwarded] = useState<number | null>(null)
+  const [warning, setWarning] = useState<string | null>(null)
 
   const loadQuiz = useCallback(async () => {
     setLoading(true)
@@ -77,6 +79,7 @@ export default function QuizPanel({ questId, disabled, onSubmitted }: Props) {
     setSubmitting(true)
     setError(null)
     setLastAwarded(null)
+    setWarning(null)
 
     const answers = unlocked.map((q) => ({
       questionId: q.id,
@@ -98,6 +101,9 @@ export default function QuizPanel({ questId, disabled, onSubmitted }: Props) {
       setData(json as QuizData)
       if (typeof json.awardedThisSubmit === 'number' && json.awardedThisSubmit > 0) {
         setLastAwarded(json.awardedThisSubmit)
+      }
+      if (json.warning === 'achievement_not_granted') {
+        setWarning('Perfect score, but the badge could not be saved. Try submitting again.')
       }
 
       const nextPicks: Record<string, string> = {}
@@ -157,6 +163,12 @@ export default function QuizPanel({ questId, disabled, onSubmitted }: Props) {
       {lastAwarded != null && lastAwarded > 0 && (
         <p className="font-bytebounce text-[16px] leading-snug text-[#33691e]">
           +{lastAwarded} points earned!
+        </p>
+      )}
+
+      {warning && (
+        <p className="font-bytebounce text-[14px] leading-snug text-[#e65100]">
+          ⚠️ {warning}
         </p>
       )}
 

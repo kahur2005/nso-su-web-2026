@@ -173,6 +173,39 @@ function buildQuizPayload(
   return { questions, earnedPoints, totalPoints, isPerfect }
 }
 
+/** Undo rows that became correct this request so a failed RPC does not lock them. */
+async function rollbackNewlyCorrectAnswers(
+  studentDbId: string,
+  questionIds: string[],
+) {
+  for (const questionId of questionIds) {
+    const { error } = await supabase
+      .from('QuestAnswer')
+      .update({ isCorrect: false, awardedPoints: 0 })
+      .eq('studentId', studentDbId)
+      .eq('questionId', questionId)
+    if (error) {
+      console.error('quiz: rollback newly-correct answer failed:', questionId, error)
+    }
+  }
+}
+
+async function grantQuizAchievement(
+  studentDbId: string,
+  achievementId: string,
+): Promise<'granted' | 'achievement_not_granted'> {
+  const row = { studentId: studentDbId, achievementId }
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { error } = await supabase.from('StudentAchievement').upsert(row, {
+      onConflict: 'studentId,achievementId',
+      ignoreDuplicates: true,
+    })
+    if (!error) return 'granted'
+    console.error(`quiz: StudentAchievement upsert failed (attempt ${attempt + 1}):`, error)
+  }
+  return 'achievement_not_granted'
+}
+
 async function buildResponse(
   questId: string,
   studentDbId: string,
@@ -311,6 +344,7 @@ export async function POST(
   }
 
   let awardedThisSubmit = 0
+  const newlyCorrectQuestionIds: string[] = []
 
   for (const [questionId, optionId] of submittedByQuestion) {
     const existing = existingByQuestion.get(questionId)
@@ -339,10 +373,12 @@ export async function POST(
 
     if (upsertError) {
       console.error('quiz: answer upsert failed:', upsertError)
+      await rollbackNewlyCorrectAnswers(studentDbId, newlyCorrectQuestionIds)
       return NextResponse.json({ error: 'Could not save answers' }, { status: 500 })
     }
 
     if (isCorrect) {
+      newlyCorrectQuestionIds.push(questionId)
       awardedThisSubmit += question.points
     }
   }
@@ -354,6 +390,7 @@ export async function POST(
     })
     if (rpcError) {
       console.error('quiz: adjust_points failed:', rpcError)
+      await rollbackNewlyCorrectAnswers(studentDbId, newlyCorrectQuestionIds)
       return NextResponse.json({ error: 'Could not award points' }, { status: 500 })
     }
   }
@@ -391,13 +428,18 @@ export async function POST(
     refreshed.answerRows,
   )
 
+  let warning: string | undefined
+
   if (payload.isPerfect && questGate.quest.achievementId) {
-    const { error: achError } = await supabase.from('StudentAchievement').upsert(
-      { studentId: studentDbId, achievementId: questGate.quest.achievementId },
-      { onConflict: 'studentId,achievementId', ignoreDuplicates: true },
-    )
-    if (achError) console.error('quiz: StudentAchievement upsert failed:', achError)
+    const result = await grantQuizAchievement(studentDbId, questGate.quest.achievementId)
+    if (result === 'achievement_not_granted') {
+      warning = 'achievement_not_granted'
+    }
   }
 
-  return NextResponse.json({ ...payload, awardedThisSubmit })
+  return NextResponse.json({
+    ...payload,
+    awardedThisSubmit,
+    ...(warning ? { warning } : {}),
+  })
 }
