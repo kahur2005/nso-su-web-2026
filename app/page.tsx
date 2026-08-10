@@ -5,11 +5,10 @@
 import Link from 'next/link'
 import CountdownTimer from '@/components/ui/CountdownTimer'
 
-// Set NEXT_PUBLIC_NSO_EVENT_DATE in .env.local, e.g.:
-//   NEXT_PUBLIC_NSO_EVENT_DATE=2026-08-15T08:00:00+07:00
-// Falls back to a placeholder date if not set so the page still renders.
+// Set NEXT_PUBLIC_NSO_EVENT_DATE in .env.local to override. Default matches
+// Day 1 in lib/timeline.ts (18 Aug 2026, 08:00 WIB).
 const EVENT_DATE_ISO =
-  process.env.NEXT_PUBLIC_NSO_EVENT_DATE ?? '2026-09-01T08:00:00+07:00'
+  process.env.NEXT_PUBLIC_NSO_EVENT_DATE ?? '2026-08-18T08:00:00+07:00'
 
 export default function HomePage() {
   const eventDate = new Date(EVENT_DATE_ISO)
