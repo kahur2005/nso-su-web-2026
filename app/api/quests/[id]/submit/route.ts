@@ -23,6 +23,15 @@ async function resolveStudentDbId(session: {
   return studentDbId || null
 }
 
+function isUniqueViolation(error: { code?: string } | null): boolean {
+  return error?.code === '23505'
+}
+
+async function abandonSubmission(submissionId: string) {
+  const { error } = await supabase.from('QuestSubmission').delete().eq('id', submissionId)
+  if (error) console.error('quest submit: abandon submission failed:', error)
+}
+
 export async function POST(
   request: Request,
   ctx: { params: Promise<{ id: string }> },
@@ -56,6 +65,37 @@ export async function POST(
 
   if (progress?.status === 'completed') {
     return NextResponse.json({ error: 'You already completed this quest.' }, { status: 409 })
+  }
+
+  const { data: approvedSub } = await supabase
+    .from('QuestSubmission')
+    .select('id')
+    .eq('studentId', studentDbId)
+    .eq('questId', id)
+    .eq('status', 'approved')
+    .maybeSingle()
+
+  if (approvedSub) {
+    return NextResponse.json(
+      { error: 'You already have an approved submission for this quest.' },
+      { status: 409 },
+    )
+  }
+
+  const { data: latestSub } = await supabase
+    .from('QuestSubmission')
+    .select('status')
+    .eq('studentId', studentDbId)
+    .eq('questId', id)
+    .order('createdAt', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (latestSub?.status === 'approved') {
+    return NextResponse.json(
+      { error: 'You already have an approved submission for this quest.' },
+      { status: 409 },
+    )
   }
 
   const { data: pending } = await supabase
@@ -106,6 +146,12 @@ export async function POST(
 
   if (subError || !sub) {
     console.error('quest submit: insert failed:', subError)
+    if (isUniqueViolation(subError)) {
+      return NextResponse.json(
+        { error: 'You already have a submission awaiting review.' },
+        { status: 409 },
+      )
+    }
     return NextResponse.json({ error: 'Could not save submission' }, { status: 500 })
   }
 
@@ -120,6 +166,7 @@ export async function POST(
   const { error: filesError } = await supabase.from('QuestSubmissionFile').insert(fileRows)
   if (filesError) {
     console.error('quest submit: files insert failed:', filesError)
+    await abandonSubmission(sub.id)
     return NextResponse.json({ error: 'Could not save files' }, { status: 500 })
   }
 
@@ -134,6 +181,8 @@ export async function POST(
   )
   if (progressError) {
     console.error('quest submit: progress upsert failed:', progressError)
+    await abandonSubmission(sub.id)
+    return NextResponse.json({ error: 'Could not update quest progress' }, { status: 500 })
   }
 
   return NextResponse.json({ submissionId: sub.id, status: 'awaiting_approval' as const })
