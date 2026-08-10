@@ -45,5 +45,7 @@ next-env.d.ts
 
 /app/generated/prisma
 
+.worktrees/
+
 # superpowers SDD scratch
 .superpowers/
