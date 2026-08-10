@@ -1,6 +1,12 @@
 // lib/quests.ts
 export type QuestType = 'qr' | 'submission' | 'quiz'
 
+export type QuestSubmissionStatus =
+  | 'awaiting_approval'
+  | 'approved'
+  | 'rejected'
+  | null
+
 export const QUEST_TYPE_LABEL: Record<QuestType, string> = {
   qr: 'QR',
   submission: 'Submit',

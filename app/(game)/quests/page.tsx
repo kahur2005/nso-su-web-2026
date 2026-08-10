@@ -8,10 +8,17 @@
 // Time-gated quests show "Opens at HH:MM" and drop the scan affordance until
 // the window opens.
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import PageWrapper from '@/components/layout/PageWrapper'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import Link from 'next/link'
+import SubmissionPanel from '@/components/quests/SubmissionPanel'
+import QuizPanel from '@/components/quests/QuizPanel'
+import {
+  QUEST_TYPE_LABEL,
+  type QuestType,
+  type QuestSubmissionStatus,
+} from '@/lib/quests'
 
 interface QuestAchievement {
   name: string
@@ -24,20 +31,21 @@ interface Quest {
   title: string
   description: string
   points: number
+  type: QuestType
   achievement: QuestAchievement | null
   isCompleted: boolean
   completedAt: string | null
+  progressStatus: string | null
+  submissionStatus: QuestSubmissionStatus
   availableFrom: string | null
   availableUntil: string | null
-  isLocked: boolean   // window hasn't opened yet
+  isLocked: boolean
 }
 
 /** Keeps light text legible against the wood grain, as BottomNav's labels do. */
 const PLANK_TEXT_SHADOW = '2px 2px 0 #4e342e'
 
 /** The quest reward: gold, with a thin black outline on all four sides. */
-/* Outline is 2px to stay proportional to the 58px glyphs — a 1px outline
- * reads as a thin fringe at this size. */
 const GOLD_POINTS = {
   color: '#ffd23f',
   textShadow:
@@ -48,12 +56,6 @@ function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
-/**
- * 3-slice sprite background: fixed end caps with the middle stretched to fill,
- * so the panel takes any width without its end art distorting. Used here for
- * the progress plank, lifted from the identical treatment in BottomNav — keep
- * the two in step if the plank sprites are ever re-exported.
- */
 function SliceBg({
   base,
   leftWidth,
@@ -95,7 +97,6 @@ function SliceBg({
   )
 }
 
-/** The solid pixel chevron on the right edge of an actionable quest card. */
 function Chevron() {
   return (
     <span
@@ -112,15 +113,63 @@ function Chevron() {
   )
 }
 
-function QuestCard({ quest }: { quest: Quest }) {
-  const actionable = !quest.isCompleted && !quest.isLocked
+function TypeBadge({ type }: { type: QuestType }) {
+  return (
+    <span className="inline-block rounded border border-[#c9a97b] bg-[#f5e0aa] px-2 py-0.5 font-bytebounce text-[13px] leading-none uppercase text-[#8a5a37]">
+      {QUEST_TYPE_LABEL[type]}
+    </span>
+  )
+}
 
-  const card = (
+function statusLabel(quest: Quest): string {
+  if (quest.isCompleted) {
+    const date = quest.completedAt
+      ? new Date(quest.completedAt).toLocaleDateString(undefined, {
+          month: 'short',
+          day: 'numeric',
+        })
+      : null
+    return date ? `✅ Completed · ${date}` : '✅ Completed'
+  }
+  if (quest.isLocked) return 'Not available yet'
+  if (quest.type === 'submission') {
+    if (quest.submissionStatus === 'awaiting_approval') return '⏳ Awaiting review'
+    if (quest.submissionStatus === 'rejected') return '❌ Rejected — try again'
+    if (quest.submissionStatus === 'approved') return '✅ Approved'
+    if (quest.progressStatus === 'in_progress') return 'In progress'
+  }
+  return 'Not completed yet'
+}
+
+function ctaLabel(quest: Quest): string | null {
+  if (quest.isCompleted || quest.isLocked) return null
+  if (quest.type === 'qr') return 'SCAN ME'
+  if (quest.type === 'submission') return 'SUBMIT'
+  if (quest.type === 'quiz') return 'QUIZ'
+  return null
+}
+
+function QuestCard({
+  quest,
+  expanded,
+  onToggle,
+  onRefresh,
+}: {
+  quest: Quest
+  expanded: boolean
+  onToggle: () => void
+  onRefresh: () => void
+}) {
+  const actionable = !quest.isCompleted && !quest.isLocked
+  const cta = ctaLabel(quest)
+  const isQrScan = quest.type === 'qr' && actionable
+  const isPanelQuest =
+    (quest.type === 'submission' || quest.type === 'quiz') && actionable
+
+  const cardInner = (
     <article
       className={`relative min-h-[72px] ${quest.isLocked ? 'opacity-75' : ''}`}
       style={{
-        // One slab of parchment (365x72) stretched to the card, torn edges and
-        // corners included — not sliced, so it scales in both directions.
         backgroundImage: 'url(/images/quests/paper.png)',
         backgroundSize: '100% 100%',
         backgroundRepeat: 'no-repeat',
@@ -129,7 +178,6 @@ function QuestCard({ quest }: { quest: Quest }) {
     >
       <div className="relative flex items-center gap-2 py-3 pl-5 pr-4">
         <div className="min-w-0 flex-1">
-          {/* Locked banner */}
           {quest.isLocked && (
             <div className="mb-2 flex items-center gap-1.5 rounded border border-[#c9a97b] bg-[#fff3d9] px-2 py-1">
               <span className="text-base leading-none">🔒</span>
@@ -139,12 +187,14 @@ function QuestCard({ quest }: { quest: Quest }) {
             </div>
           )}
 
-          {/* Title */}
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+            <TypeBadge type={quest.type} />
+          </div>
+
           <h2 className="mt-1.5 font-bytebounce text-[23px] uppercase leading-none text-[#3e2723]">
             {quest.title}
           </h2>
 
-          {/* Indented subtitle, as in the Figma card */}
           <p className="mt-2 pl-3 font-bytebounce text-[17px] leading-tight text-[#6d4c41]">
             {quest.description}
           </p>
@@ -167,28 +217,17 @@ function QuestCard({ quest }: { quest: Quest }) {
             </div>
           )}
 
-          {/* Status */}
           <p className="mt-2 font-bytebounce text-[16px] leading-none">
             {quest.isCompleted ? (
-              <span className="text-[#4a7c2f]">
-                ✅ Completed
-                {quest.completedAt &&
-                  ` · ${new Date(quest.completedAt).toLocaleDateString(undefined, {
-                    month: 'short',
-                    day: 'numeric',
-                  })}`}
-              </span>
+              <span className="text-[#4a7c2f]">{statusLabel(quest)}</span>
             ) : quest.isLocked ? (
-              <span className="text-[#a58962]">Not available yet</span>
+              <span className="text-[#a58962]">{statusLabel(quest)}</span>
             ) : (
-              <span className="text-[#a58962]">Not completed yet</span>
+              <span className="text-[#a58962]">{statusLabel(quest)}</span>
             )}
           </p>
         </div>
 
-        {/* Reward + scan affordance: points then button, side by side at the
-            right edge, held vertically centred against the title/description
-            block by the `items-center` on the row. */}
         <div className="flex shrink-0 items-center gap-3">
           <span
             className="font-bytebounce text-[58px] leading-none"
@@ -197,29 +236,53 @@ function QuestCard({ quest }: { quest: Quest }) {
             +{quest.points}
           </span>
 
-          {/* A span, not a button — the whole card is already the link. */}
-          {actionable && (
+          {cta && (
             <span className="whitespace-nowrap rounded border-2 border-[#3a2418] bg-[#8a5a37] px-3 py-1.5 font-bytebounce text-[18px] leading-none text-[#ffd23f]">
-              SCAN ME
+              {cta}
             </span>
           )}
         </div>
 
-        {actionable && <Chevron />}
+        {(isQrScan || isPanelQuest) && <Chevron />}
       </div>
     </article>
   )
 
-  if (!actionable) return card
-
-  return (
+  const cardBody = isQrScan ? (
     <Link
       href="/scan"
       aria-label={`Scan the QR code for ${quest.title}`}
       className="block transition-transform active:translate-y-0.5"
     >
-      {card}
+      {cardInner}
     </Link>
+  ) : isPanelQuest ? (
+    <button
+      type="button"
+      aria-expanded={expanded}
+      aria-label={`${expanded ? 'Close' : 'Open'} ${quest.title}`}
+      onClick={onToggle}
+      className="block w-full text-left transition-transform active:translate-y-0.5"
+    >
+      {cardInner}
+    </button>
+  ) : (
+    cardInner
+  )
+
+  return (
+    <div className="space-y-2">
+      {cardBody}
+      {expanded && quest.type === 'submission' && (
+        <SubmissionPanel
+          questId={quest.id}
+          submissionStatus={quest.submissionStatus}
+          disabled={quest.isLocked || quest.isCompleted}
+          onSubmitted={onRefresh}
+        />
+      )}
+      {expanded && quest.type === 'quiz' && <QuizPanel />}
+    </div>
   )
 }
 
@@ -227,14 +290,18 @@ export default function QuestsPage() {
   const [quests, setQuests] = useState<Quest[]>([])
   const [loading, setLoading] = useState(true)
   const [showDone, setShowDone] = useState(true)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetch('/api/quests')
+  const loadQuests = useCallback(() => {
+    return fetch('/api/quests')
       .then((r) => r.json())
       .then((d) => setQuests(d.quests ?? []))
       .catch(() => setQuests([]))
-      .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    loadQuests().finally(() => setLoading(false))
+  }, [loadQuests])
 
   const completed = quests.filter((q) => q.isCompleted).length
   const visible = showDone ? quests : quests.filter((q) => !q.isCompleted)
@@ -242,15 +309,12 @@ export default function QuestsPage() {
 
   return (
     <PageWrapper>
-      {/* Jungle backdrop from the Figma frame — the same art /scan uses.
-          Renders after PageWrapper's sky layer at the same z-index, so it wins. */}
       <div
         className="fixed inset-0 -z-10 bg-cover bg-bottom"
         style={{ backgroundImage: 'url(/images/scan/bg.png)' }}
       />
 
       <div className="relative game-column pb-4 pt-14">
-        {/* Section header: scroll icon + title */}
         <div className="flex items-center gap-2.5 px-1">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -269,9 +333,6 @@ export default function QuestsPage() {
           </div>
         ) : (
           <>
-            {/* Overall progress, on the same wooden plank as the bottom nav.
-                Height and cap width are BottomNav's 80/37, which is the plank
-                art's natural aspect ratio — keep them in step if either moves. */}
             <div className="relative mt-3.5 h-20">
               <SliceBg base="/images/nav/plank" leftWidth={37} rightWidth={37} />
 
@@ -314,7 +375,17 @@ export default function QuestsPage() {
 
             <div className="mt-3.5 space-y-3.5">
               {visible.map((quest) => (
-                <QuestCard key={quest.id} quest={quest} />
+                <QuestCard
+                  key={quest.id}
+                  quest={quest}
+                  expanded={expandedId === quest.id}
+                  onToggle={() =>
+                    setExpandedId((id) => (id === quest.id ? null : quest.id))
+                  }
+                  onRefresh={() => {
+                    loadQuests()
+                  }}
+                />
               ))}
             </div>
 
