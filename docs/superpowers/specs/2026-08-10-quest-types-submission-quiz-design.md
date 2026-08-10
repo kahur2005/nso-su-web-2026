@@ -1,7 +1,7 @@
 # Quest types: submission + quiz — design
 
 **Date:** 2026-08-10  
-**Status:** approved; implementation plan at `docs/superpowers/plans/2026-08-10-quest-types-submission-quiz.md`  
+**Status:** approved, implemented  
 **Approach:** Revive `Quest.type` + child tables (Approach 1)
 
 ## Problem
