@@ -35,7 +35,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Student not found' }, { status: 404 })
   }
 
-  const [questsRes, progressRes, submissionsRes] = await Promise.all([
+  const [questsRes, progressRes, submissionsRes, quizQuestionsRes] = await Promise.all([
     supabase
       .from('Quest')
       .select(
@@ -53,6 +53,7 @@ export async function GET() {
       .select('questId, status, createdAt')
       .eq('studentId', studentDbId)
       .order('createdAt', { ascending: false }),
+    supabase.from('QuestQuestion').select('id, questId'),
   ])
 
   if (questsRes.error) {
@@ -65,9 +66,46 @@ export async function GET() {
   if (submissionsRes.error) {
     console.error('quests: submissions fetch failed:', submissionsRes.error)
   }
+  if (quizQuestionsRes.error) {
+    console.error('quests: quiz questions fetch failed:', quizQuestionsRes.error)
+  }
 
   const quests = questsRes.data ?? []
   const progressRows = progressRes.data ?? []
+
+  const quizQuestionIdsByQuest = new Map<string, string[]>()
+  for (const q of quizQuestionsRes.data ?? []) {
+    const list = quizQuestionIdsByQuest.get(q.questId) ?? []
+    list.push(q.id)
+    quizQuestionIdsByQuest.set(q.questId, list)
+  }
+
+  const allQuizQuestionIds = (quizQuestionsRes.data ?? []).map((q) => q.id)
+  let quizCorrectByQuest = new Map<string, number>()
+
+  if (allQuizQuestionIds.length > 0) {
+    const { data: correctAnswers, error: correctError } = await supabase
+      .from('QuestAnswer')
+      .select('questionId, isCorrect')
+      .eq('studentId', studentDbId)
+      .eq('isCorrect', true)
+      .in('questionId', allQuizQuestionIds)
+
+    if (correctError) {
+      console.error('quests: quiz answers fetch failed:', correctError)
+    } else {
+      const questionToQuest = new Map<string, string>()
+      for (const [questId, qids] of quizQuestionIdsByQuest) {
+        for (const qid of qids) questionToQuest.set(qid, questId)
+      }
+      for (const row of correctAnswers ?? []) {
+        const questId = questionToQuest.get(row.questionId)
+        if (questId) {
+          quizCorrectByQuest.set(questId, (quizCorrectByQuest.get(questId) ?? 0) + 1)
+        }
+      }
+    }
+  }
 
   const progressByQuest = new Map(progressRows.map((p) => [p.questId, p]))
 
@@ -89,13 +127,21 @@ export async function GET() {
 
       const progress = progressByQuest.get(q.id)
       const latestSub = latestSubByQuest.get(q.id)
+      const questType = isQuestType(q.type) ? q.type : 'qr'
+      const quizQids = quizQuestionIdsByQuest.get(q.id)
+      const quizTotal =
+        questType === 'quiz' && quizQids ? quizQids.length : null
+      const quizCorrectCount =
+        questType === 'quiz' && quizTotal != null && quizTotal > 0
+          ? (quizCorrectByQuest.get(q.id) ?? 0)
+          : null
 
       return {
         id: q.id,
         title: q.title,
         description: q.description,
         points: q.points,
-        type: isQuestType(q.type) ? q.type : 'qr',
+        type: questType,
         achievement: q.achievement ?? null,
         progressStatus: progress?.status ?? null,
         submissionStatus: latestSub?.status ?? null,
@@ -105,6 +151,8 @@ export async function GET() {
         availableUntil: q.availableUntil ?? null,
         isLocked: !!notYet,
         isExpired: !!expired,
+        quizCorrectCount,
+        quizTotal,
       }
     })
     .filter((q) => !q.isExpired)

@@ -40,6 +40,8 @@ interface Quest {
   availableFrom: string | null
   availableUntil: string | null
   isLocked: boolean
+  quizCorrectCount: number | null
+  quizTotal: number | null
 }
 
 /** Keeps light text legible against the wood grain, as BottomNav's labels do. */
@@ -121,7 +123,30 @@ function TypeBadge({ type }: { type: QuestType }) {
   )
 }
 
+function isQuizPerfect(quest: Quest): boolean {
+  return (
+    quest.type === 'quiz' &&
+    quest.quizTotal != null &&
+    quest.quizTotal > 0 &&
+    (quest.quizCorrectCount ?? 0) >= quest.quizTotal
+  )
+}
+
 function statusLabel(quest: Quest): string {
+  if (quest.isCompleted && quest.type === 'quiz' && quest.quizTotal != null && quest.quizTotal > 0) {
+    const n = quest.quizCorrectCount ?? 0
+    if (n === quest.quizTotal) {
+      const date = quest.completedAt
+        ? new Date(quest.completedAt).toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric',
+          })
+        : null
+      return date ? `✅ Perfect · ${date}` : '✅ Perfect'
+    }
+    if (n > 0) return `${n}/${quest.quizTotal} correct — keep trying`
+    return 'Attempted — keep trying'
+  }
   if (quest.isCompleted) {
     const date = quest.completedAt
       ? new Date(quest.completedAt).toLocaleDateString(undefined, {
@@ -138,14 +163,24 @@ function statusLabel(quest: Quest): string {
     if (quest.submissionStatus === 'approved') return '✅ Approved'
     if (quest.progressStatus === 'in_progress') return 'In progress'
   }
+  if (quest.type === 'quiz' && quest.quizTotal != null && quest.quizTotal > 0) {
+    const n = quest.quizCorrectCount ?? 0
+    if (n === quest.quizTotal) return `✅ ${n}/${quest.quizTotal} correct`
+    if (n > 0) return `${n}/${quest.quizTotal} correct — keep trying`
+    return 'Not completed yet'
+  }
   return 'Not completed yet'
 }
 
 function ctaLabel(quest: Quest): string | null {
-  if (quest.isCompleted || quest.isLocked) return null
+  if (quest.isLocked) return null
+  if (quest.type === 'quiz') {
+    if (isQuizPerfect(quest)) return null
+    return 'QUIZ'
+  }
+  if (quest.isCompleted) return null
   if (quest.type === 'qr') return 'SCAN ME'
   if (quest.type === 'submission') return 'SUBMIT'
-  if (quest.type === 'quiz') return 'QUIZ'
   return null
 }
 
@@ -160,7 +195,9 @@ function QuestCard({
   onToggle: () => void
   onRefresh: () => void
 }) {
-  const actionable = !quest.isCompleted && !quest.isLocked
+  const actionable =
+    !quest.isLocked &&
+    (quest.type === 'quiz' ? !isQuizPerfect(quest) : !quest.isCompleted)
   const cta = ctaLabel(quest)
   const isQrScan = quest.type === 'qr' && actionable
   const isPanelQuest =
@@ -281,7 +318,13 @@ function QuestCard({
           onSubmitted={onRefresh}
         />
       )}
-      {expanded && quest.type === 'quiz' && <QuizPanel />}
+      {expanded && quest.type === 'quiz' && (
+        <QuizPanel
+          questId={quest.id}
+          disabled={quest.isLocked}
+          onSubmitted={onRefresh}
+        />
+      )}
     </div>
   )
 }
