@@ -48,19 +48,49 @@ export function safeEqualHex(a: string, b: string): boolean {
   return timingSafeEqual(bufA, bufB)
 }
 
+function isLocalhostUrl(value: string): boolean {
+  try {
+    const { hostname } = new URL(value)
+    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1'
+  } catch {
+    return /localhost|127\.0\.0\.1/i.test(value)
+  }
+}
+
+function normalizeBase(value: string | null | undefined): string | null {
+  if (!value) return null
+  const trimmed = value.trim().replace(/\/+$/, '')
+  if (!trimmed) return null
+  // VERCEL_URL is host-only; env may already include a scheme.
+  if (/^https?:\/\//i.test(trimmed)) return trimmed
+  return `https://${trimmed}`
+}
+
 /**
- * Absolute reset URL. Prefer an explicit base (e.g. the request's public
- * origin on Vercel) over NEXT_PUBLIC_BASE_URL — that env is often left at
- * the local scaffold value and would put localhost into production emails.
+ * Pick a public site origin for emailed links. Never prefer a localhost
+ * scaffold value when a real public candidate exists (common Vercel misconfig).
+ */
+export function resolveResetBase(candidates: Array<string | null | undefined>): string {
+  const normalized = candidates.map(normalizeBase).filter((v): v is string => Boolean(v))
+  const publicBase = normalized.find((v) => !isLocalhostUrl(v))
+  if (publicBase) return publicBase
+  if (process.env.VERCEL && process.env.VERCEL_URL) {
+    return normalizeBase(process.env.VERCEL_URL) || 'http://localhost:3000'
+  }
+  return normalized[0] || 'http://localhost:3000'
+}
+
+/**
+ * Absolute reset URL. `baseOverride` should be the request's public origin
+ * when available; localhost env values are skipped if any public candidate exists.
  */
 export function resetLink(rawToken: string, baseOverride?: string | null): string {
   const envBase = process.env.NEXT_PUBLIC_BASE_URL || null
-  const rawBase = (baseOverride && baseOverride.trim()) || envBase
-  const usedFallback = !rawBase
-  const usedOverride = Boolean(baseOverride && baseOverride.trim())
-  const base = (rawBase || 'http://localhost:3000').replace(/\/+$/, '')
+  const nextAuthUrl = process.env.NEXTAUTH_URL || null
+  const vercelUrl = process.env.VERCEL_URL || null
+  const base = resolveResetBase([baseOverride, envBase, nextAuthUrl, vercelUrl])
   // #region agent log
-  const payload = {sessionId:'06b2cb',runId:'post-fix',hypothesisId:'A-B-E',location:'lib/password-reset.ts:resetLink',message:'reset link base resolved',data:{envBase,baseOverride:baseOverride??null,usedOverride,usedFallback,resolvedBase:base,nextAuthUrl:process.env.NEXTAUTH_URL??null,vercelUrl:process.env.VERCEL_URL??null,nodeEnv:process.env.NODE_ENV??null},timestamp:Date.now()}
+  const payload = {sessionId:'06b2cb',runId:'post-fix',hypothesisId:'A-B-E-F',location:'lib/password-reset.ts:resetLink',message:'reset link base resolved',data:{envBase,baseOverride:baseOverride??null,nextAuthUrl,vercelUrl,resolvedBase:base,isLocalhost:isLocalhostUrl(base),nodeEnv:process.env.NODE_ENV??null,onVercel:Boolean(process.env.VERCEL)},timestamp:Date.now()}
   fetch('http://127.0.0.1:7683/ingest/491e9167-62e2-4f60-bb4c-3c2656e9f6ec',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'06b2cb'},body:JSON.stringify(payload)}).catch(()=>{});
   console.info('[nso-debug][06b2cb]', JSON.stringify(payload))
   // #endregion

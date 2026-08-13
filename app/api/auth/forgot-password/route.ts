@@ -12,6 +12,7 @@ import {
   buildResetEmail,
   createResetToken,
   resetLink,
+  resolveResetBase,
 } from '@/lib/password-reset'
 
 /**
@@ -22,6 +23,9 @@ const GENERIC = { ok: true, message: 'If that email has an account, a reset link
 
 /** Public site origin from the incoming request (works behind Vercel’s proxy). */
 function publicBaseFromRequest(request: Request): string | null {
+  const origin = request.headers.get('origin')?.trim() || null
+  if (origin) return origin.replace(/\/+$/, '')
+
   const host =
     request.headers.get('x-forwarded-host')?.split(',')[0]?.trim() ||
     request.headers.get('host')?.trim() ||
@@ -33,18 +37,36 @@ function publicBaseFromRequest(request: Request): string | null {
   return `${proto}://${host}`.replace(/\/+$/, '')
 }
 
+function jsonWithResetBase(
+  body: unknown,
+  request: Request,
+  init?: { status?: number }
+): NextResponse {
+  const resolved = resolveResetBase([
+    publicBaseFromRequest(request),
+    process.env.NEXT_PUBLIC_BASE_URL,
+    process.env.NEXTAUTH_URL,
+    process.env.VERCEL_URL,
+  ])
+  const res = NextResponse.json(body, init)
+  // Temporary probe header so we can confirm Production resolved the public host.
+  res.headers.set('x-nso-reset-base', resolved)
+  return res
+}
+
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null)
   const email = String(body?.email || '').toLowerCase().trim()
+  const requestBase = publicBaseFromRequest(request)
 
   // #region agent log
-  const reqPayload = {sessionId:'06b2cb',runId:'post-fix',hypothesisId:'C-D',location:'app/api/auth/forgot-password/route.ts:POST',message:'forgot-password request origin',data:{requestUrl:request.url,host:request.headers.get('host'),origin:request.headers.get('origin'),xForwardedHost:request.headers.get('x-forwarded-host'),xForwardedProto:request.headers.get('x-forwarded-proto'),publicBase:publicBaseFromRequest(request),hasEmail:Boolean(email)},timestamp:Date.now()}
+  const reqPayload = {sessionId:'06b2cb',runId:'post-fix',hypothesisId:'C-D-F',location:'app/api/auth/forgot-password/route.ts:POST',message:'forgot-password request origin',data:{requestUrl:request.url,host:request.headers.get('host'),origin:request.headers.get('origin'),xForwardedHost:request.headers.get('x-forwarded-host'),xForwardedProto:request.headers.get('x-forwarded-proto'),publicBase:requestBase,hasEmail:Boolean(email)},timestamp:Date.now()}
   fetch('http://127.0.0.1:7683/ingest/491e9167-62e2-4f60-bb4c-3c2656e9f6ec',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'06b2cb'},body:JSON.stringify(reqPayload)}).catch(()=>{});
   console.info('[nso-debug][06b2cb]', JSON.stringify(reqPayload))
   // #endregion
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return NextResponse.json({ error: 'Please enter a valid email.' }, { status: 400 })
+    return jsonWithResetBase({ error: 'Please enter a valid email.' }, request, { status: 400 })
   }
 
   const { data: student, error: lookupError } = await supabase
@@ -57,14 +79,15 @@ export async function POST(request: Request) {
   // pretending we sent an email that we never attempted.
   if (lookupError) {
     console.error('[forgot-password] Student lookup failed:', lookupError)
-    return NextResponse.json(
+    return jsonWithResetBase(
       { error: 'Something went wrong. Please try again.' },
+      request,
       { status: 500 }
     )
   }
 
   // Unknown email: stop here, but answer exactly as if we had sent one.
-  if (!student) return NextResponse.json(GENERIC)
+  if (!student) return jsonWithResetBase(GENERIC, request)
 
   // Throttle. An unused, unexpired token minted within the cooldown means we
   // already emailed this person very recently; sending again would just burn
@@ -83,12 +106,13 @@ export async function POST(request: Request) {
   // behaving like the SingleUseToken drift documented in CLAUDE.md.
   if (recentError) {
     console.error('[forgot-password] Throttle check failed:', recentError)
-    return NextResponse.json(
+    return jsonWithResetBase(
       { error: 'Password reset is unavailable right now. Please contact a committee member.' },
+      request,
       { status: 500 }
     )
   }
-  if (recent && recent.length > 0) return NextResponse.json(GENERIC)
+  if (recent && recent.length > 0) return jsonWithResetBase(GENERIC, request)
 
   const { raw, hash } = createResetToken()
   const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS).toISOString()
@@ -100,13 +124,14 @@ export async function POST(request: Request) {
   })
   if (insertError) {
     console.error('[forgot-password] Token insert failed:', insertError)
-    return NextResponse.json(
+    return jsonWithResetBase(
       { error: 'Password reset is unavailable right now. Please contact a committee member.' },
+      request,
       { status: 500 }
     )
   }
 
-  const link = resetLink(raw, publicBaseFromRequest(request))
+  const link = resetLink(raw, requestBase)
   const { subject, text, html } = buildResetEmail({
     name: student.name || '',
     link,
@@ -115,7 +140,7 @@ export async function POST(request: Request) {
   // #region agent log
   let linkOrigin: string | null = null
   try { linkOrigin = new URL(link).origin } catch { linkOrigin = 'invalid-url' }
-  const sendPayload = {sessionId:'06b2cb',runId:'post-fix',hypothesisId:'B-E',location:'app/api/auth/forgot-password/route.ts:beforeSend',message:'email link origin before send',data:{linkOrigin,isLocalhost:/localhost|127\.0\.0\.1/i.test(linkOrigin||'')},timestamp:Date.now()}
+  const sendPayload = {sessionId:'06b2cb',runId:'post-fix',hypothesisId:'B-E-H',location:'app/api/auth/forgot-password/route.ts:beforeSend',message:'email link origin before send',data:{linkOrigin,isLocalhost:/localhost|127\.0\.0\.1/i.test(linkOrigin||'')},timestamp:Date.now()}
   fetch('http://127.0.0.1:7683/ingest/491e9167-62e2-4f60-bb4c-3c2656e9f6ec',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'06b2cb'},body:JSON.stringify(sendPayload)}).catch(()=>{});
   console.info('[nso-debug][06b2cb]', JSON.stringify(sendPayload))
   // #endregion
@@ -127,11 +152,12 @@ export async function POST(request: Request) {
     // unused), and the user can retry after the cooldown. Report the failure
     // rather than claiming success we can't back up.
     console.error('[forgot-password] Send failed:', err)
-    return NextResponse.json(
+    return jsonWithResetBase(
       { error: "We couldn't send the email right now. Please try again in a minute." },
+      request,
       { status: 502 }
     )
   }
 
-  return NextResponse.json(GENERIC)
+  return jsonWithResetBase(GENERIC, request)
 }
