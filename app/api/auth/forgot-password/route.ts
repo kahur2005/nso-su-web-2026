@@ -38,7 +38,7 @@ function publicBaseFromRequest(request: Request): string | null {
 }
 
 function jsonWithResetBase(
-  body: unknown,
+  body: Record<string, unknown>,
   request: Request,
   init?: { status?: number }
 ): NextResponse {
@@ -48,8 +48,9 @@ function jsonWithResetBase(
     process.env.NEXTAUTH_URL,
     process.env.VERCEL_URL,
   ])
-  const res = NextResponse.json(body, init)
-  // Temporary probe header so we can confirm Production resolved the public host.
+  // Temporary: surface the resolved email-link host so we can confirm Production
+  // without reading the mailbox. Remove after the localhost-link bug is verified fixed.
+  const res = NextResponse.json({ ...body, _debugResetBase: resolved }, init)
   res.headers.set('x-nso-reset-base', resolved)
   return res
 }
