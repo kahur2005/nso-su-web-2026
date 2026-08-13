@@ -20,9 +20,28 @@ import {
  */
 const GENERIC = { ok: true, message: 'If that email has an account, a reset link is on its way.' }
 
+/** Public site origin from the incoming request (works behind Vercel’s proxy). */
+function publicBaseFromRequest(request: Request): string | null {
+  const host =
+    request.headers.get('x-forwarded-host')?.split(',')[0]?.trim() ||
+    request.headers.get('host')?.trim() ||
+    null
+  if (!host) return null
+  const proto =
+    request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim() ||
+    (host.includes('localhost') || host.startsWith('127.') ? 'http' : 'https')
+  return `${proto}://${host}`.replace(/\/+$/, '')
+}
+
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null)
   const email = String(body?.email || '').toLowerCase().trim()
+
+  // #region agent log
+  const reqPayload = {sessionId:'06b2cb',runId:'post-fix',hypothesisId:'C-D',location:'app/api/auth/forgot-password/route.ts:POST',message:'forgot-password request origin',data:{requestUrl:request.url,host:request.headers.get('host'),origin:request.headers.get('origin'),xForwardedHost:request.headers.get('x-forwarded-host'),xForwardedProto:request.headers.get('x-forwarded-proto'),publicBase:publicBaseFromRequest(request),hasEmail:Boolean(email)},timestamp:Date.now()}
+  fetch('http://127.0.0.1:7683/ingest/491e9167-62e2-4f60-bb4c-3c2656e9f6ec',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'06b2cb'},body:JSON.stringify(reqPayload)}).catch(()=>{});
+  console.info('[nso-debug][06b2cb]', JSON.stringify(reqPayload))
+  // #endregion
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: 'Please enter a valid email.' }, { status: 400 })
@@ -87,10 +106,19 @@ export async function POST(request: Request) {
     )
   }
 
+  const link = resetLink(raw, publicBaseFromRequest(request))
   const { subject, text, html } = buildResetEmail({
     name: student.name || '',
-    link: resetLink(raw),
+    link,
   })
+
+  // #region agent log
+  let linkOrigin: string | null = null
+  try { linkOrigin = new URL(link).origin } catch { linkOrigin = 'invalid-url' }
+  const sendPayload = {sessionId:'06b2cb',runId:'post-fix',hypothesisId:'B-E',location:'app/api/auth/forgot-password/route.ts:beforeSend',message:'email link origin before send',data:{linkOrigin,isLocalhost:/localhost|127\.0\.0\.1/i.test(linkOrigin||'')},timestamp:Date.now()}
+  fetch('http://127.0.0.1:7683/ingest/491e9167-62e2-4f60-bb4c-3c2656e9f6ec',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'06b2cb'},body:JSON.stringify(sendPayload)}).catch(()=>{});
+  console.info('[nso-debug][06b2cb]', JSON.stringify(sendPayload))
+  // #endregion
 
   try {
     await sendMail({ to: student.email, subject, text, html })

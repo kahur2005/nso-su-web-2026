@@ -48,8 +48,22 @@ export function safeEqualHex(a: string, b: string): boolean {
   return timingSafeEqual(bufA, bufB)
 }
 
-export function resetLink(rawToken: string): string {
-  const base = (process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000').replace(/\/+$/, '')
+/**
+ * Absolute reset URL. Prefer an explicit base (e.g. the request's public
+ * origin on Vercel) over NEXT_PUBLIC_BASE_URL — that env is often left at
+ * the local scaffold value and would put localhost into production emails.
+ */
+export function resetLink(rawToken: string, baseOverride?: string | null): string {
+  const envBase = process.env.NEXT_PUBLIC_BASE_URL || null
+  const rawBase = (baseOverride && baseOverride.trim()) || envBase
+  const usedFallback = !rawBase
+  const usedOverride = Boolean(baseOverride && baseOverride.trim())
+  const base = (rawBase || 'http://localhost:3000').replace(/\/+$/, '')
+  // #region agent log
+  const payload = {sessionId:'06b2cb',runId:'post-fix',hypothesisId:'A-B-E',location:'lib/password-reset.ts:resetLink',message:'reset link base resolved',data:{envBase,baseOverride:baseOverride??null,usedOverride,usedFallback,resolvedBase:base,nextAuthUrl:process.env.NEXTAUTH_URL??null,vercelUrl:process.env.VERCEL_URL??null,nodeEnv:process.env.NODE_ENV??null},timestamp:Date.now()}
+  fetch('http://127.0.0.1:7683/ingest/491e9167-62e2-4f60-bb4c-3c2656e9f6ec',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'06b2cb'},body:JSON.stringify(payload)}).catch(()=>{});
+  console.info('[nso-debug][06b2cb]', JSON.stringify(payload))
+  // #endregion
   return `${base}/reset-password?token=${encodeURIComponent(rawToken)}`
 }
 
