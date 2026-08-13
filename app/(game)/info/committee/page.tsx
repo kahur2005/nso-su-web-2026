@@ -42,19 +42,19 @@ const CARD_MIN_ASPECT = '46.94%' // 115/245 — the frame's drawn proportions, n
 // are near-square cut-outs (640x640) whose subject sits in a tall centre strip
 // with 17-45% of the width transparent, so `object-cover` scales them by the
 // box height and eats that empty margin rather than the person.
-const CARD_PORTRAIT = { left: '3.16%', top: '-1.92cqw', bottom: '3.42cqw', width: '35.82%' }
-const CARD_PLAQUE = { left: '16.94%', top: '-0.40cqw', width: '60.40%', height: '15.55cqw' }
-const CARD_PILL = { left: '5.16%', top: '11.40cqw', width: '62.61%', height: '9.16cqw' }
+const CARD_PORTRAIT = { left: '1.5%', top: '-1.92cqw', bottom: '3.42cqw', width: '32%' }
+const CARD_PLAQUE = { left: '28%', top: '-0.40cqw', width: '47%', height: '15.55cqw' }
+const CARD_PILL = { left: '26.5%', top: '11.40cqw', width: '48.5%', height: '9.16cqw' }
 const CARD_IG = { left: '76.14%', top: '-0.62cqw', width: '15.78%', height: '14.50cqw' }
-const CARD_NAME = { left: '26.52%', right: '34.43%', top: '7.57cqw' }
-const CARD_ROLE = { left: '18.17%', right: '35.89%', top: '15.18cqw' }
+const CARD_NAME = { left: '30%', right: '27%', top: '7.57cqw' }
+const CARD_ROLE = { left: '27.5%', right: '27%', top: '15.18cqw' }
 // The fun fact is the one thing in normal flow, so it is what sets the height.
 // The top padding clears the name plaque and division pill above it. The bottom
 // padding is 7cqw rather than the old 6%-of-height, because the original box
 // ended *inside* the frame's 14px bottom border — harmless when the text was
 // short and vertically centred, but now that a long fact fills the box to the
 // last line, that last line would sit on the border.
-const CARD_FACT = { marginLeft: '41%', marginRight: '5%', paddingTop: '21.12cqw', paddingBottom: '7cqw' }
+const CARD_FACT = { marginLeft: '29%', marginRight: '5%', paddingTop: '21.12cqw', paddingBottom: '7cqw' }
 
 // `card-frame.png` 9-sliced, so the card can be any height without the border
 // stretching. Slices are source px, in CSS order top/right/bottom/left: 31 is
@@ -72,6 +72,8 @@ const CARD_FRAME = {
   borderImageSource: 'url(/images/committee/card-frame.png)',
   borderImageSlice: '31 25 26 14 fill',
   borderImageRepeat: 'stretch',
+  filter:
+    'drop-shadow(2px 0 0 #FAC875) drop-shadow(-2px 0 0 #FAC875) drop-shadow(0 2px 0 #FAC875) drop-shadow(0 -2px 0 #FAC875)',
 } as const
 
 // The scroll art is mostly transparent padding: `scroll-mid.png` is 420px wide
@@ -281,44 +283,40 @@ export default function CommitteePage() {
                         </p>
                       </div>
 
+                      {/* Portrait cutout rendered underneath plaque & text */}
+                      <div className="absolute z-0" style={CARD_PORTRAIT}>
+                        <img
+                          src={portrait}
+                          alt={member.name}
+                          className="h-full w-full object-contain object-bottom"
+                        />
+                      </div>
+
                       <img
                         src={`/images/committee/plaque-${active.id}.png`}
                         alt=""
                         aria-hidden
-                        className="absolute"
+                        className="absolute z-10"
                         style={CARD_PLAQUE}
                       />
                       <img
                         src="/images/committee/division-pill.png"
                         alt=""
                         aria-hidden
-                        className="absolute"
+                        className="absolute z-10"
                         style={CARD_PILL}
                       />
                       <div
-                        className="absolute -translate-y-1/2 truncate font-bytebounce text-[17px] leading-none text-[#ffeccf]"
+                        className="absolute z-10 -translate-y-1/2 truncate font-bytebounce text-[17px] leading-none text-[#ffeccf]"
                         style={{ ...CARD_NAME, textShadow: '2px 2px 0 #3e2723' }}
                       >
                         {member.name}
                       </div>
                       <div
-                        className="absolute -translate-y-1/2 truncate text-center font-bytebounce text-[12px] leading-none text-[#ffd23f]"
+                        className="absolute z-10 -translate-y-1/2 truncate text-center font-bytebounce text-[12px] leading-none text-[#ffd23f]"
                         style={{ ...CARD_ROLE, textShadow: '1px 1px 0 #3a2418' }}
                       >
                         {member.role}
-                      </div>
-
-                      {/* The wrapper is what stretches. An absolutely positioned
-                          replaced element with `height: auto` takes its intrinsic
-                          height and ignores `bottom`, so the bare <img> stayed
-                          small on a tall card; a plain div honours top+bottom and
-                          the image fills it. */}
-                      <div className="absolute" style={CARD_PORTRAIT}>
-                        <img
-                          src={portrait}
-                          alt={member.name}
-                          className="h-full w-full object-cover object-top"
-                        />
                       </div>
 
                       {href ? (
@@ -327,13 +325,13 @@ export default function CommitteePage() {
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label={`${member.name} on Instagram`}
-                          className="absolute transition-transform hover:scale-110 active:scale-95"
+                          className="absolute z-10 transition-transform hover:scale-110 active:scale-95"
                           style={CARD_IG}
                         >
                           <img src="/images/committee/ig-button.png" alt="" className="h-full w-full" />
                         </a>
                       ) : (
-                        <span aria-hidden className="absolute opacity-45" style={CARD_IG}>
+                        <span aria-hidden className="absolute z-10 opacity-45" style={CARD_IG}>
                           <img src="/images/committee/ig-button.png" alt="" className="h-full w-full" />
                         </span>
                       )}

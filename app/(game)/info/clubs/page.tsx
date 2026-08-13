@@ -281,7 +281,7 @@ export default function UkmClubsPage() {
                 <button
                   key={club.id}
                   onClick={() => setSelected(club)}
-                  className="p-4 flex flex-col items-center justify-center transition-all hover:scale-[1.02] hover:brightness-105 active:scale-[0.97]"
+                  className="px-6 py-5 flex flex-col items-center justify-center transition-all hover:scale-[1.02] hover:brightness-105 active:scale-[0.97]"
                   style={{
                     // The parchment frame is baked into the art (border + fill),
                     // so it is stretched to the tile rather than tiled or
@@ -295,10 +295,10 @@ export default function UkmClubsPage() {
                   <img
                     src={icon}
                     alt={club.name}
-                    className="w-16 h-16 object-contain mb-2"
+                    className="w-14 h-14 object-contain mb-2"
                     style={{ imageRendering: 'pixelated' }}
                   />
-                  <p className="font-bytebounce text-[20px] text-[#3e2723] leading-tight text-center">
+                  <p className="font-bytebounce text-[18px] text-[#3e2723] leading-tight text-center px-2.5 w-full break-words">
                     {club.name}
                   </p>
                 </button>
