@@ -213,7 +213,7 @@ export default function LeaderboardPage() {
       <div className="relative">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 -left-2 -right-2 -z-10 sm:-left-4 sm:-right-4 md:-left-6 md:-right-6"
+          className="pointer-events-none absolute -top-3 sm:-top-5 -bottom-28 md:-bottom-12 lg:-bottom-16 -left-2 -right-2 -z-10 sm:-left-4 sm:-right-4 md:-left-6 md:-right-6"
           style={{
             backgroundImage: 'url(/images/leaderboard-page-bg.png)',
             backgroundSize: 'cover',
@@ -221,7 +221,7 @@ export default function LeaderboardPage() {
           }}
         />
 
-      <div className="game-column pt-3 sm:pt-5 pb-28 sm:pb-32 md:pb-12">
+      <div className="game-column pt-3 sm:pt-5 pb-6 sm:pb-8 md:pb-6">
         {/* LIVE status indicator */}
         <div className="mb-2 flex items-center justify-end gap-1.5 px-2" data-tour="lb-live">
           <span className="relative flex h-2 w-2">
