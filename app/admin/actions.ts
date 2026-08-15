@@ -30,19 +30,42 @@ export async function assignStudentToGroup(formData: FormData) {
 
   if (!input || !groupId) return
 
-  // Resolve student by studentId, UUID id, or exact name
-  const { data: student } = await supabase
+  // Resolve student by studentId, UUID id, or exact name.
+  // Uses separate .eq() queries instead of .or() with string interpolation
+  // to prevent PostgREST filter injection.
+  let student: { id: string; studentId: string } | null = null
+
+  const { data: byStudentId } = await supabase
     .from('Student')
     .select('id, studentId')
-    .or(`studentId.eq."${input}",id.eq."${input}",name.ilike."${input}"`)
+    .eq('studentId', input)
     .maybeSingle()
+  student = byStudentId
 
-  const targetId = student?.studentId ?? input
+  if (!student) {
+    const { data: byId } = await supabase
+      .from('Student')
+      .select('id, studentId')
+      .eq('id', input)
+      .maybeSingle()
+    student = byId
+  }
+
+  if (!student) {
+    const { data: byName } = await supabase
+      .from('Student')
+      .select('id, studentId')
+      .ilike('name', input)
+      .maybeSingle()
+    student = byName
+  }
+
+  if (!student) return
 
   await supabase
     .from('Student')
     .update({ groupId })
-    .or(`studentId.eq."${targetId}",id.eq."${targetId}"`)
+    .eq('id', student.id)
 
   revalidatePath('/admin/groups')
   revalidatePath('/leaderboard')
@@ -56,18 +79,40 @@ export async function unassignStudent(formData: FormData) {
   const input = String(formData.get('studentId') || '').trim()
   if (!input) return
 
-  const { data: student } = await supabase
+  // Resolve student — same safe pattern as assignStudentToGroup.
+  let student: { id: string; studentId: string } | null = null
+
+  const { data: byStudentId } = await supabase
     .from('Student')
     .select('id, studentId')
-    .or(`studentId.eq."${input}",id.eq."${input}",name.ilike."${input}"`)
+    .eq('studentId', input)
     .maybeSingle()
+  student = byStudentId
 
-  const targetId = student?.studentId ?? input
+  if (!student) {
+    const { data: byId } = await supabase
+      .from('Student')
+      .select('id, studentId')
+      .eq('id', input)
+      .maybeSingle()
+    student = byId
+  }
+
+  if (!student) {
+    const { data: byName } = await supabase
+      .from('Student')
+      .select('id, studentId')
+      .ilike('name', input)
+      .maybeSingle()
+    student = byName
+  }
+
+  if (!student) return
 
   await supabase
     .from('Student')
     .update({ groupId: null })
-    .or(`studentId.eq."${targetId}",id.eq."${targetId}"`)
+    .eq('id', student.id)
 
   revalidatePath('/admin/groups')
   revalidatePath('/leaderboard')
@@ -82,6 +127,7 @@ export async function adjustPoints(formData: FormData) {
 
   const studentId = String(formData.get('studentId') || '').trim()
   const amount = parseInt(String(formData.get('amount') || '0'), 10)
+  const reason = String(formData.get('reason') || '').trim()
 
   if (!studentId || !amount) return
 
@@ -98,9 +144,10 @@ export async function adjustPoints(formData: FormData) {
     p_amount: amount,
   })
 
+  const reasonSuffix = reason ? ` (${reason})` : ''
   await supabase.from('Announcement').insert({
     title: `Points ${amount > 0 ? 'Awarded' : 'Deducted'}`,
-    content: `${amount > 0 ? '+' : ''}${amount} points ${amount > 0 ? 'awarded to' : 'deducted from'} ${student.name ?? 'a student'}`,
+    content: `${amount > 0 ? '+' : ''}${amount} points ${amount > 0 ? 'awarded to' : 'deducted from'} ${student.name ?? 'a student'}${reasonSuffix}`,
     type: 'points',
   })
 

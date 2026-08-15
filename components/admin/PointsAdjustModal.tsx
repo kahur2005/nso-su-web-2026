@@ -21,6 +21,7 @@ export default function PointsAdjustModal({
 }) {
   const [mode, setMode] = useState<'add' | 'reduce'>('add')
   const [amount, setAmount] = useState('')
+  const [reason, setReason] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
@@ -41,6 +42,9 @@ export default function PointsAdjustModal({
     const formData = new FormData()
     formData.set('studentId', student.studentId)
     formData.set('amount', String(signedAmount))
+    if (reason.trim()) {
+      formData.set('reason', reason.trim())
+    }
 
     startTransition(async () => {
       await adjustPoints(formData)
@@ -121,6 +125,21 @@ export default function PointsAdjustModal({
                 focus:border-slate-400"
             />
             {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+          </div>
+
+          <div>
+            <label className="text-xs font-medium text-slate-500 block mb-1">
+              Reason <span className="text-slate-400 font-normal">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="e.g. Mini Game 1 winner, Quiz bonus"
+              className="w-full bg-white border border-slate-300 rounded-md text-slate-800
+                text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-900/10
+                focus:border-slate-400"
+            />
           </div>
 
           <button
