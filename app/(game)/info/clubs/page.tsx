@@ -80,11 +80,11 @@ function ClubDetailModal({ club, onClose }: { club: Club; onClose: () => void })
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm max-h-[90vh] overflow-y-auto rounded border-2 border-[#b08a5e] bg-[#f5e7c6] p-5 shadow-2xl relative"
+        className="relative w-full max-w-sm max-h-[85vh] origin-center scale-[1.12] overflow-y-auto rounded border-2 border-[#b08a5e] bg-[#f5e7c6] p-5 shadow-2xl sm:max-h-[90vh] sm:scale-100"
         onClick={(e) => e.stopPropagation()}
       >
         <button

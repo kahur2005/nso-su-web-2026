@@ -3,24 +3,26 @@
 'use client'
 import { useState } from 'react'
 import { toggleQuestActive, deleteQuest } from '@/app/admin/quests/actions'
+import type { QuestType } from '@/lib/quests'
 
 export function QuestActiveToggle({
   id,
   isActive,
   hasQr,
+  type = 'qr',
 }: {
   id: string
   isActive: boolean
   hasQr: boolean
+  type?: QuestType
 }) {
   const [pending, setPending] = useState(false)
 
   return (
     <form
       action={async (formData) => {
-        // Activating a quest with no code would put a quest students can see on
-        // the board with no way to complete it.
-        if (!isActive && !hasQr) {
+        // QR quests need a code before activation; submission/quiz do not.
+        if (!isActive && type === 'qr' && !hasQr) {
           alert('Generate this quest’s QR code before activating it.')
           return
         }
