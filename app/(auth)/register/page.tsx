@@ -27,10 +27,10 @@ const STEP_TITLES: [string, string][] = [
   ["Last", "step!"],
 ];
 
-const labelClass = "block font-bytebounce text-[22px] text-[#e0b391]";
+const labelClass = "block font-bytebounce text-fluid-lg text-[#e0b391]";
 const labelShadow = { textShadow: "2px 1.4px 0 #4e342e" };
 const inputClass =
-  "mt-1 w-full rounded-[13px] border-2 border-[#e0b391] bg-white px-4 font-bytebounce text-[22px] text-[#4e342e] placeholder:text-[#c9b6a4] focus:border-[#fbc94c] focus:outline-none";
+  "mt-1 w-full rounded-[13px] border-2 border-[#e0b391] bg-white px-4 font-bytebounce text-fluid-lg text-[#4e342e] placeholder:text-[#c9b6a4] focus:border-[#fbc94c] focus:outline-none";
 
 // ── Avatar option data ──────────────────────────────────────────────────────
 const SKINS = [
@@ -431,7 +431,7 @@ export default function RegisterPage() {
         </h1>
 
         <p
-          className="mt-1 text-center font-bytebounce text-[17px] text-[#e0b391]"
+          className="mt-1 text-center font-bytebounce text-fluid-base text-[#e0b391]"
           style={labelShadow}
         >
           Step {step + 1} of {TOTAL_STEPS}
@@ -464,7 +464,7 @@ export default function RegisterPage() {
                   required
                   autoComplete="email"
                   placeholder="you@email.com"
-                  className={`${inputClass} h-[52px]`}
+                  className={`${inputClass} h-[clamp(44px,13vw,56px)]`}
                 />
               </div>
               <div>
@@ -484,7 +484,7 @@ export default function RegisterPage() {
                   minLength={6}
                   autoComplete="new-password"
                   placeholder="At least 6 characters"
-                  className={`${inputClass} h-[52px]`}
+                  className={`${inputClass} h-[clamp(44px,13vw,56px)]`}
                 />
               </div>
               <div>
@@ -504,7 +504,7 @@ export default function RegisterPage() {
                   minLength={6}
                   autoComplete="new-password"
                   placeholder="Repeat your password"
-                  className={`${inputClass} h-[52px]`}
+                  className={`${inputClass} h-[clamp(44px,13vw,56px)]`}
                 />
               </div>
               <div>
@@ -522,7 +522,7 @@ export default function RegisterPage() {
                   onChange={update("instagram")}
                   autoComplete="off"
                   placeholder="@yourhandle (optional)"
-                  className={`${inputClass} h-[52px]`}
+                  className={`${inputClass} h-[clamp(44px,13vw,56px)]`}
                 />
               </div>
             </div>
@@ -547,7 +547,7 @@ export default function RegisterPage() {
                   required
                   autoComplete="name"
                   placeholder="Your full name"
-                  className={`${inputClass} h-[52px]`}
+                  className={`${inputClass} h-[clamp(44px,13vw,56px)]`}
                 />
               </div>
               <div>
@@ -565,7 +565,7 @@ export default function RegisterPage() {
                   onChange={update("major")}
                   required
                   placeholder="e.g. Computer Science"
-                  className={`${inputClass} h-[52px]`}
+                  className={`${inputClass} h-[clamp(44px,13vw,56px)]`}
                 />
               </div>
               {/* Gender — used for group analytics */}
@@ -583,7 +583,7 @@ export default function RegisterPage() {
                         key={g}
                         type="button"
                         onClick={() => setForm((f) => ({ ...f, gender: g }))}
-                        className="flex-1 rounded-[13px] border-2 py-2 font-bytebounce text-[18px] transition-colors"
+                        className="flex-1 rounded-[13px] border-2 py-2 font-bytebounce text-fluid-base transition-colors"
                         style={{
                           borderColor: selected ? "#fbc94c" : "#e0b391",
                           background: selected ? "#fbc94c22" : "#fffcfb",
@@ -618,7 +618,7 @@ export default function RegisterPage() {
                   onChange={update("hobby")}
                   required
                   placeholder="e.g. football, drawing, gaming"
-                  className={`${inputClass} h-[52px]`}
+                  className={`${inputClass} h-[clamp(44px,13vw,56px)]`}
                 />
               </div>
               <div>
@@ -659,7 +659,7 @@ export default function RegisterPage() {
                     size={112}
                   />
                   <p
-                    className="font-bytebounce text-[13px] text-[#fbc94c]"
+                    className="font-bytebounce text-fluid-xs text-[#fbc94c]"
                     style={labelShadow}
                   >
                     Your avatar
@@ -724,7 +724,7 @@ export default function RegisterPage() {
                           size={44}
                         />
                       ) : (
-                        <div className="w-11 h-11 flex items-center justify-center font-bytebounce text-[10px] text-[#4e342e]">
+                        <div className="w-11 h-11 flex items-center justify-center font-bytebounce text-fluid-2xs text-[#4e342e]">
                           None
                         </div>
                       )}
@@ -815,7 +815,7 @@ export default function RegisterPage() {
                           style={{ imageRendering: "pixelated" }}
                         />
                       ) : (
-                        <div className="w-12 h-12 flex items-center justify-center font-bytebounce text-[10px] text-[#4e342e]">
+                        <div className="w-12 h-12 flex items-center justify-center font-bytebounce text-fluid-2xs text-[#4e342e]">
                           Bald
                         </div>
                       )}
@@ -852,7 +852,7 @@ export default function RegisterPage() {
                                 : "none",
                           }}
                         />
-                        <span className="font-bytebounce text-[10px] text-[#e0b391]">
+                        <span className="font-bytebounce text-fluid-2xs text-[#e0b391]">
                           {c.label}
                         </span>
                       </button>
@@ -882,7 +882,7 @@ export default function RegisterPage() {
                       {m ? (
                         <PixelAvatar skin={avatarSkin} mouth={m} size={44} />
                       ) : (
-                        <div className="w-11 h-11 flex items-center justify-center font-bytebounce text-[10px] text-[#4e342e]">
+                        <div className="w-11 h-11 flex items-center justify-center font-bytebounce text-fluid-2xs text-[#4e342e]">
                           None
                         </div>
                       )}
@@ -917,7 +917,7 @@ export default function RegisterPage() {
                           size={44}
                         />
                       ) : (
-                        <div className="w-11 h-11 flex items-center justify-center font-bytebounce text-[10px] text-[#4e342e]">
+                        <div className="w-11 h-11 flex items-center justify-center font-bytebounce text-fluid-2xs text-[#4e342e]">
                           None
                         </div>
                       )}
@@ -939,7 +939,7 @@ export default function RegisterPage() {
                 Allergies or health conditions we should know?
               </label>
               <p
-                className="mt-2 font-bytebounce text-[16px] leading-tight text-[#24e9d5]"
+                className="mt-2 font-bytebounce text-fluid-sm leading-tight text-[#24e9d5]"
                 style={{ textShadow: "1.2px 1px 0 #4e342e" }}
               >
                 Kept private! It helps the committee keep you safe during
@@ -959,7 +959,7 @@ export default function RegisterPage() {
 
           {error && (
             <p
-              className="mt-4 text-center font-bytebounce text-[18px] text-[#d6101d]"
+              className="mt-4 text-center font-bytebounce text-fluid-base text-[#d6101d]"
               style={{ textShadow: "1.2px 0.7px 0 #e0b391" }}
             >
               {error}
@@ -970,7 +970,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="wood-plank block h-[52px] w-full font-bytebounce text-[28px] text-[#e0b391] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+              className="wood-plank block h-[clamp(44px,13vw,56px)] w-full font-bytebounce text-fluid-2xl text-[#e0b391] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
               style={{ textShadow: "2.7px 1.8px 0 #4e342e" }}
             >
               {loading ? (

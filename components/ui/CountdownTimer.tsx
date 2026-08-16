@@ -10,13 +10,13 @@ interface CountdownTimerProps {
 function TimeBox({ value, label }: { value: number; label: string }) {
   return (
     <div className="flex flex-col items-center">
-      <div className="rounded-md border-2 border-[#3a2418] bg-[#fdf6e3] px-3 py-2 min-w-[54px] text-center shadow">
-        <span className="font-bytebounce text-[24px] text-[#b8860b]">
+      <div className="rounded-md border-2 border-[#3a2418] bg-[#fdf6e3] px-3 py-2 min-w-[clamp(44px,12vw,58px)] text-center shadow">
+        <span className="font-bytebounce text-fluid-xl text-[#b8860b]">
           {String(value).padStart(2, '0')}
         </span>
       </div>
       <span
-        className="mt-1 font-bytebounce text-[13px] text-[#e0b391]"
+        className="mt-1 font-bytebounce text-fluid-xs text-[#e0b391]"
         style={{ textShadow: '1px 1px 0 #3a2418' }}
       >
         {label}
@@ -58,18 +58,18 @@ export default function CountdownTimer({
   return (
     <div className="text-center">
       <p
-        className="font-bytebounce text-[16px] text-white mb-2"
+        className="font-bytebounce text-fluid-sm text-white mb-2"
         style={{ textShadow: '1.5px 1.5px 0 #4e342e', color: '#ffd23f' }}
       >
         {label}
       </p>
       <div className="flex gap-2 justify-center items-center">
         <TimeBox value={timeLeft.days} label="DAYS" />
-        <span className="font-bytebounce text-[20px] text-[#ffd23f] mb-4 blink">:</span>
+        <span className="font-bytebounce text-fluid-md text-[#ffd23f] mb-4 blink">:</span>
         <TimeBox value={timeLeft.hours} label="HRS" />
-        <span className="font-bytebounce text-[20px] text-[#ffd23f] mb-4 blink">:</span>
+        <span className="font-bytebounce text-fluid-md text-[#ffd23f] mb-4 blink">:</span>
         <TimeBox value={timeLeft.minutes} label="MIN" />
-        <span className="font-bytebounce text-[20px] text-[#ffd23f] mb-4 blink">:</span>
+        <span className="font-bytebounce text-fluid-md text-[#ffd23f] mb-4 blink">:</span>
         <TimeBox value={timeLeft.seconds} label="SEC" />
       </div>
     </div>

@@ -20,7 +20,7 @@ export default function LunchStatusChip({
 }) {
   return (
     <span
-      className={`inline-block whitespace-nowrap rounded border px-2 py-0.5 font-bytebounce text-[15px] leading-none ${STYLE[status]} ${className}`}
+      className={`inline-block whitespace-nowrap rounded border px-2 py-0.5 font-bytebounce text-fluid-sm leading-none ${STYLE[status]} ${className}`}
     >
       {LUNCH_STATUS_LABEL[status]}
     </span>

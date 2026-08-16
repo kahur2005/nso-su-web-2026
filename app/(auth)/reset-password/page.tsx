@@ -97,7 +97,7 @@ function ResetPasswordForm() {
     return (
       <AuthShell title="One sec...">
         <p
-          className="text-center font-bytebounce text-[22px] text-[#e0b391] blink"
+          className="text-center font-bytebounce text-fluid-lg text-[#e0b391] blink"
           style={authLabelShadow}
         >
           Checking your link
@@ -110,14 +110,14 @@ function ResetPasswordForm() {
     return (
       <AuthShell title="Link expired">
         <p
-          className="text-center font-bytebounce text-[20px] leading-snug text-[#e0b391]"
+          className="text-center font-bytebounce text-fluid-md leading-snug text-[#e0b391]"
           style={authLabelShadow}
         >
           {linkError}
         </p>
         <Link
           href="/forgot-password"
-          className={`${authButtonClass} text-center leading-[52px]`}
+          className={`${authButtonClass} text-center leading-[clamp(44px,13vw,56px)]`}
           style={authButtonShadow}
         >
           Request a new link
@@ -130,14 +130,14 @@ function ResetPasswordForm() {
     return (
       <AuthShell title="All set!">
         <p
-          className="text-center font-bytebounce text-[22px] leading-snug text-[#7aff06]"
+          className="text-center font-bytebounce text-fluid-lg leading-snug text-[#7aff06]"
           style={authLabelShadow}
         >
           Your password has been changed. Taking you to the login screen...
         </p>
         <Link
           href="/login"
-          className={`${authButtonClass} text-center leading-[52px]`}
+          className={`${authButtonClass} text-center leading-[clamp(44px,13vw,56px)]`}
           style={authButtonShadow}
         >
           Go to login
@@ -185,7 +185,7 @@ function ResetPasswordForm() {
 
         {error && (
           <p
-            className="mt-3 text-center font-bytebounce text-[18px] text-[#d6101d]"
+            className="mt-3 text-center font-bytebounce text-fluid-base text-[#d6101d]"
             style={{ textShadow: '1.2px 0.7px 0 #e0b391' }}
           >
             {error}

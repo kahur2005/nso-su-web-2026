@@ -46,7 +46,7 @@ export default function ActivityLog({ rows }: { rows: ActivityRow[] }) {
               type="button"
               onClick={() => setExpanded((v) => !v)}
               aria-expanded={expanded}
-              className="font-bytebounce text-[17px] leading-none text-[#a1887f] transition-colors hover:text-[#ffecb3]"
+              className="font-bytebounce text-fluid-base leading-none text-[#a1887f] transition-colors hover:text-[#ffecb3]"
               style={{ textShadow: '1.5px 1.5px 0 #3e2723' }}
             >
               {expanded ? 'Show Less ◀' : 'See All ▶'}
@@ -57,7 +57,7 @@ export default function ActivityLog({ rows }: { rows: ActivityRow[] }) {
 
       {rows.length === 0 ? (
         <div className="px-5 py-4" style={PAPER}>
-          <p className="font-bytebounce text-[17px] leading-none text-[#6d4c41]">
+          <p className="font-bytebounce text-fluid-base leading-none text-[#6d4c41]">
             No scans yet — go scan a committee member!
           </p>
         </div>
@@ -68,16 +68,16 @@ export default function ActivityLog({ rows }: { rows: ActivityRow[] }) {
             return (
             <div key={row.id} className="flex items-center gap-3 px-5 py-3.5" style={PAPER}>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-bytebounce text-[21px] leading-none text-[#3e2723]">
+                <p className="truncate font-bytebounce text-fluid-lg leading-none text-[#3e2723]">
                   {isQuiz ? row.title : `Scanned ${row.title}`}
                 </p>
-                <p className="mt-1.5 font-bytebounce text-[17px] leading-none text-[#4e342e]">
+                <p className="mt-1.5 font-bytebounce text-fluid-base leading-none text-[#4e342e]">
                   <span aria-hidden>{isQuiz ? '📖' : '💡'}</span>{' '}
                   {isQuiz ? 'Guidebook quiz' : 'FunFact collected'} · {formatDate(row.scannedAt)}
                 </p>
               </div>
               <p
-                className={`shrink-0 font-bytebounce text-[18px] leading-none ${
+                className={`shrink-0 font-bytebounce text-fluid-base leading-none ${
                   row.points < 0 ? 'text-[#d6101d]' : 'text-[#328b36]'
                 }`}
               >

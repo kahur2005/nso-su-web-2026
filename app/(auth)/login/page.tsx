@@ -99,7 +99,7 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className="mt-auto w-full pt-10">
           <label
             htmlFor="email"
-            className="block font-bytebounce text-[22px] text-[#e0b391]"
+            className="block font-bytebounce text-fluid-lg text-[#e0b391]"
             style={{ textShadow: '2px 1.4px 0 #4e342e' }}
           >
             Login
@@ -112,12 +112,12 @@ export default function LoginPage() {
             required
             autoComplete="email"
             placeholder="you@email.com"
-            className="mt-1 h-[52px] w-full rounded-[13px] border-2 border-[#e0b391] bg-white px-4 font-bytebounce text-[22px] text-[#4e342e] placeholder:text-[#c9b6a4] focus:border-[#fbc94c] focus:outline-none"
+            className="mt-1 h-[clamp(44px,13vw,56px)] w-full rounded-[13px] border-2 border-[#e0b391] bg-white px-4 font-bytebounce text-fluid-lg text-[#4e342e] placeholder:text-[#c9b6a4] focus:border-[#fbc94c] focus:outline-none"
           />
 
           <label
             htmlFor="password"
-            className="mt-6 block font-bytebounce text-[22px] text-[#e0b391]"
+            className="mt-6 block font-bytebounce text-fluid-lg text-[#e0b391]"
             style={{ textShadow: '2px 1.4px 0 #4e342e' }}
           >
             Password
@@ -130,13 +130,13 @@ export default function LoginPage() {
             required
             autoComplete="current-password"
             placeholder="••••••••"
-            className="mt-1 h-[52px] w-full rounded-[13px] border-2 border-[#e0b391] bg-white px-4 font-bytebounce text-[22px] text-[#4e342e] placeholder:text-[#c9b6a4] focus:border-[#fbc94c] focus:outline-none"
+            className="mt-1 h-[clamp(44px,13vw,56px)] w-full rounded-[13px] border-2 border-[#e0b391] bg-white px-4 font-bytebounce text-fluid-lg text-[#4e342e] placeholder:text-[#c9b6a4] focus:border-[#fbc94c] focus:outline-none"
           />
 
           <div className="mt-2 text-right">
             <Link
               href="/forgot-password"
-              className="font-bytebounce text-[16px] text-[#d6101d] underline-offset-4 hover:underline"
+              className="font-bytebounce text-fluid-sm text-[#d6101d] underline-offset-4 hover:underline"
               style={{ textShadow: '1.2px 0.7px 0 #e0b391' }}
             >
               Forgot password?
@@ -145,7 +145,7 @@ export default function LoginPage() {
 
           {error && (
             <p
-              className="mt-3 text-center font-bytebounce text-[18px] text-[#d6101d]"
+              className="mt-3 text-center font-bytebounce text-fluid-base text-[#d6101d]"
               style={{ textShadow: '1.2px 0.7px 0 #e0b391' }}
             >
               {error}
@@ -155,7 +155,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="wood-plank mt-8 block h-[52px] w-full font-bytebounce text-[28px] text-[#e0b391] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+            className="wood-plank mt-8 block h-[clamp(44px,13vw,56px)] w-full font-bytebounce text-fluid-2xl text-[#e0b391] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
             style={{ textShadow: '2.7px 1.8px 0 #4e342e' }}
           >
             {loading ? <span className="blink">Loading...</span> : 'Login'}
@@ -163,7 +163,7 @@ export default function LoginPage() {
 
           <Link
             href="/register"
-            className="wood-plank mt-4 block h-[52px] w-full text-center font-bytebounce text-[28px] leading-[52px] text-[#7aff06] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5"
+            className="wood-plank mt-4 block h-[clamp(44px,13vw,56px)] w-full text-center font-bytebounce text-fluid-2xl leading-[clamp(44px,13vw,56px)] text-[#7aff06] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5"
             style={{ textShadow: '2.7px 1.8px 0 #4e342e' }}
           >
             Create a new account
@@ -173,7 +173,7 @@ export default function LoginPage() {
             type="button"
             onClick={handleAdminLogin}
             disabled={loading}
-            className="wood-plank mt-4 block h-[52px] w-full font-bytebounce text-[28px] text-[#24e9d5] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+            className="wood-plank mt-4 block h-[clamp(44px,13vw,56px)] w-full font-bytebounce text-fluid-2xl text-[#24e9d5] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
             style={{ textShadow: '2.7px 1.8px 0 #4e342e' }}
           >
             Login as an admin

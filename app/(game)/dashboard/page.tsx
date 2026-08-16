@@ -160,7 +160,7 @@ export default async function DashboardPage() {
               className="w-6 h-6 object-contain shrink-0"
             />
             <span
-              className="font-bytebounce text-[22px] sm:text-[25px] leading-none"
+              className="font-bytebounce text-fluid-xl leading-none"
               style={OUTLINE_CREAM_SM}
             >
               New announcement!
@@ -171,7 +171,7 @@ export default async function DashboardPage() {
             href="#all-announcements"
             className="parchment-card flex items-center gap-3 px-2.5 py-2.5 min-h-[70px] transition-transform active:translate-y-0.5"
           >
-            <p className="flex-1 min-w-0 font-bytebounce text-[20px] sm:text-[22px] leading-snug text-[#6d4c41] line-clamp-2">
+            <p className="flex-1 min-w-0 font-bytebounce text-fluid-lg leading-snug text-[#6d4c41] line-clamp-2">
               {latestAnn ? (
                 <>
                   <span className="text-[#3e2723]">{latestAnn.title}</span>
@@ -208,7 +208,7 @@ export default async function DashboardPage() {
                   }}
                 />
                 <span
-                  className="font-bytebounce text-[20px] sm:text-[22px] leading-none text-[#e0b391]"
+                  className="font-bytebounce text-fluid-lg leading-none text-[#e0b391]"
                   style={{ textShadow: "2px 2px 0 #3e2723" }}
                 >
                   {tile.label}
@@ -222,7 +222,7 @@ export default async function DashboardPage() {
             data-tour="stats"
           >
             <div>
-              <p className="font-bytebounce text-[16px] sm:text-[18px] leading-tight text-[#6d4c41]">
+              <p className="font-bytebounce text-fluid-sm leading-tight text-[#6d4c41]">
                 You have
                 <br />
                 collected :
@@ -232,7 +232,7 @@ export default async function DashboardPage() {
               >
                 {student.points}
               </p>
-              <p className="font-bytebounce text-[17px] sm:text-[19px] leading-none text-[#6d4c41] mt-0.5">
+              <p className="font-bytebounce text-fluid-base leading-none text-[#6d4c41] mt-0.5">
                 Points
               </p>
             </div>
@@ -241,7 +241,7 @@ export default async function DashboardPage() {
               <p className="font-bytebounce text-[clamp(28px,9vw,40px)] leading-none text-[#3e2723]">
                 {student.funFactsCollected}/{totalNPCs || 66}
               </p>
-              <p className="font-bytebounce text-[17px] sm:text-[19px] leading-none text-[#6d4c41] mt-0.5">
+              <p className="font-bytebounce text-fluid-base leading-none text-[#6d4c41] mt-0.5">
                 Fun Facts
               </p>
             </div>
@@ -257,7 +257,7 @@ export default async function DashboardPage() {
               className="w-8 h-8 object-contain shrink-0"
             />
             <h2
-              className="font-bytebounce text-[28px] sm:text-[32px] leading-none"
+              className="font-bytebounce text-fluid-3xl leading-none"
               style={OUTLINE_CREAM}
             >
               Active Quests
@@ -266,7 +266,7 @@ export default async function DashboardPage() {
 
           {activeQuests.length === 0 ? (
             <div className="parchment-card px-2.5 py-3.5 text-center">
-              <p className="font-bytebounce text-[19px] text-[#6d4c41]">
+              <p className="font-bytebounce text-fluid-md text-[#6d4c41]">
                 No active quests right now
               </p>
             </div>
@@ -278,10 +278,10 @@ export default async function DashboardPage() {
                 className="parchment-card flex items-center gap-3 px-2.5 py-2.5 min-h-[70px] transition-transform active:translate-y-0.5"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="font-bytebounce text-[22px] sm:text-[24px] leading-tight text-[#3e2723] truncate">
+                  <p className="font-bytebounce text-fluid-xl leading-tight text-[#3e2723] truncate">
                     {quest.title}
                   </p>
-                  <p className="font-bytebounce text-[18px] sm:text-[19px] leading-tight text-[#6d4c41] truncate mt-0.5 pl-3">
+                  <p className="font-bytebounce text-fluid-base leading-tight text-[#6d4c41] truncate mt-0.5 pl-3">
                     {quest.description || "Ask their Funfacts"}
                   </p>
                 </div>
@@ -299,13 +299,13 @@ export default async function DashboardPage() {
         >
           <div className="flex items-end justify-between gap-2 px-0.5">
             <h2
-              className="font-bytebounce text-[28px] sm:text-[32px] leading-none"
+              className="font-bytebounce text-fluid-3xl leading-none"
               style={OUTLINE_CREAM}
             >
               All Announcements
             </h2>
             <span
-              className="font-bytebounce text-[18px] sm:text-[20px] leading-none shrink-0"
+              className="font-bytebounce text-fluid-base leading-none shrink-0"
               style={OUTLINE_CREAM_SM}
             >
               {announcements.length} total
@@ -314,7 +314,7 @@ export default async function DashboardPage() {
 
           {announcements.length === 0 ? (
             <div className="parchment-card px-2.5 py-3.5 text-center">
-              <p className="font-bytebounce text-[19px] text-[#6d4c41]">
+              <p className="font-bytebounce text-fluid-md text-[#6d4c41]">
                 No announcements posted yet
               </p>
             </div>
@@ -323,17 +323,17 @@ export default async function DashboardPage() {
               {announcements.map((ann: any) => (
                 <div key={ann.id} className="parchment-card px-2.5 py-2.5">
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-bytebounce text-[22px] leading-snug text-[#3e2723]">
+                    <h3 className="font-bytebounce text-fluid-xl leading-snug text-[#3e2723]">
                       {ann.title}
                     </h3>
-                    <span className="font-bytebounce text-[15px] leading-snug text-[#8a6a52] shrink-0 mt-0.5">
+                    <span className="font-bytebounce text-fluid-sm leading-snug text-[#8a6a52] shrink-0 mt-0.5">
                       {new Date(ann.createdAt).toLocaleDateString("en", {
                         month: "short",
                         day: "numeric",
                       })}
                     </span>
                   </div>
-                  <p className="font-bytebounce text-[18px] leading-relaxed text-[#6d4c41] whitespace-pre-line mt-1">
+                  <p className="font-bytebounce text-fluid-base leading-relaxed text-[#6d4c41] whitespace-pre-line mt-1">
                     {ann.content}
                   </p>
                 </div>

@@ -96,7 +96,7 @@ export default function CampusMapPage() {
                     className="h-auto w-full object-contain block rounded"
                     style={{ imageRendering: 'pixelated' }}
                   />
-                  <div className="absolute bottom-2 right-2 rounded bg-[#3e2723]/85 px-2 py-0.5 font-bytebounce text-[13px] text-[#ffd23f] opacity-90 transition-opacity group-hover:opacity-100">
+                  <div className="absolute bottom-2 right-2 rounded bg-[#3e2723]/85 px-2 py-0.5 font-bytebounce text-fluid-xs text-[#ffd23f] opacity-90 transition-opacity group-hover:opacity-100">
                     🔍 Tap to zoom
                   </div>
                 </div>
@@ -116,12 +116,12 @@ export default function CampusMapPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-2 flex items-center justify-between px-1">
-                <h3 className="font-bytebounce text-[24px] text-[#ffd23f]">
+                <h3 className="font-bytebounce text-fluid-xl text-[#ffd23f]">
                   {zoomedFloor.title}
                 </h3>
                 <button
                   onClick={() => setZoomedFloor(null)}
-                  className="rounded bg-[#ff180e] px-3 py-1 font-bytebounce text-[18px] text-white hover:brightness-110 active:translate-y-0.5"
+                  className="rounded bg-[#ff180e] px-3 py-1 font-bytebounce text-fluid-base text-white hover:brightness-110 active:translate-y-0.5"
                 >
                   ✕ Close
                 </button>
