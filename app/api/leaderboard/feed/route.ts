@@ -1,14 +1,22 @@
 // app/api/leaderboard/feed/route.ts
-// Returns a chronological log of points events (quest completions + scan logs)
+// Returns a chronological log of points events (quest completions + scan logs + guidebook quiz claims)
 // used by the leaderboard "RECORD" tab.
 import { supabase } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
 
-/* The RECORD tab shows the 10 most recent points events. Both source queries
+/* The RECORD tab shows the 10 most recent points events. All source queries
  * are capped at the same number rather than something larger: an event that
  * lands in the merged top 10 by time is necessarily within its own source's
  * most-recent 10, so fetching deeper cannot change the result. */
 const FEED_LIMIT = 10
+
+const CHAPTER_LABELS: Record<string, string> = {
+  talking: 'Talking to Lecturers',
+  'dos-donts': "Do's & Don'ts",
+  'cv-interview': 'CV & Interview',
+  facilities: 'Campus Facilities',
+  academics: 'Academics & Life',
+}
 
 interface RawStudentRef {
   name: string
@@ -31,9 +39,17 @@ interface RawScanItem {
   npc: { committeeName: string } | null
 }
 
+interface RawQuizItem {
+  id: string
+  chapterId: string
+  pointsAwarded: number
+  claimedAt: string
+  student: RawStudentRef | null
+}
+
 export async function GET() {
   try {
-    const [questsRes, scansRes] = await Promise.all([
+    const [questsRes, scansRes, quizRes] = await Promise.all([
       supabase
         .from('QuestProgress')
         .select(`
@@ -56,10 +72,24 @@ export async function GET() {
         `)
         .order('scannedAt', { ascending: false })
         .limit(FEED_LIMIT * 2),
+      supabase
+        .from('GuidebookQuizAttempt')
+        .select(`
+          id,
+          chapterId,
+          pointsAwarded,
+          claimedAt,
+          student:Student(name, studentId, isAdmin)
+        `)
+        .eq('isCorrect', true)
+        .not('claimedAt', 'is', null)
+        .order('claimedAt', { ascending: false })
+        .limit(FEED_LIMIT * 2),
     ])
 
     if (questsRes.error) throw questsRes.error
     if (scansRes.error) console.error('leaderboard feed: scan log fetch failed:', scansRes.error)
+    if (quizRes.error) console.error('leaderboard feed: quiz attempts fetch failed:', quizRes.error)
 
     const questEvents = ((questsRes.data as unknown as RawQuestItem[]) ?? [])
       .filter((q) => !q.student?.isAdmin)
@@ -89,7 +119,25 @@ export async function GET() {
             at: s.scannedAt,
           }))
 
-    const feed = [...questEvents, ...scanEvents]
+    const quizEvents = quizRes.error
+      ? []
+      : ((quizRes.data as unknown as RawQuizItem[]) ?? [])
+          .filter((qz) => !qz.student?.isAdmin)
+          .map((qz) => {
+            const chapterTitle = CHAPTER_LABELS[qz.chapterId] || qz.chapterId
+            return {
+              id: `qz-${qz.id}`,
+              type: 'quiz',
+              label: `Guidebook Quiz: ${chapterTitle}`,
+              questType: 'quiz',
+              points: qz.pointsAwarded ?? 2,
+              studentName: qz.student?.name ?? 'Unknown',
+              studentId: qz.student?.studentId ?? '',
+              at: qz.claimedAt,
+            }
+          })
+
+    const feed = [...questEvents, ...scanEvents, ...quizEvents]
       .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
       .slice(0, FEED_LIMIT)
 

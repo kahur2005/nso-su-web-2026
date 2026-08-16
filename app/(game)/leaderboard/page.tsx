@@ -180,10 +180,8 @@ export default function LeaderboardPage() {
     }
   }
 
-  // Quest.type was retired when every quest became QR-completed, so the feed
-  // now emits just two kinds of event.
   const typeIcon: Record<string, string> = {
-    quest: '⚔️', scan: '📸',
+    quest: '⚔️', scan: '📸', quiz: '📖',
   }
 
   const tabs: { key: Tab; label: string }[] = [
