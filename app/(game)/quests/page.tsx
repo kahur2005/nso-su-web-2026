@@ -133,19 +133,19 @@ function QuestCard({ quest }: { quest: Quest }) {
           {quest.isLocked && (
             <div className="mb-2 flex items-center gap-1.5 rounded border border-[#c9a97b] bg-[#fff3d9] px-2 py-1">
               <span className="text-base leading-none">🔒</span>
-              <p className="font-bytebounce text-[14px] leading-none text-[#8a5a37]">
+              <p className="font-bytebounce text-fluid-xs leading-none text-[#8a5a37]">
                 Opens at {quest.availableFrom ? formatTime(quest.availableFrom) : '—'}
               </p>
             </div>
           )}
 
           {/* Title */}
-          <h2 className="mt-1.5 font-bytebounce text-[23px] uppercase leading-none text-[#3e2723]">
+          <h2 className="mt-1.5 font-bytebounce text-fluid-xl uppercase leading-none text-[#3e2723]">
             {quest.title}
           </h2>
 
           {/* Indented subtitle, as in the Figma card */}
-          <p className="mt-2 pl-3 font-bytebounce text-[17px] leading-tight text-[#6d4c41]">
+          <p className="mt-2 pl-3 font-bytebounce text-fluid-base leading-tight text-[#6d4c41]">
             {quest.description}
           </p>
 
@@ -161,14 +161,14 @@ function QuestCard({ quest }: { quest: Quest }) {
               ) : (
                 <span className="text-lg leading-none">🏅</span>
               )}
-              <p className="min-w-0 flex-1 truncate font-bytebounce text-[15px] leading-none text-[#8a5a37]">
+              <p className="min-w-0 flex-1 truncate font-bytebounce text-fluid-sm leading-none text-[#8a5a37]">
                 Grants &quot;{quest.achievement.name}&quot;
               </p>
             </div>
           )}
 
           {/* Status */}
-          <p className="mt-2 font-bytebounce text-[16px] leading-none">
+          <p className="mt-2 font-bytebounce text-fluid-sm leading-none">
             {quest.isCompleted ? (
               <span className="text-[#4a7c2f]">
                 ✅ Completed
@@ -191,7 +191,7 @@ function QuestCard({ quest }: { quest: Quest }) {
             block by the `items-center` on the row. */}
         <div className="flex shrink-0 items-center gap-3">
           <span
-            className="font-bytebounce text-[58px] leading-none"
+            className="font-bytebounce text-fluid-6xl leading-none"
             style={GOLD_POINTS}
           >
             +{quest.points}
@@ -199,7 +199,7 @@ function QuestCard({ quest }: { quest: Quest }) {
 
           {/* A span, not a button — the whole card is already the link. */}
           {actionable && (
-            <span className="whitespace-nowrap rounded border-2 border-[#3a2418] bg-[#8a5a37] px-3 py-1.5 font-bytebounce text-[18px] leading-none text-[#ffd23f]">
+            <span className="whitespace-nowrap rounded border-2 border-[#3a2418] bg-[#8a5a37] px-3 py-1.5 font-bytebounce text-fluid-base leading-none text-[#ffd23f]">
               SCAN ME
             </span>
           )}
@@ -258,7 +258,7 @@ export default function QuestsPage() {
             alt=""
             className="h-9 w-8 shrink-0 object-contain"
           />
-          <h1 className="title-gold font-bytebounce text-[30px] leading-none sm:text-[34px]">
+          <h1 className="title-gold font-bytebounce text-fluid-3xl leading-none">
             Active Quests
           </h1>
         </div>
@@ -277,7 +277,7 @@ export default function QuestsPage() {
 
               <div className="relative flex h-full flex-col justify-center px-5">
                 <div
-                  className="flex items-center justify-between gap-3 font-bytebounce text-[17px] leading-none text-[#d9d9d9]"
+                  className="flex items-center justify-between gap-3 font-bytebounce text-fluid-base leading-none text-[#d9d9d9]"
                   style={{ textShadow: PLANK_TEXT_SHADOW }}
                 >
                   <span className="whitespace-nowrap">
@@ -286,7 +286,7 @@ export default function QuestsPage() {
                   {quests.length > 0 && (
                     <button
                       onClick={() => setShowDone((v) => !v)}
-                      className="whitespace-nowrap text-[15px] text-[#d9d9d9] underline"
+                      className="whitespace-nowrap text-fluid-sm text-[#d9d9d9] underline"
                     >
                       {showDone ? 'hide completed' : 'show all'}
                     </button>
@@ -305,7 +305,7 @@ export default function QuestsPage() {
 
             {quests.length === 0 && (
               <p
-                className="py-10 text-center font-bytebounce text-[18px] text-white"
+                className="py-10 text-center font-bytebounce text-fluid-base text-white"
                 style={{ textShadow: '2px 2px 0 #3e2723' }}
               >
                 No quests are active yet. Check back soon!
@@ -320,7 +320,7 @@ export default function QuestsPage() {
 
             {visible.length === 0 && quests.length > 0 && (
               <p
-                className="py-10 text-center font-bytebounce text-[18px] text-white"
+                className="py-10 text-center font-bytebounce text-fluid-base text-white"
                 style={{ textShadow: '2px 2px 0 #3e2723' }}
               >
                 Every quest done. Nice work!

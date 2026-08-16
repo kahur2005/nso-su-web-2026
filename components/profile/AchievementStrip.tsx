@@ -20,7 +20,7 @@ export default function AchievementStrip({
   if (achievements.length === 0) {
     return (
       <p
-        className="px-1 font-bytebounce text-[17px] leading-none text-[#e0b391]"
+        className="px-1 font-bytebounce text-fluid-base leading-none text-[#e0b391]"
         style={{ textShadow: '1.5px 1.5px 0 #3e2723' }}
       >
         No achievements yet — complete a quest to earn your first badge.
@@ -63,7 +63,7 @@ export default function AchievementStrip({
                 )}
               </div>
               <p
-                className={`mt-1 w-[68px] truncate font-bytebounce text-[13px] leading-none ${
+                className={`mt-1 w-[68px] truncate font-bytebounce text-fluid-xs leading-none ${
                   a.unlocked ? 'text-[#ffecb3]' : 'text-[#a1887f]'
                 }`}
                 style={{ textShadow: '1px 1px 0 #3e2723' }}
@@ -115,17 +115,17 @@ export default function AchievementStrip({
             </div>
             
             <div className="flex flex-col gap-1.5">
-              <h2 className="font-bytebounce text-[24px] leading-none uppercase text-[#3e2723]">
+              <h2 className="font-bytebounce text-fluid-xl leading-none uppercase text-[#3e2723]">
                 {selected.name}
               </h2>
-              <p className="font-bytebounce text-[18px] leading-tight text-[#6d4c41]">
+              <p className="font-bytebounce text-fluid-base leading-tight text-[#6d4c41]">
                 {selected.description || 'Keep playing to discover how to unlock this achievement!'}
               </p>
             </div>
 
             <button
               onClick={() => setSelected(null)}
-              className="mt-2 font-bytebounce text-[20px] text-[#3e2723] hover:text-[#d6101d] focus:outline-none"
+              className="mt-2 font-bytebounce text-fluid-md text-[#3e2723] hover:text-[#d6101d] focus:outline-none"
             >
               Close
             </button>

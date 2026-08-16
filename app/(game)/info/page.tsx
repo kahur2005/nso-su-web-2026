@@ -53,7 +53,7 @@ export default function InfoHubPage() {
         <h1 className="title-gold text-center font-bytebounce text-[clamp(2.75rem,15vw,4rem)] leading-none">
           INFO STATION
         </h1>
-        <p className="mx-auto mt-1 max-w-[280px] text-center font-bytebounce text-[17px] leading-tight text-[#7d5a3d]">
+        <p className="mx-auto mt-1 max-w-[280px] text-center font-bytebounce text-fluid-base leading-tight text-[#7d5a3d]">
           Everything you need to know to survive NSO 2026
         </p>
 

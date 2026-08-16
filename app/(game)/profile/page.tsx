@@ -211,7 +211,7 @@ export default async function ProfilePage() {
             title="Achievements"
             right={
               <span
-                className="font-bytebounce text-[17px] leading-none text-[#e0b391]"
+                className="font-bytebounce text-fluid-base leading-none text-[#e0b391]"
                 style={{ textShadow: '1.5px 1.5px 0 #3e2723' }}
               >
                 {unlockedCount}/{achievements.length}

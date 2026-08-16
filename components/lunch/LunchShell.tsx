@@ -41,12 +41,12 @@ export default function LunchShell({
         </button>
 
         <div className="px-1">
-          <h1 className="title-gold font-bytebounce text-[30px] leading-none sm:text-[34px]">
+          <h1 className="title-gold font-bytebounce text-fluid-3xl leading-none">
             {title}
           </h1>
           {subtitle && (
             <p
-              className="mt-1.5 font-bytebounce text-[17px] leading-tight text-white"
+              className="mt-1.5 font-bytebounce text-fluid-base leading-tight text-white"
               style={{ textShadow: '2px 2px 0 #3e2723' }}
             >
               {subtitle}

@@ -226,7 +226,7 @@ export default function LeaderboardPage() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          <span className="font-bytebounce text-[13px] text-[#86efac] tracking-wide" style={{ textShadow: '1px 1px 0 #14532d' }}>
+          <span className="font-bytebounce text-fluid-xs text-[#86efac] tracking-wide" style={{ textShadow: '1px 1px 0 #14532d' }}>
             LIVE 30s
           </span>
         </div>
@@ -327,7 +327,7 @@ export default function LeaderboardPage() {
             </button>
           ))}
         </div>
-        <p className="mb-1 text-center font-bytebounce text-[13px] text-[#e0b391]" style={{ textShadow: '1px 1px 0 #4e342e' }}>
+        <p className="mb-1 text-center font-bytebounce text-fluid-xs text-[#e0b391]" style={{ textShadow: '1px 1px 0 #4e342e' }}>
           Updated {lastUpdate.toLocaleTimeString()}
           <button onClick={fetchData} className="ml-2 text-[#7aff06] hover:brightness-125">[refresh]</button>
         </p>
@@ -424,7 +424,7 @@ export default function LeaderboardPage() {
                             >
                               {group.totalPoints.toLocaleString()}
                             </span>
-                            <span className="ml-[2px] font-bytebounce text-[11px]" style={{ color: style.color !== '#ffeb3b' ? style.color : '#ffc20e' }}>
+                            <span className="ml-[2px] font-bytebounce text-fluid-2xs" style={{ color: style.color !== '#ffeb3b' ? style.color : '#ffc20e' }}>
                               pts
                             </span>
                           </div>
@@ -449,7 +449,7 @@ export default function LeaderboardPage() {
                               style={medal.style}
                             >
                               {group.members.length === 0 ? (
-                                <p className="py-2 text-center font-bytebounce text-[15px] text-[#8a7355]">
+                                <p className="py-2 text-center font-bytebounce text-fluid-sm text-[#8a7355]">
                                   No members yet.
                                 </p>
                               ) : (
@@ -488,23 +488,23 @@ export default function LeaderboardPage() {
                                         <span className="flex-shrink-0" title="No Instagram linked">{avatar}</span>
                                       )}
                                       <div className="min-w-0 flex-1">
-                                        <p className="truncate font-bytebounce text-[16px] leading-tight text-[#5d4330]">
+                                        <p className="truncate font-bytebounce text-fluid-sm leading-tight text-[#5d4330]">
                                           {m.name}
                                         </p>
                                         {m.instagram && (
-                                          <p className="truncate font-bytebounce text-[12px] leading-none text-[#8a5a37]">
+                                          <p className="truncate font-bytebounce text-fluid-2xs leading-none text-[#8a5a37]">
                                             @{m.instagram.replace(/^@/, '')}
                                           </p>
                                         )}
                                       </div>
-                                      <p className="flex-shrink-0 font-bytebounce text-[16px] leading-none text-[#88684e] ml-1">
+                                      <p className="flex-shrink-0 font-bytebounce text-fluid-sm leading-none text-[#88684e] ml-1">
                                         {m.points.toLocaleString()} pts
                                       </p>
                                     </div>
                                   )
                                 })
                               )}
-                              <p className="mt-1 text-center font-bytebounce text-[11px] leading-none text-[#a58962]">
+                              <p className="mt-1 text-center font-bytebounce text-fluid-2xs leading-none text-[#a58962]">
                                 tap an avatar to open their instagram
                               </p>
                             </div>
@@ -515,7 +515,7 @@ export default function LeaderboardPage() {
                   )
                 })}
                 {groups.length === 0 && (
-                  <p className="py-6 text-center font-bytebounce text-[18px] text-[#8a7355]">
+                  <p className="py-6 text-center font-bytebounce text-fluid-base text-[#8a7355]">
                     No guilds yet.
                   </p>
                 )}
@@ -554,7 +554,7 @@ export default function LeaderboardPage() {
                         >
                           {student.name}
                         </p>
-                        <p className="mt-[2px] truncate font-bytebounce text-[12px] leading-none text-[#88684e]">
+                        <p className="mt-[2px] truncate font-bytebounce text-fluid-2xs leading-none text-[#88684e]">
                           {student.group?.name ?? '—'} · 📖 {student.funFactsCollected}
                         </p>
                         <div className="mt-[3px]">
@@ -568,7 +568,7 @@ export default function LeaderboardPage() {
                         >
                           {student.points.toLocaleString()}
                         </span>
-                        <span className="ml-[2px] font-bytebounce text-[11px]" style={{ color: style.color !== '#ffeb3b' ? style.color : '#ffc20e' }}>
+                        <span className="ml-[2px] font-bytebounce text-fluid-2xs" style={{ color: style.color !== '#ffeb3b' ? style.color : '#ffc20e' }}>
                           pts
                         </span>
                       </div>
@@ -576,7 +576,7 @@ export default function LeaderboardPage() {
                   )
                 })}
                 {students.length === 0 && (
-                  <p className="py-6 text-center font-bytebounce text-[18px] text-[#8a7355]">
+                  <p className="py-6 text-center font-bytebounce text-fluid-base text-[#8a7355]">
                     No players yet.
                   </p>
                 )}
@@ -586,11 +586,11 @@ export default function LeaderboardPage() {
             {/* ── Record Tab ── */}
             {activeTab === 'record' && (
               <div className="mx-auto w-[78%] space-y-[6px]">
-                <p className="text-center font-bytebounce text-[13px] text-[#5d4330]">
+                <p className="text-center font-bytebounce text-fluid-xs text-[#5d4330]">
                   Latest points events
                 </p>
                 {feed.length === 0 && (
-                  <p className="py-6 text-center font-bytebounce text-[18px] text-[#8a7355]">
+                  <p className="py-6 text-center font-bytebounce text-fluid-base text-[#8a7355]">
                     No records yet.
                   </p>
                 )}
@@ -601,12 +601,12 @@ export default function LeaderboardPage() {
                   >
                     <span className="flex-shrink-0 text-lg">{typeIcon[ev.questType] ?? '📋'}</span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-bytebounce text-[15px] leading-tight text-[#3e2723]">{ev.studentName}</p>
-                      <p className="truncate font-bytebounce text-[12px] leading-tight text-[#5d4330]">{ev.label}</p>
+                      <p className="truncate font-bytebounce text-fluid-sm leading-tight text-[#3e2723]">{ev.studentName}</p>
+                      <p className="truncate font-bytebounce text-fluid-2xs leading-tight text-[#5d4330]">{ev.label}</p>
                     </div>
                     <div className="flex-shrink-0 text-right">
-                      <p className="font-bytebounce text-[15px] leading-none text-[#b8860b]">+{ev.points} pts</p>
-                      <p className="mt-[2px] font-bytebounce text-[11px] leading-none text-[#a58962]">
+                      <p className="font-bytebounce text-fluid-sm leading-none text-[#b8860b]">+{ev.points} pts</p>
+                      <p className="mt-[2px] font-bytebounce text-fluid-2xs leading-none text-[#a58962]">
                         {new Date(ev.at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                       </p>
                     </div>

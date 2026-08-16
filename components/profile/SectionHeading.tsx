@@ -26,7 +26,7 @@ export default function SectionHeading({ icon, title, right }: SectionHeadingPro
         className="h-9 w-8 shrink-0 object-contain"
         style={{ imageRendering: 'pixelated' }}
       />
-      <h2 className="font-bytebounce text-[28px] leading-none sm:text-[32px]" style={CREAM_HEADING}>
+      <h2 className="font-bytebounce text-fluid-3xl leading-none" style={CREAM_HEADING}>
         {title}
       </h2>
       {right && <div className="ml-auto shrink-0">{right}</div>}

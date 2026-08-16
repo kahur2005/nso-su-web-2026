@@ -72,7 +72,7 @@ export default function PlayerBanner({
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="font-bytebounce text-[16px] leading-none sm:text-[17px]" style={TAN}>
+        <p className="font-bytebounce text-fluid-sm leading-none" style={TAN}>
           WELCOME BACK, PLAYER
         </p>
 
@@ -84,10 +84,10 @@ export default function PlayerBanner({
         </h1>
 
         <div className="flex items-baseline justify-between gap-2">
-          <p className="min-w-0 truncate font-bytebounce text-[17px] leading-none sm:text-[18px]" style={CREAM}>
+          <p className="min-w-0 truncate font-bytebounce text-fluid-base leading-none" style={CREAM}>
             LEVEL {level} ✤ {title}
           </p>
-          <p className="shrink-0 font-bytebounce text-[14px] leading-none sm:text-[15px]" style={TAN}>
+          <p className="shrink-0 font-bytebounce text-fluid-xs leading-none" style={TAN}>
             {into}/{span} xp
           </p>
         </div>

@@ -45,14 +45,14 @@ export default function ForgotPasswordPage() {
     return (
       <AuthShell title="Check your email">
         <p
-          className="text-center font-bytebounce text-[22px] leading-snug text-[#e0b391]"
+          className="text-center font-bytebounce text-fluid-lg leading-snug text-[#e0b391]"
           style={authLabelShadow}
         >
           If <span className="text-[#fbc94c]">{email}</span> has an account, we&apos;ve
           sent a link to reset your password.
         </p>
         <p
-          className="mt-4 text-center font-bytebounce text-[18px] leading-snug text-[#e0b391]"
+          className="mt-4 text-center font-bytebounce text-fluid-base leading-snug text-[#e0b391]"
           style={authLabelShadow}
         >
           The link works once and expires in 1 hour. Check your spam folder if
@@ -95,7 +95,7 @@ export default function ForgotPasswordPage() {
 
         {error && (
           <p
-            className="mt-3 text-center font-bytebounce text-[18px] text-[#d6101d]"
+            className="mt-3 text-center font-bytebounce text-fluid-base text-[#d6101d]"
             style={{ textShadow: '1.2px 0.7px 0 #e0b391' }}
           >
             {error}
