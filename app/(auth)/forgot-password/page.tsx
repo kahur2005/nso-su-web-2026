@@ -13,6 +13,8 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [sent, setSent] = useState(false)
+  // Temporary debug readout for the localhost reset-link investigation.
+  const [debugResetBase, setDebugResetBase] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,6 +35,9 @@ export default function ForgotPasswordPage() {
       }
       // Success is deliberately vague — the API never reveals whether this
       // email has an account, and the UI must not either.
+      if (typeof data._debugResetBase === 'string') {
+        setDebugResetBase(data._debugResetBase)
+      }
       setSent(true)
     } catch {
       setError('Could not reach the server. Check your connection.')
@@ -58,6 +63,15 @@ export default function ForgotPasswordPage() {
           The link works once and expires in 1 hour. Check your spam folder if
           it doesn&apos;t show up.
         </p>
+        {debugResetBase ? (
+          <p
+            className="mt-4 break-all text-center font-bytebounce text-[16px] leading-snug text-[#fbc94c]"
+            style={authLabelShadow}
+            data-debug="reset-base"
+          >
+            Debug link host: {debugResetBase}
+          </p>
+        ) : null}
         <button
           type="button"
           onClick={() => {

@@ -25,7 +25,7 @@ export async function completeQuestScan(
 ): Promise<ScanOutcome> {
   const { data: quest, error: questError } = await supabase
     .from('Quest')
-    .select('isActive, isDeleted, qrToken')
+    .select('isActive, isDeleted, qrToken, type')
     .eq('id', questId)
     .maybeSingle()
 
@@ -40,6 +40,12 @@ export async function completeQuestScan(
     return {
       body: { success: false, error: 'This quest is not active right now.' },
       status: 410,
+    }
+  }
+  if (quest.type && quest.type !== 'qr') {
+    return {
+      body: { success: false, error: 'This quest is not completed by scanning.' },
+      status: 400,
     }
   }
   if (!quest.qrToken || quest.qrToken !== token) {
