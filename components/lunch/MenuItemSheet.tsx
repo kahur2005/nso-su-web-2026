@@ -67,11 +67,11 @@ export default function MenuItemSheet({
               {item.name}
             </h2>
             {item.description && (
-              <p className="mt-1.5 font-bytebounce text-[17px] leading-tight text-[#6d4c41]">
+              <p className="mt-1.5 font-bytebounce text-[22px] leading-tight text-[#6d4c41]">
                 {item.description}
               </p>
             )}
-            <p className="mt-1.5 font-bytebounce text-[20px] leading-none text-[#8a5a37]">
+            <p className="mt-1.5 font-bytebounce text-[24px] leading-none text-[#8a5a37]">
               {formatRupiah(item.price)}
             </p>
           </div>
@@ -79,7 +79,7 @@ export default function MenuItemSheet({
 
         {item.addOns.length > 0 && (
           <div className="mt-4">
-            <h3 className="font-bytebounce text-[19px] uppercase leading-none text-[#3e2723]">
+            <h3 className="font-bytebounce text-[22px] uppercase leading-none text-[#3e2723]">
               Add-ons
             </h3>
             <div className="mt-2 space-y-1.5">
@@ -94,10 +94,10 @@ export default function MenuItemSheet({
                     onChange={() => toggle(addOn.id)}
                     className="h-4 w-4 shrink-0 accent-[#8a5a37]"
                   />
-                  <span className="min-w-0 flex-1 font-bytebounce text-[18px] leading-none text-[#3e2723]">
+                  <span className="min-w-0 flex-1 font-bytebounce text-[22px] leading-none text-[#3e2723]">
                     {addOn.name}
                   </span>
-                  <span className="shrink-0 font-bytebounce text-[17px] leading-none text-[#8a5a37]">
+                  <span className="shrink-0 font-bytebounce text-[22px] leading-none text-[#8a5a37]">
                     +{formatRupiah(addOn.price)}
                   </span>
                 </label>
@@ -108,7 +108,7 @@ export default function MenuItemSheet({
 
         {/* Quantity */}
         <div className="mt-4 flex items-center gap-3">
-          <span className="font-bytebounce text-[19px] uppercase leading-none text-[#3e2723]">
+          <span className="font-bytebounce text-[22px] uppercase leading-none text-[#3e2723]">
             Quantity
           </span>
           <div className="flex items-center gap-2">
@@ -116,13 +116,13 @@ export default function MenuItemSheet({
               type="button"
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
               aria-label="Decrease quantity"
-              className="h-9 w-9 border-2 border-[#5d4037] bg-[#f5e0aa] font-bytebounce text-[22px] leading-none text-[#3e2723] active:translate-y-0.5"
+              className="h-10 w-10 border-2 border-[#5d4037] bg-[#f5e0aa] font-bytebounce text-[24px] leading-none text-[#3e2723] active:translate-y-0.5"
             >
               −
             </button>
             <span
               aria-live="polite"
-              className="w-8 text-center font-bytebounce text-[22px] leading-none text-[#3e2723]"
+              className="w-8 text-center font-bytebounce text-[24px] leading-none text-[#3e2723]"
             >
               {quantity}
             </span>
@@ -130,7 +130,7 @@ export default function MenuItemSheet({
               type="button"
               onClick={() => setQuantity((q) => Math.min(50, q + 1))}
               aria-label="Increase quantity"
-              className="h-9 w-9 border-2 border-[#5d4037] bg-[#f5e0aa] font-bytebounce text-[22px] leading-none text-[#3e2723] active:translate-y-0.5"
+              className="h-10 w-10 border-2 border-[#5d4037] bg-[#f5e0aa] font-bytebounce text-[24px] leading-none text-[#3e2723] active:translate-y-0.5"
             >
               +
             </button>
@@ -141,14 +141,14 @@ export default function MenuItemSheet({
           <button
             type="button"
             onClick={onClose}
-            className="border-2 border-[#5d4037] bg-[#e0b391] px-4 py-3 font-bytebounce text-[19px] uppercase leading-none text-[#3e2723] active:translate-y-0.5"
+            className="border-2 border-[#5d4037] bg-[#e0b391] px-4 py-3 font-bytebounce text-[22px] uppercase leading-none text-[#3e2723] active:translate-y-0.5"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={() => onAdd(quantity, addOnIds)}
-            className="flex-1 border-2 border-black bg-[#4a7c2f] px-4 py-3 font-bytebounce text-[19px] uppercase leading-none text-white active:translate-y-0.5"
+            className="flex-1 border-2 border-black bg-[#4a7c2f] px-4 py-3 font-bytebounce text-[22px] uppercase leading-none text-white active:translate-y-0.5"
           >
             Add · {formatRupiah(total)}
           </button>

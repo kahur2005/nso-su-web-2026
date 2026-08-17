@@ -76,8 +76,12 @@ const RANK_STYLE = [
 ]
 const RANK_REST = { color: '#88684e', shadow: 'none', edge: null }
 
-/** Hard black 4-way outline for every points numeral on this page. */
-const POINTS_OUTLINE = {
+/** Hard outline for points numerals — light brown (1px) on guild/player rows. */
+const POINTS_OUTLINE_WHITE = {
+  textShadow:
+    '1px 1px 0 #c9a97b, -1px 1px 0 #c9a97b, 1px -1px 0 #c9a97b, -1px -1px 0 #c9a97b',
+} as const
+const POINTS_OUTLINE_BLACK = {
   textShadow:
     '1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000',
 } as const
@@ -266,7 +270,7 @@ export default function LeaderboardPage() {
               </p>
               <p
                 className="absolute inset-x-0 top-[15.5%] text-center font-bytebounce text-[clamp(18px,6vw,26px)] leading-none text-[#e0b391]"
-                style={POINTS_OUTLINE}
+                style={POINTS_OUTLINE_WHITE}
               >
                 {(activeTab === 'groups' ? leaderGroup.totalPoints : leaderStudent.points).toLocaleString()} Points
               </p>
@@ -429,7 +433,7 @@ export default function LeaderboardPage() {
                               className="font-bytebounce text-[clamp(22px,7vw,30px)]"
                               style={{
                                 color: style.color !== '#ffeb3b' ? style.color : '#ffc20e',
-                                ...POINTS_OUTLINE,
+                                ...POINTS_OUTLINE_WHITE,
                               }}
                             >
                               {group.totalPoints.toLocaleString()}
@@ -438,7 +442,7 @@ export default function LeaderboardPage() {
                               className="ml-[2px] font-bytebounce text-[11px]"
                               style={{
                                 color: style.color !== '#ffeb3b' ? style.color : '#ffc20e',
-                                ...POINTS_OUTLINE,
+                                ...POINTS_OUTLINE_WHITE,
                               }}
                             >
                               pts
@@ -515,7 +519,7 @@ export default function LeaderboardPage() {
                                       </div>
                                       <p
                                         className="ml-1 flex-shrink-0 font-bytebounce text-[24px] leading-none text-[#88684e]"
-                                        style={POINTS_OUTLINE}
+                                        style={POINTS_OUTLINE_BLACK}
                                       >
                                         {m.points.toLocaleString()} pts
                                       </p>
@@ -585,7 +589,7 @@ export default function LeaderboardPage() {
                           className="font-bytebounce text-[clamp(24px,7.5vw,34px)]"
                           style={{
                             color: style.color !== '#ffeb3b' ? style.color : '#ffc20e',
-                            ...POINTS_OUTLINE,
+                            ...POINTS_OUTLINE_WHITE,
                           }}
                         >
                           {student.points.toLocaleString()}
@@ -594,7 +598,7 @@ export default function LeaderboardPage() {
                           className="ml-[2px] font-bytebounce text-[13px]"
                           style={{
                             color: style.color !== '#ffeb3b' ? style.color : '#ffc20e',
-                            ...POINTS_OUTLINE,
+                            ...POINTS_OUTLINE_WHITE,
                           }}
                         >
                           pts
@@ -635,7 +639,7 @@ export default function LeaderboardPage() {
                     <div className="flex-shrink-0 text-right">
                       <p
                         className="font-bytebounce text-[15px] leading-none text-[#b8860b]"
-                        style={POINTS_OUTLINE}
+                        style={POINTS_OUTLINE_BLACK}
                       >
                         +{ev.points} pts
                       </p>

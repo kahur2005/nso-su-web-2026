@@ -44,11 +44,11 @@ const CARD_PORTRAIT = {
   bottom: '1.5cqw',
   width: '46%',
 }
-const CARD_PLAQUE = { left: '30%', top: '-0.40cqw', width: '47%', height: '18.5cqw' }
-const CARD_PILL = { left: '28.5%', top: '13.8cqw', width: '48.5%', height: '11.5cqw' }
+const CARD_PLAQUE = { left: '16%', top: '-0.40cqw', width: '61%', height: '18.5cqw' }
+const CARD_PILL = { left: '14.5%', top: '13.8cqw', width: '62.5%', height: '11.5cqw' }
 const CARD_IG = { left: '76.14%', top: '-0.62cqw', width: '15.78%', height: '14.50cqw' }
-const CARD_NAME = { left: '32%', right: '27%', top: '8.6cqw' }
-const CARD_ROLE = { left: '29.5%', right: '27%', top: '18.8cqw' }
+const CARD_NAME = { left: '18%', right: '27%', top: '8.6cqw' }
+const CARD_ROLE = { left: '16%', right: '27%', top: '18.8cqw' }
 // The fun fact is the one thing in normal flow, so it is what sets the height.
 // The top padding clears the name plaque and division pill above it.
 const CARD_FACT = {
@@ -158,7 +158,7 @@ function CommitteeMemberCard({
           className="relative z-[1] col-start-1 row-start-1 flex flex-col justify-center"
           style={CARD_FACT_EXPANDED}
         >
-          <p className="w-full text-center font-bytebounce text-[24px] leading-[1.05] text-[#5d4330] pr-[10%]">
+          <p className="w-full pr-[10%] text-center font-bytebounce text-[18px] leading-[0.5] text-[#5d4330]">
             {member.funFact}
           </p>
         </div>
@@ -168,7 +168,7 @@ function CommitteeMemberCard({
           style={CARD_FACT}
         >
           <p
-            className={`w-full text-center font-bytebounce text-[24px] leading-[1.05] ${
+            className={`w-full text-center font-bytebounce text-[18px] leading-[0.5] ${
               member.isScanned ? 'text-[#5d4330]' : 'text-[#b3a184]'
             } ${canExpand ? 'line-clamp-2 pr-[10%]' : ''}`}
           >
@@ -204,7 +204,7 @@ function CommitteeMemberCard({
         </button>
       )}
 
-      <div className="pointer-events-none absolute z-[5]" style={CARD_PORTRAIT}>
+      <div className="pointer-events-none absolute z-[15]" style={CARD_PORTRAIT}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={portrait}
@@ -213,12 +213,13 @@ function CommitteeMemberCard({
         />
       </div>
 
+      {/* Ribbons sit under the portrait so the cut-out reads as popping out. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={`/images/committee/plaque-${divisionId}.png`}
         alt=""
         aria-hidden
-        className="absolute z-10"
+        className="absolute z-[8]"
         style={CARD_PLAQUE}
       />
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -226,17 +227,17 @@ function CommitteeMemberCard({
         src="/images/committee/division-pill.png"
         alt=""
         aria-hidden
-        className="absolute z-10"
+        className="absolute z-[8]"
         style={CARD_PILL}
       />
       <div
-        className="absolute z-10 -translate-y-1/2 truncate font-bytebounce text-[24px] leading-none text-[#ffeccf]"
+        className="absolute z-[9] -translate-y-1/2 truncate font-bytebounce text-[24px] leading-none text-[#ffeccf]"
         style={{ ...CARD_NAME, textShadow: '2px 2px 0 #3e2723' }}
       >
         {member.name}
       </div>
       <div
-        className="absolute z-10 -translate-y-1/2 truncate text-center font-bytebounce text-[24px] leading-none text-[#ffd23f]"
+        className="absolute z-[9] -translate-y-1/2 truncate text-center font-bytebounce text-[24px] leading-none text-[#ffd23f]"
         style={{ ...CARD_ROLE, textShadow: '1px 1px 0 #3a2418' }}
       >
         {member.role}
@@ -248,14 +249,14 @@ function CommitteeMemberCard({
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`${member.name} on Instagram`}
-          className="absolute z-10 transition-transform hover:scale-110 active:scale-95"
+          className="absolute z-20 transition-transform hover:scale-110 active:scale-95"
           style={CARD_IG}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/committee/ig-button.png" alt="" className="h-full w-full" />
         </a>
       ) : (
-        <span aria-hidden className="absolute z-10 opacity-45" style={CARD_IG}>
+        <span aria-hidden className="absolute z-20 opacity-45" style={CARD_IG}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/committee/ig-button.png" alt="" className="h-full w-full" />
         </span>

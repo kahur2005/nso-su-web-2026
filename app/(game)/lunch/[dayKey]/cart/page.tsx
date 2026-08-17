@@ -88,16 +88,15 @@ export default function LunchCartPage() {
     <LunchShell
       title="Your cart"
       subtitle={meta ? `${meta.headerTitle} · ${meta.date}` : undefined}
-      backHref={restaurantId ? `/lunch/${dayKey}/${restaurantId}` : `/lunch/${dayKey}`}
     >
       {!hasHydrated ? null : lines.length === 0 || !isThisDay ? (
         <Parchment className="mt-3.5 px-5 py-4">
-          <p className="font-bytebounce text-[19px] leading-tight text-[#6d4c41]">
+          <p className="font-bytebounce text-[24px] leading-tight text-[#6d4c41]">
             Your cart is empty.
           </p>
           <Link
             href={`/lunch/${dayKey}`}
-            className="mt-2 inline-block font-bytebounce text-[17px] text-[#8a5a37] underline"
+            className="mt-2 inline-block font-bytebounce text-[22px] text-[#8a5a37] underline"
           >
             Browse restaurants
           </Link>
@@ -109,17 +108,17 @@ export default function LunchCartPage() {
               <Parchment key={line.key} as="article" className="px-5 py-3">
                 <div className="flex items-start gap-2">
                   <div className="min-w-0 flex-1">
-                    <h2 className="font-bytebounce text-[21px] uppercase leading-none text-[#3e2723]">
+                    <h2 className="font-bytebounce text-[24px] uppercase leading-none text-[#3e2723]">
                       {line.name}
                     </h2>
                     {line.addOns.length > 0 && (
-                      <p className="mt-1.5 font-bytebounce text-[16px] leading-tight text-[#6d4c41]">
+                      <p className="mt-1.5 font-bytebounce text-[22px] leading-tight text-[#6d4c41]">
                         {line.addOns
                           .map((a) => `+ ${a.name} (${formatRupiah(a.price)})`)
                           .join(', ')}
                       </p>
                     )}
-                    <p className="mt-1 font-bytebounce text-[19px] leading-none text-[#8a5a37]">
+                    <p className="mt-1 font-bytebounce text-[24px] leading-none text-[#8a5a37]">
                       {formatRupiah(cartLineTotal(line))}
                     </p>
                   </div>
@@ -130,18 +129,18 @@ export default function LunchCartPage() {
                         type="button"
                         onClick={() => setQuantity(line.key, line.quantity - 1)}
                         aria-label={`Decrease ${line.name}`}
-                        className="h-8 w-8 border-2 border-[#5d4037] bg-[#f5e0aa] font-bytebounce text-[20px] leading-none text-[#3e2723] active:translate-y-0.5"
+                        className="h-8 w-8 border-2 border-[#5d4037] bg-[#f5e0aa] font-bytebounce text-[24px] leading-none text-[#3e2723] active:translate-y-0.5"
                       >
                         −
                       </button>
-                      <span className="w-6 text-center font-bytebounce text-[20px] leading-none text-[#3e2723]">
+                      <span className="w-6 text-center font-bytebounce text-[24px] leading-none text-[#3e2723]">
                         {line.quantity}
                       </span>
                       <button
                         type="button"
                         onClick={() => setQuantity(line.key, line.quantity + 1)}
                         aria-label={`Increase ${line.name}`}
-                        className="h-8 w-8 border-2 border-[#5d4037] bg-[#f5e0aa] font-bytebounce text-[20px] leading-none text-[#3e2723] active:translate-y-0.5"
+                        className="h-8 w-8 border-2 border-[#5d4037] bg-[#f5e0aa] font-bytebounce text-[24px] leading-none text-[#3e2723] active:translate-y-0.5"
                       >
                         +
                       </button>
@@ -149,7 +148,7 @@ export default function LunchCartPage() {
                     <button
                       type="button"
                       onClick={() => removeLine(line.key)}
-                      className="font-bytebounce text-[15px] leading-none text-[#8c2d1a] underline"
+                      className="font-bytebounce text-[20px] leading-none text-[#8c2d1a] underline"
                     >
                       remove
                     </button>
@@ -165,11 +164,11 @@ export default function LunchCartPage() {
           <Parchment className="mt-4 px-5 py-4">
             <label
               htmlFor="lunch-note"
-              className="block font-bytebounce text-[20px] uppercase leading-none text-[#3e2723]"
+              className="block font-bytebounce text-[24px] uppercase leading-none text-[#3e2723]"
             >
               Note for the kitchen
             </label>
-            <p className="mt-1.5 font-bytebounce text-[16px] leading-tight text-[#6d4c41]">
+            <p className="mt-1.5 font-bytebounce text-[22px] leading-tight text-[#6d4c41]">
               Optional — e.g. &quot;sambal dipisah&quot;, &quot;extra timun&quot;,
               &quot;ayam paha atas&quot;.
             </p>
@@ -180,9 +179,9 @@ export default function LunchCartPage() {
               maxLength={300}
               rows={2}
               placeholder="Sambal dipisah ya"
-              className="mt-2 w-full resize-none border-2 border-[#8a5a37] bg-[#fff3d9] px-3 py-2 font-bytebounce text-[18px] leading-tight text-[#3e2723] placeholder:text-[#c0a184] focus:outline-none focus:ring-2 focus:ring-[#8a5a37]/40"
+              className="mt-2 w-full resize-none border-2 border-[#8a5a37] bg-[#fff3d9] px-3 py-2 font-bytebounce text-[22px] leading-tight text-[#3e2723] placeholder:text-[#c0a184] focus:outline-none focus:ring-2 focus:ring-[#8a5a37]/40"
             />
-            <p className="mt-1 text-right font-bytebounce text-[14px] leading-none text-[#a58962]">
+            <p className="mt-1 text-right font-bytebounce text-[18px] leading-none text-[#a58962]">
               {note.length}/300
             </p>
           </Parchment>
@@ -190,7 +189,7 @@ export default function LunchCartPage() {
           {/* Total + pay */}
           <Parchment className="mt-4 px-5 py-4">
             <div className="flex items-baseline justify-between gap-3">
-              <span className="font-bytebounce text-[23px] uppercase leading-none text-[#3e2723]">
+              <span className="font-bytebounce text-[26px] uppercase leading-none text-[#3e2723]">
                 Total
               </span>
               <span className="font-bytebounce text-[30px] leading-none text-[#8a5a37]">
@@ -202,7 +201,7 @@ export default function LunchCartPage() {
           {error && (
             <p
               role="alert"
-              className="mt-3 border-2 border-black bg-[#f6d5cd] px-4 py-2 font-bytebounce text-[17px] leading-tight text-[#8c2d1a]"
+              className="mt-3 border-2 border-black bg-[#f6d5cd] px-4 py-2 font-bytebounce text-[22px] leading-tight text-[#8c2d1a]"
             >
               {error}
             </p>
@@ -212,14 +211,14 @@ export default function LunchCartPage() {
             type="button"
             onClick={handlePay}
             disabled={submitting}
-            className="mt-4 w-full border-4 border-black bg-[#4a7c2f] px-4 py-4 font-bytebounce text-[22px] uppercase leading-none text-white disabled:opacity-60 active:translate-y-0.5"
+            className="mt-4 w-full border-4 border-black bg-[#4a7c2f] px-4 py-4 font-bytebounce text-[24px] uppercase leading-none text-white disabled:opacity-60 active:translate-y-0.5"
             style={{ boxShadow: '4px 4px 0px #000' }}
           >
             {submitting ? 'Placing order...' : `Pay ${formatRupiah(subtotal)}`}
           </button>
 
           <p
-            className="mt-2 mb-4 text-center font-bytebounce text-[15px] leading-tight text-white"
+            className="mt-2 mb-4 text-center font-bytebounce text-[20px] leading-tight text-white"
             style={{ textShadow: '2px 2px 0 #3e2723' }}
           >
             You will get a QRIS code for this exact amount on the next screen.

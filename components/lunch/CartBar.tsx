@@ -25,13 +25,13 @@ export default function CartBar({
         className="mx-auto flex max-w-[520px] items-center gap-3 border-4 border-black bg-[#4a7c2f] px-4 py-3 active:translate-y-0.5"
         style={{ boxShadow: '4px 4px 0px #000' }}
       >
-        <span className="font-bytebounce text-[19px] leading-none text-white">
+        <span className="font-bytebounce text-[22px] leading-none text-white">
           {count} item{count === 1 ? '' : 's'}
         </span>
-        <span className="flex-1 text-right font-bytebounce text-[21px] leading-none text-[#ffd23f]">
+        <span className="flex-1 text-right font-bytebounce text-[24px] leading-none text-[#ffd23f]">
           {formatRupiah(cartSubtotal(lines))}
         </span>
-        <span className="font-bytebounce text-[19px] uppercase leading-none text-white">
+        <span className="font-bytebounce text-[22px] uppercase leading-none text-white">
           View cart →
         </span>
       </Link>

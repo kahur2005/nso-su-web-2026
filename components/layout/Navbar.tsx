@@ -34,7 +34,22 @@ const BACK_TARGETS: Array<[prefix: string, href: string]> = [
   ['/quests', '/dashboard'],
 ]
 
+function lunchBackHref(pathname: string): string | null {
+  if (pathname !== '/lunch' && !pathname.startsWith('/lunch/')) return null
+  // Landing → dashboard (same as the tile that opens lunch).
+  if (pathname === '/lunch' || pathname === '/lunch/') return '/dashboard'
+  // Order receipts always return to the lunch home, not /lunch/order.
+  if (pathname.startsWith('/lunch/order')) return '/lunch'
+  // Nested day / restaurant / cart: pop one path segment.
+  const parts = pathname.replace(/\/$/, '').split('/')
+  parts.pop()
+  const parent = parts.join('/')
+  return parent || '/dashboard'
+}
+
 function backHrefFor(pathname: string): string | null {
+  const lunch = lunchBackHref(pathname)
+  if (lunch) return lunch
   const hit = BACK_TARGETS.find(
     ([prefix]) => pathname === prefix || pathname.startsWith(prefix + '/'),
   )
