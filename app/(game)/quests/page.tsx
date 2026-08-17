@@ -19,6 +19,7 @@ import {
   type QuestType,
   type QuestSubmissionStatus,
 } from '@/lib/quests'
+import { APP_TIME_ZONE_LABEL, formatJakartaDate, formatJakartaTime } from '@/lib/time'
 
 interface QuestAchievement {
   name: string
@@ -55,7 +56,7 @@ const GOLD_POINTS = {
 }
 
 function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  return formatJakartaTime(iso)
 }
 
 function SliceBg({
@@ -137,7 +138,7 @@ function statusLabel(quest: Quest): string {
     const n = quest.quizCorrectCount ?? 0
     if (n === quest.quizTotal) {
       const date = quest.completedAt
-        ? new Date(quest.completedAt).toLocaleDateString(undefined, {
+        ? formatJakartaDate(quest.completedAt, {
             month: 'short',
             day: 'numeric',
           })
@@ -149,7 +150,7 @@ function statusLabel(quest: Quest): string {
   }
   if (quest.isCompleted) {
     const date = quest.completedAt
-      ? new Date(quest.completedAt).toLocaleDateString(undefined, {
+      ? formatJakartaDate(quest.completedAt, {
           month: 'short',
           day: 'numeric',
         })
@@ -213,26 +214,26 @@ function QuestCard({
         imageRendering: 'pixelated',
       }}
     >
-      <div className="relative flex items-center gap-2 py-3 pl-5 pr-4">
+      <div className="relative flex items-center gap-2 px-5 pb-10 pt-10">
         <div className="min-w-0 flex-1">
           {quest.isLocked && (
             <div className="mb-2 flex items-center gap-1.5 rounded border border-[#c9a97b] bg-[#fff3d9] px-2 py-1">
               <span className="text-base leading-none">🔒</span>
               <p className="font-bytebounce text-[14px] leading-none text-[#8a5a37]">
-                Opens at {quest.availableFrom ? formatTime(quest.availableFrom) : '—'}
+                Opens at {quest.availableFrom ? formatTime(quest.availableFrom) : '—'} {APP_TIME_ZONE_LABEL}
               </p>
             </div>
           )}
 
-          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <TypeBadge type={quest.type} />
           </div>
 
-          <h2 className="mt-1.5 font-bytebounce text-[23px] uppercase leading-none text-[#3e2723]">
+          <h2 className="mt-2 font-bytebounce text-[23px] uppercase leading-none text-[#3e2723]">
             {quest.title}
           </h2>
 
-          <p className="mt-2 pl-3 font-bytebounce text-[17px] leading-tight text-[#6d4c41]">
+          <p className="mt-2 pl-3 font-bytebounce text-[24px] leading-[1.05] text-[#6d4c41]">
             {quest.description}
           </p>
 
@@ -254,7 +255,7 @@ function QuestCard({
             </div>
           )}
 
-          <p className="mt-2 font-bytebounce text-[16px] leading-none">
+          <p className="mt-3 font-bytebounce text-[16px] leading-none">
             {quest.isCompleted ? (
               <span className="text-[#4a7c2f]">{statusLabel(quest)}</span>
             ) : quest.isLocked ? (

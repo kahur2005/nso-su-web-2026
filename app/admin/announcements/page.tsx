@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import DataTable from '@/components/admin/DataTable'
 import { createAnnouncement, toggleAnnouncement } from '../actions'
+import { formatJakartaDateTime } from '@/lib/time'
 
 const inputClass = `w-full bg-white border border-slate-300 rounded-md text-slate-800
   text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400`
@@ -93,7 +94,7 @@ export default async function AdminAnnouncementsPage() {
               </form>
             </td>
             <td className="px-4 py-2.5 text-slate-600 align-top whitespace-nowrap">
-              {new Date(ann.createdAt).toLocaleString()}
+              {formatJakartaDateTime(ann.createdAt)}
             </td>
           </tr>
         ))}

@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
+/** Matches guidebook / quest-card body copy. */
+const BODY = 'font-bytebounce text-[24px] leading-[1.05]'
+
 type QuizOption = { id: string; label: string }
 
 type QuizQuestion = {
@@ -132,7 +135,7 @@ export default function QuizPanel({ questId, disabled, onSubmitted }: Props) {
   if (error && !data) {
     return (
       <div className="rounded border-2 border-[#c9a97b] bg-[#fff8e7] px-4 py-3">
-        <p className="font-bytebounce text-[16px] leading-snug text-[#c62828]">{error}</p>
+        <p className={`${BODY} text-[#c62828]`}>{error}</p>
       </div>
     )
   }
@@ -140,7 +143,7 @@ export default function QuizPanel({ questId, disabled, onSubmitted }: Props) {
   if (!data || data.questions.length === 0) {
     return (
       <div className="rounded border-2 border-[#c9a97b] bg-[#fff8e7] px-4 py-3">
-        <p className="font-bytebounce text-[16px] leading-snug text-[#6d4c41]">
+        <p className={`${BODY} text-[#6d4c41]`}>
           No questions yet — check back soon.
         </p>
       </div>
@@ -150,36 +153,30 @@ export default function QuizPanel({ questId, disabled, onSubmitted }: Props) {
   return (
     <div className="space-y-3 rounded border-2 border-[#c9a97b] bg-[#fff8e7] px-4 py-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="font-bytebounce text-[15px] leading-snug text-[#6d4c41]">
+        <p className={`${BODY} text-[#6d4c41]`}>
           {data.isPerfect
             ? '✅ Perfect score!'
             : 'Answer all questions. Correct ones lock — retry the rest.'}
         </p>
-        <p className="font-bytebounce text-[15px] leading-none text-[#8a5a37]">
+        <p className={`${BODY} leading-none text-[#8a5a37]`}>
           {data.earnedPoints}/{data.totalPoints} pts
         </p>
       </div>
 
       {lastAwarded != null && lastAwarded > 0 && (
-        <p className="font-bytebounce text-[16px] leading-snug text-[#33691e]">
-          +{lastAwarded} points earned!
-        </p>
+        <p className={`${BODY} text-[#33691e]`}>+{lastAwarded} points earned!</p>
       )}
 
       {warning && (
-        <p className="font-bytebounce text-[14px] leading-snug text-[#e65100]">
-          ⚠️ {warning}
-        </p>
+        <p className={`${BODY} text-[#e65100]`}>⚠️ {warning}</p>
       )}
 
       {data.questions.map((q, qi) => (
         <fieldset key={q.id} className="space-y-2 border-0 p-0">
-          <legend className="font-bytebounce text-[16px] leading-snug text-[#3e2723]">
+          <legend className={`${BODY} text-[#3e2723]`}>
             {qi + 1}. {q.prompt}
-            <span className="ml-2 text-[14px] text-[#8a5a37]">(+{q.points})</span>
-            {q.locked && (
-              <span className="ml-2 text-[14px] text-[#4a7c2f]">✓</span>
-            )}
+            <span className="ml-2 text-[#8a5a37]">(+{q.points})</span>
+            {q.locked && <span className="ml-2 text-[#4a7c2f]">✓</span>}
           </legend>
 
           <div className="space-y-1.5">
@@ -206,11 +203,9 @@ export default function QuizPanel({ questId, disabled, onSubmitted }: Props) {
                     onChange={() =>
                       setPicks((prev) => ({ ...prev, [q.id]: opt.id }))
                     }
-                    className="mt-0.5 shrink-0 accent-[#5d4037]"
+                    className="mt-1 shrink-0 accent-[#5d4037]"
                   />
-                  <span className="font-bytebounce text-[14px] leading-snug text-[#6d4c41]">
-                    {opt.label}
-                  </span>
+                  <span className={`${BODY} text-[#6d4c41]`}>{opt.label}</span>
                 </label>
               )
             })}
@@ -218,12 +213,10 @@ export default function QuizPanel({ questId, disabled, onSubmitted }: Props) {
         </fieldset>
       ))}
 
-      {error && (
-        <p className="font-bytebounce text-[14px] text-[#c62828]">{error}</p>
-      )}
+      {error && <p className={`${BODY} text-[#c62828]`}>{error}</p>}
 
       {disabled && (
-        <p className="font-bytebounce text-[15px] text-[#a58962]">
+        <p className={`${BODY} text-[#a58962]`}>
           This quest is not open for quiz attempts yet.
         </p>
       )}
@@ -233,14 +226,14 @@ export default function QuizPanel({ questId, disabled, onSubmitted }: Props) {
           type="button"
           disabled={!canSubmit || submitting}
           onClick={handleSubmit}
-          className="rounded border-2 border-[#3a2418] bg-[#8a5a37] px-4 py-2 font-bytebounce text-[16px] leading-none text-[#ffd23f] disabled:opacity-50"
+          className="rounded border-2 border-[#3a2418] bg-[#8a5a37] px-4 py-2 font-bytebounce text-[24px] leading-none text-[#ffd23f] disabled:opacity-50"
         >
           {submitting ? 'SUBMITTING…' : 'SUBMIT ANSWERS'}
         </button>
       )}
 
       {!disabled && data.isPerfect && (
-        <p className="font-bytebounce text-[16px] leading-snug text-[#33691e]">
+        <p className={`${BODY} text-[#33691e]`}>
           All questions correct — quest complete!
         </p>
       )}

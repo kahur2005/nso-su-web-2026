@@ -6,6 +6,7 @@
 'use client'
 import { useState } from 'react'
 import SectionHeading from './SectionHeading'
+import { formatJakartaDate } from '@/lib/time'
 
 export interface ActivityRow {
   id: string
@@ -20,7 +21,7 @@ export interface ActivityRow {
 const COLLAPSED_ROWS = 3
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en', { month: 'short', day: 'numeric' })
+  return formatJakartaDate(iso, { month: 'short', day: 'numeric' })
 }
 
 const PAPER = {
@@ -57,7 +58,7 @@ export default function ActivityLog({ rows }: { rows: ActivityRow[] }) {
 
       {rows.length === 0 ? (
         <div className="px-5 py-4" style={PAPER}>
-          <p className="font-bytebounce text-[17px] leading-none text-[#6d4c41]">
+          <p className="font-bytebounce text-[22px] leading-[1.05] text-[#6d4c41]">
             No scans yet — go scan a committee member!
           </p>
         </div>
@@ -66,18 +67,18 @@ export default function ActivityLog({ rows }: { rows: ActivityRow[] }) {
           {visible.map((row) => {
             const isQuiz = row.kind === 'guidebook'
             return (
-            <div key={row.id} className="flex items-center gap-3 px-5 py-3.5" style={PAPER}>
+            <div key={row.id} className="flex items-center gap-3 px-5 py-4" style={PAPER}>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-bytebounce text-[21px] leading-none text-[#3e2723]">
+                <p className="truncate font-bytebounce text-[24px] leading-[1.05] text-[#3e2723]">
                   {isQuiz ? row.title : `Scanned ${row.title}`}
                 </p>
-                <p className="mt-1.5 font-bytebounce text-[17px] leading-none text-[#4e342e]">
+                <p className="mt-2 font-bytebounce text-[20px] leading-none text-[#4e342e]">
                   <span aria-hidden>{isQuiz ? '📖' : '💡'}</span>{' '}
                   {isQuiz ? 'Guidebook quiz' : 'FunFact collected'} · {formatDate(row.scannedAt)}
                 </p>
               </div>
               <p
-                className={`shrink-0 font-bytebounce text-[18px] leading-none ${
+                className={`shrink-0 font-bytebounce text-[22px] leading-none ${
                   row.points < 0 ? 'text-[#d6101d]' : 'text-[#328b36]'
                 }`}
               >

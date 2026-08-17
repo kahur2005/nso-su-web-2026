@@ -9,6 +9,7 @@ import {
   type QuestType,
   isQuestType,
 } from '@/lib/quests'
+import { APP_TIME_ZONE_LABEL, toJakartaInputValue } from '@/lib/time'
 
 export interface QuestRow {
   id: string
@@ -182,28 +183,24 @@ export default function QuestForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className={labelClass}>Active Time Window Start (Daily Quest optional)</label>
+          <label className={labelClass}>
+            Active Time Window Start ({APP_TIME_ZONE_LABEL}, optional)
+          </label>
           <input
             name="availableFrom"
             type="datetime-local"
-            defaultValue={
-              quest?.availableFrom
-                ? new Date(quest.availableFrom).toISOString().slice(0, 16)
-                : ''
-            }
+            defaultValue={toJakartaInputValue(quest?.availableFrom)}
             className={inputClass}
           />
         </div>
         <div>
-          <label className={labelClass}>Active Time Window End (Daily Quest optional)</label>
+          <label className={labelClass}>
+            Active Time Window End ({APP_TIME_ZONE_LABEL}, optional)
+          </label>
           <input
             name="availableUntil"
             type="datetime-local"
-            defaultValue={
-              quest?.availableUntil
-                ? new Date(quest.availableUntil).toISOString().slice(0, 16)
-                : ''
-            }
+            defaultValue={toJakartaInputValue(quest?.availableUntil)}
             className={inputClass}
           />
         </div>

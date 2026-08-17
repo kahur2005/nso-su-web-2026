@@ -18,6 +18,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PageIntro from '@/components/onboarding/PageIntro'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import { formatJakartaDate, formatJakartaTime } from '@/lib/time'
 import GroupEmblem from '@/components/ui/GroupEmblem'
 import PixelAvatar from '@/components/ui/PixelAvatar'
 import { parseAvatarConfig, hairKey } from '@/lib/avatar'
@@ -74,6 +75,12 @@ const RANK_STYLE = [
   { color: '#a15548', shadow: '0px 2px 0px #773b50', edge: '#b06a34' }, // bronze
 ]
 const RANK_REST = { color: '#88684e', shadow: 'none', edge: null }
+
+/** Hard black 4-way outline for every points numeral on this page. */
+const POINTS_OUTLINE = {
+  textShadow:
+    '1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000',
+} as const
 
 /** Class + CSS variable that paint rank `i`'s podium trim, if it has one. */
 function medalTrim(i: number): { className: string; style?: CSSProperties } {
@@ -259,7 +266,7 @@ export default function LeaderboardPage() {
               </p>
               <p
                 className="absolute inset-x-0 top-[15.5%] text-center font-bytebounce text-[clamp(18px,6vw,26px)] leading-none text-[#e0b391]"
-                style={{ textShadow: '2px 2px 0 #4e342e' }}
+                style={POINTS_OUTLINE}
               >
                 {(activeTab === 'groups' ? leaderGroup.totalPoints : leaderStudent.points).toLocaleString()} Points
               </p>
@@ -328,7 +335,7 @@ export default function LeaderboardPage() {
           ))}
         </div>
         <p className="mb-1 text-center font-bytebounce text-[13px] text-[#e0b391]" style={{ textShadow: '1px 1px 0 #4e342e' }}>
-          Updated {lastUpdate.toLocaleTimeString()}
+          Updated {formatJakartaTime(lastUpdate)}
           <button onClick={fetchData} className="ml-2 text-[#7aff06] hover:brightness-125">[refresh]</button>
         </p>
 
@@ -420,11 +427,20 @@ export default function LeaderboardPage() {
                           <div className="flex-shrink-0 text-right leading-none">
                             <span
                               className="font-bytebounce text-[clamp(22px,7vw,30px)]"
-                              style={{ color: style.color !== '#ffeb3b' ? style.color : '#ffc20e' }}
+                              style={{
+                                color: style.color !== '#ffeb3b' ? style.color : '#ffc20e',
+                                ...POINTS_OUTLINE,
+                              }}
                             >
                               {group.totalPoints.toLocaleString()}
                             </span>
-                            <span className="ml-[2px] font-bytebounce text-[11px]" style={{ color: style.color !== '#ffeb3b' ? style.color : '#ffc20e' }}>
+                            <span
+                              className="ml-[2px] font-bytebounce text-[11px]"
+                              style={{
+                                color: style.color !== '#ffeb3b' ? style.color : '#ffc20e',
+                                ...POINTS_OUTLINE,
+                              }}
+                            >
                               pts
                             </span>
                           </div>
@@ -445,11 +461,11 @@ export default function LeaderboardPage() {
                             className="overflow-hidden"
                           >
                             <div
-                              className={`pixel-frame pixel-frame--bottom pixel-frame--roster px-3 pb-3 pt-2 ${medal.className}`}
+                              className={`pixel-frame pixel-frame--bottom pixel-frame--roster px-3 pb-4 pt-3 ${medal.className}`}
                               style={medal.style}
                             >
                               {group.members.length === 0 ? (
-                                <p className="py-2 text-center font-bytebounce text-[15px] text-[#8a7355]">
+                                <p className="py-3 text-center font-bytebounce text-[24px] text-[#8a7355]">
                                   No members yet.
                                 </p>
                               ) : (
@@ -465,13 +481,13 @@ export default function LeaderboardPage() {
                                       eyes={ma.eyes ?? undefined}
                                       brow={ma.brows ?? undefined}
                                       mouth={ma.mouth ?? undefined}
-                                      size={34}
+                                      size={52}
                                     />
                                   )
                                   return (
                                     <div
                                       key={m.id}
-                                      className="flex items-center gap-2 border-b border-[#c9a97b] py-[5px] last:border-0"
+                                      className="flex items-center gap-3 border-b border-[#c9a97b] py-3 last:border-0"
                                     >
                                       {href ? (
                                         <a
@@ -488,23 +504,26 @@ export default function LeaderboardPage() {
                                         <span className="flex-shrink-0" title="No Instagram linked">{avatar}</span>
                                       )}
                                       <div className="min-w-0 flex-1">
-                                        <p className="truncate font-bytebounce text-[16px] leading-tight text-[#5d4330]">
+                                        <p className="truncate whitespace-nowrap font-bytebounce text-[24px] leading-[1.05] text-[#5d4330]">
                                           {m.name}
                                         </p>
                                         {m.instagram && (
-                                          <p className="truncate font-bytebounce text-[12px] leading-none text-[#8a5a37]">
+                                          <p className="mt-0.5 truncate whitespace-nowrap font-bytebounce text-[18px] leading-none text-[#8a5a37]">
                                             @{m.instagram.replace(/^@/, '')}
                                           </p>
                                         )}
                                       </div>
-                                      <p className="flex-shrink-0 font-bytebounce text-[16px] leading-none text-[#88684e] ml-1">
+                                      <p
+                                        className="ml-1 flex-shrink-0 font-bytebounce text-[24px] leading-none text-[#88684e]"
+                                        style={POINTS_OUTLINE}
+                                      >
                                         {m.points.toLocaleString()} pts
                                       </p>
                                     </div>
                                   )
                                 })
                               )}
-                              <p className="mt-1 text-center font-bytebounce text-[11px] leading-none text-[#a58962]">
+                              <p className="mt-2 text-center font-bytebounce text-[16px] leading-none text-[#a58962]">
                                 tap an avatar to open their instagram
                               </p>
                             </div>
@@ -545,30 +564,39 @@ export default function LeaderboardPage() {
                       </div>
                       <PixelAvatar
                         {...(() => { const a = parseAvatarConfig(student.avatarConfig); return { skin: a.skin, clothes: a.clothes ?? undefined, hair: hairKey(a) ?? undefined, hijab: a.hijab ?? undefined, eyes: a.eyes ?? undefined, brow: a.brows ?? undefined, mouth: a.mouth ?? undefined } })()}
-                        size={38}
+                        size={56}
                       />
                       <div className="min-w-0 flex-1">
                         <p
-                          className="truncate font-bytebounce text-[clamp(15px,5vw,21px)] leading-none"
+                          className="truncate font-bytebounce text-[clamp(22px,6.5vw,28px)] leading-none"
                           style={{ color: style.color, textShadow: style.shadow }}
                         >
                           {student.name}
                         </p>
-                        <p className="mt-[2px] truncate font-bytebounce text-[12px] leading-none text-[#88684e]">
+                        <p className="mt-[3px] truncate font-bytebounce text-[14px] leading-none text-[#88684e]">
                           {student.group?.name ?? '—'} · 📖 {student.funFactsCollected}
                         </p>
-                        <div className="mt-[3px]">
+                        <div className="mt-[4px]">
                           <PixelBar value={student.points} max={maxStudentPoints} />
                         </div>
                       </div>
                       <div className="flex-shrink-0 text-right leading-none">
                         <span
-                          className="font-bytebounce text-[clamp(20px,6.5vw,28px)]"
-                          style={{ color: style.color !== '#ffeb3b' ? style.color : '#ffc20e' }}
+                          className="font-bytebounce text-[clamp(24px,7.5vw,34px)]"
+                          style={{
+                            color: style.color !== '#ffeb3b' ? style.color : '#ffc20e',
+                            ...POINTS_OUTLINE,
+                          }}
                         >
                           {student.points.toLocaleString()}
                         </span>
-                        <span className="ml-[2px] font-bytebounce text-[11px]" style={{ color: style.color !== '#ffeb3b' ? style.color : '#ffc20e' }}>
+                        <span
+                          className="ml-[2px] font-bytebounce text-[13px]"
+                          style={{
+                            color: style.color !== '#ffeb3b' ? style.color : '#ffc20e',
+                            ...POINTS_OUTLINE,
+                          }}
+                        >
                           pts
                         </span>
                       </div>
@@ -605,9 +633,14 @@ export default function LeaderboardPage() {
                       <p className="truncate font-bytebounce text-[12px] leading-tight text-[#5d4330]">{ev.label}</p>
                     </div>
                     <div className="flex-shrink-0 text-right">
-                      <p className="font-bytebounce text-[15px] leading-none text-[#b8860b]">+{ev.points} pts</p>
+                      <p
+                        className="font-bytebounce text-[15px] leading-none text-[#b8860b]"
+                        style={POINTS_OUTLINE}
+                      >
+                        +{ev.points} pts
+                      </p>
                       <p className="mt-[2px] font-bytebounce text-[11px] leading-none text-[#a58962]">
-                        {new Date(ev.at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        {formatJakartaDate(ev.at, { month: 'short', day: 'numeric' })}
                       </p>
                     </div>
                   </div>

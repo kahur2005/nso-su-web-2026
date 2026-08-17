@@ -13,6 +13,7 @@ import { redirect } from 'next/navigation'
 import { isLunchDayKey } from '@/lib/lunch'
 import { isValidQrisPayload, normalizeQrisPayload } from '@/lib/qris'
 import { resolveStudentDbId } from '@/lib/lunch-data'
+import { jakartaLocalInputToIso } from '@/lib/time'
 
 async function requireAdmin() {
   const session = await getServerSession(authOptions)
@@ -288,7 +289,7 @@ export async function updateLunchDay(formData: FormData) {
     {
       dayKey,
       isOpen: checked(formData, 'isOpen'),
-      orderDeadline: deadlineRaw ? new Date(deadlineRaw).toISOString() : null,
+      orderDeadline: deadlineRaw ? jakartaLocalInputToIso(deadlineRaw) : null,
     },
     { onConflict: 'dayKey' }
   )

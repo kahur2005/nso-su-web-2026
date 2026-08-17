@@ -11,6 +11,7 @@ import PageWrapper from "@/components/layout/PageWrapper";
 import PageIntro from "@/components/onboarding/PageIntro";
 import ParallaxBg from "@/components/layout/ParallaxBg";
 import Link from "next/link";
+import { formatJakartaDate } from "@/lib/time";
 
 async function getDashboardData(studentId: string) {
   const [
@@ -327,7 +328,7 @@ export default async function DashboardPage() {
                       {ann.title}
                     </h3>
                     <span className="font-bytebounce text-[15px] leading-snug text-[#8a6a52] shrink-0 mt-0.5">
-                      {new Date(ann.createdAt).toLocaleDateString("en", {
+                      {formatJakartaDate(ann.createdAt, {
                         month: "short",
                         day: "numeric",
                       })}

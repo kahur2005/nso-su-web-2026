@@ -12,6 +12,7 @@ import { redirect } from 'next/navigation'
 import { getLunchDays, getQrisStatic } from '@/lib/lunch-data'
 import { LUNCH_DAYS } from '@/lib/lunch'
 import { isValidQrisPayload } from '@/lib/qris'
+import { APP_TIME_ZONE_LABEL, toJakartaInputValue } from '@/lib/time'
 import LunchTabs from '../LunchTabs'
 import { updateLunchSettings, updateLunchDay } from '../actions'
 
@@ -20,21 +21,6 @@ const inputClass = `w-full bg-white border border-slate-300 rounded-md text-slat
 
 const saveButton =
   'rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700'
-
-/**
- * <input type="datetime-local"> wants 'YYYY-MM-DDTHH:mm' in LOCAL time, while
- * the column is timestamptz. Building the string from the local getters is the
- * conversion; toISOString() would silently shift the displayed time by the
- * server's UTC offset.
- */
-function toLocalInputValue(iso: string | null): string {
-  if (!iso) return ''
-  const d = new Date(iso)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-    d.getHours()
-  )}:${pad(d.getMinutes())}`
-}
 
 export default async function AdminLunchSettingsPage({
   searchParams,
@@ -160,12 +146,12 @@ export default async function AdminLunchSettingsPage({
                 </label>
                 <div className="min-w-[220px] flex-1">
                   <label className="mb-1 block text-xs font-medium text-slate-500">
-                    Order deadline
+                    Order deadline ({APP_TIME_ZONE_LABEL})
                   </label>
                   <input
                     name="orderDeadline"
                     type="datetime-local"
-                    defaultValue={toLocalInputValue(day?.orderDeadline ?? null)}
+                    defaultValue={toJakartaInputValue(day?.orderDeadline ?? null)}
                     className={inputClass}
                   />
                 </div>

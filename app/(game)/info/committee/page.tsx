@@ -35,26 +35,40 @@ const OUTLINE_GOLD = {
 // card's width, which is what the art actually scales with. To convert an old
 // value: oldPercentOfHeight * 115 / 245.
 const CARD_MIN_ASPECT = '46.94%' // 115/245 — the frame's drawn proportions, now a floor
-// Anchored top *and* bottom rather than given a height, so the portrait
-// stretches with the card instead of floating at a fixed size on a tall one:
-// the head stays tucked under the name plaque, the feet stay on the card's
-// floor, and the person scales up with everything else. The committee photos
-// are near-square cut-outs (640x640) whose subject sits in a tall centre strip
-// with 17-45% of the width transparent, so `object-cover` scales them by the
-// box height and eats that empty margin rather than the person.
-const CARD_PORTRAIT = { left: '1.5%', top: '-1.92cqw', bottom: '3.42cqw', width: '32%' }
-const CARD_PLAQUE = { left: '28%', top: '-0.40cqw', width: '47%', height: '15.55cqw' }
-const CARD_PILL = { left: '26.5%', top: '11.40cqw', width: '48.5%', height: '9.16cqw' }
+// Portrait is oversized and hung past the top of the frame so the cut-out
+// "pops out" of the card. Feet stay near the bottom edge; head clears the
+// top border. Fun-fact column starts further right so it clears the wider bust.
+const CARD_PORTRAIT = {
+  left: '-2%',
+  top: '-18cqw',
+  bottom: '1.5cqw',
+  width: '46%',
+}
+const CARD_PLAQUE = { left: '30%', top: '-0.40cqw', width: '47%', height: '18.5cqw' }
+const CARD_PILL = { left: '28.5%', top: '13.8cqw', width: '48.5%', height: '11.5cqw' }
 const CARD_IG = { left: '76.14%', top: '-0.62cqw', width: '15.78%', height: '14.50cqw' }
-const CARD_NAME = { left: '30%', right: '27%', top: '7.57cqw' }
-const CARD_ROLE = { left: '27.5%', right: '27%', top: '15.18cqw' }
+const CARD_NAME = { left: '32%', right: '27%', top: '8.6cqw' }
+const CARD_ROLE = { left: '29.5%', right: '27%', top: '18.8cqw' }
 // The fun fact is the one thing in normal flow, so it is what sets the height.
-// The top padding clears the name plaque and division pill above it. The bottom
-// padding is 7cqw rather than the old 6%-of-height, because the original box
-// ended *inside* the frame's 14px bottom border — harmless when the text was
-// short and vertically centred, but now that a long fact fills the box to the
-// last line, that last line would sit on the border.
-const CARD_FACT = { marginLeft: '29%', marginRight: '5%', paddingTop: '21.12cqw', paddingBottom: '7cqw' }
+// The top padding clears the name plaque and division pill above it.
+const CARD_FACT = {
+  left: '40%',
+  right: '5%',
+  top: '26cqw',
+  bottom: '12cqw',
+}
+const CARD_FACT_EXPANDED = {
+  marginLeft: '40%',
+  marginRight: '5%',
+  paddingTop: '26cqw',
+  paddingBottom: '14cqw',
+}
+const CARD_EXPAND_BTN = {
+  right: '3.5%',
+  bottom: '3.2%',
+  width: '8cqw',
+  minWidth: 24,
+}
 
 // `card-frame.png` 9-sliced, so the card can be any height without the border
 // stretching. Slices are source px, in CSS order top/right/bottom/left: 31 is
@@ -90,7 +104,8 @@ const CARD_FRAME = {
 // bottom rolls, and those rolls grew with the art.
 const SCROLL_ART_BLEED = '18.59%'
 const RIBBON = { left: '3.64%', width: '94.14%' }
-const CARD_COLUMN = { marginLeft: '11.86%', width: '80.04%', marginTop: '-3.43%' }
+// Stretch cards almost to the parchment body edges (was ~80% wide / inset 12%).
+const CARD_COLUMN = { marginLeft: '3%', width: '94%', marginTop: '-3.43%' }
 const SCROLL_PAD_TOP = '22.04%'
 const SCROLL_PAD_BOTTOM = '20.58%'
 const RIBBON_TITLE_CENTRE = '38.1%'
@@ -111,6 +126,142 @@ function instagramHref(value: string | null): string | null {
   if (!trimmed) return null
   if (/^https?:\/\//i.test(trimmed)) return trimmed
   return `https://instagram.com/${trimmed.replace(/^@/, '')}`
+}
+
+function CommitteeMemberCard({
+  member,
+  divisionId,
+}: {
+  member: CommitteeMember
+  divisionId: DivisionId
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const href = instagramHref(member.instagram)
+  const portrait = member.imageUrl ?? '/images/committee/portrait-placeholder.png'
+  const canExpand = member.isScanned
+
+  return (
+    // Collapsed height is locked to CARD_MIN_ASPECT for both scanned and
+    // unscanned cards. Expanding puts the fun fact back in normal flow so
+    // the frame can grow with the full text.
+    <article className="@container relative z-0 grid w-full overflow-visible">
+      <div
+        aria-hidden
+        className="col-start-1 row-start-1 w-0"
+        style={{ paddingTop: CARD_MIN_ASPECT }}
+      />
+
+      <div aria-hidden className="absolute inset-0" style={CARD_FRAME} />
+
+      {expanded && canExpand ? (
+        <div
+          className="relative z-[1] col-start-1 row-start-1 flex flex-col justify-center"
+          style={CARD_FACT_EXPANDED}
+        >
+          <p className="w-full text-center font-bytebounce text-[24px] leading-[1.05] text-[#5d4330] pr-[10%]">
+            {member.funFact}
+          </p>
+        </div>
+      ) : (
+        <div
+          className="absolute z-[1] flex items-center justify-center overflow-hidden"
+          style={CARD_FACT}
+        >
+          <p
+            className={`w-full text-center font-bytebounce text-[24px] leading-[1.05] ${
+              member.isScanned ? 'text-[#5d4330]' : 'text-[#b3a184]'
+            } ${canExpand ? 'line-clamp-2 pr-[10%]' : ''}`}
+          >
+            {member.isScanned ? member.funFact : '? ? ?'}
+          </p>
+        </div>
+      )}
+
+      {canExpand && (
+        <button
+          type="button"
+          aria-expanded={expanded}
+          aria-label={
+            expanded
+              ? `Hide full fun fact for ${member.name}`
+              : `Show full fun fact for ${member.name}`
+          }
+          onClick={() => setExpanded((v) => !v)}
+          className="absolute z-20 flex items-center justify-center transition-transform active:translate-y-0.5"
+          style={CARD_EXPAND_BTN}
+        >
+          {/* page-next points right; rotate to a down / up chevron */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/committee/page-next.png"
+            alt=""
+            className="w-full transition-transform duration-150"
+            style={{
+              transform: expanded ? 'rotate(-90deg)' : 'rotate(90deg)',
+              imageRendering: 'pixelated',
+            }}
+          />
+        </button>
+      )}
+
+      <div className="pointer-events-none absolute z-[5]" style={CARD_PORTRAIT}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={portrait}
+          alt={member.name}
+          className="h-full w-full object-contain object-bottom drop-shadow-[2px_3px_0_rgba(62,39,35,0.35)]"
+        />
+      </div>
+
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={`/images/committee/plaque-${divisionId}.png`}
+        alt=""
+        aria-hidden
+        className="absolute z-10"
+        style={CARD_PLAQUE}
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/images/committee/division-pill.png"
+        alt=""
+        aria-hidden
+        className="absolute z-10"
+        style={CARD_PILL}
+      />
+      <div
+        className="absolute z-10 -translate-y-1/2 truncate font-bytebounce text-[24px] leading-none text-[#ffeccf]"
+        style={{ ...CARD_NAME, textShadow: '2px 2px 0 #3e2723' }}
+      >
+        {member.name}
+      </div>
+      <div
+        className="absolute z-10 -translate-y-1/2 truncate text-center font-bytebounce text-[24px] leading-none text-[#ffd23f]"
+        style={{ ...CARD_ROLE, textShadow: '1px 1px 0 #3a2418' }}
+      >
+        {member.role}
+      </div>
+
+      {href ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`${member.name} on Instagram`}
+          className="absolute z-10 transition-transform hover:scale-110 active:scale-95"
+          style={CARD_IG}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/committee/ig-button.png" alt="" className="h-full w-full" />
+        </a>
+      ) : (
+        <span aria-hidden className="absolute z-10 opacity-45" style={CARD_IG}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/committee/ig-button.png" alt="" className="h-full w-full" />
+        </span>
+      )}
+    </article>
+  )
 }
 
 export default function CommitteePage() {
@@ -153,7 +304,7 @@ export default function CommitteePage() {
           COMMITTEE
         </h1>
         <p
-          className="mt-1 text-center font-bytebounce text-[19px] leading-tight text-white"
+          className="mt-1 text-center font-bytebounce text-[24px] leading-tight text-white"
           style={{ textShadow: '2px 2px 0 #4e342e' }}
         >
           The team behind NSO 2026
@@ -237,107 +388,21 @@ export default function CommitteePage() {
                 <LoadingSpinner />
               </div>
             ) : divisionMembers.length === 0 ? (
-              <p className="relative z-10 mt-8 text-center font-bytebounce text-[18px] text-[#8a7355]">
+              <p className="relative z-10 mt-8 text-center font-bytebounce text-[24px] text-[#8a7355]">
                 No members listed yet.
               </p>
             ) : (
               <div
-                className="relative z-10 flex flex-col gap-[5%]"
+                className="relative z-10 flex flex-col gap-[8%] overflow-visible"
                 style={CARD_COLUMN}
               >
-                {pageMembers.map((member) => {
-                  const href = instagramHref(member.instagram)
-                  const portrait = member.imageUrl ?? '/images/committee/portrait-placeholder.png'
-                  return (
-                    // `grid` with both flow children in the same cell: the row is
-                    // as tall as the taller of the two, so the spacer sets a
-                    // floor and the fun fact pushes past it when it needs to.
-                    // `@container` makes the card the reference for every cqw
-                    // inside it.
-                    <article key={member.id} className="@container relative grid w-full">
-                      {/* Height floor. Percentage padding resolves against this
-                          card's width, so it is an aspect ratio, not a fixed
-                          height — short fun facts keep the original card. */}
-                      <div
-                        aria-hidden
-                        className="col-start-1 row-start-1 w-0"
-                        style={{ paddingTop: CARD_MIN_ASPECT }}
-                      />
-
-                      <div aria-hidden className="absolute inset-0" style={CARD_FRAME} />
-
-                      {/* `relative` is load-bearing: the frame beside it is
-                          positioned, so an unpositioned sibling would paint
-                          underneath the frame's `fill` and the fact would
-                          disappear behind the parchment. */}
-                      <div
-                        className="relative col-start-1 row-start-1 flex flex-col justify-center"
-                        style={CARD_FACT}
-                      >
-                        <p
-                          className={`text-center font-bytebounce text-[13px] leading-[1.05] ${
-                            member.isScanned ? 'text-[#5d4330]' : 'text-[#b3a184]'
-                          }`}
-                        >
-                          {member.isScanned ? `“${member.funFact}”` : '? ? ?'}
-                        </p>
-                      </div>
-
-                      {/* Portrait cutout rendered underneath plaque & text */}
-                      <div className="absolute z-0" style={CARD_PORTRAIT}>
-                        <img
-                          src={portrait}
-                          alt={member.name}
-                          className="h-full w-full object-contain object-bottom"
-                        />
-                      </div>
-
-                      <img
-                        src={`/images/committee/plaque-${active.id}.png`}
-                        alt=""
-                        aria-hidden
-                        className="absolute z-10"
-                        style={CARD_PLAQUE}
-                      />
-                      <img
-                        src="/images/committee/division-pill.png"
-                        alt=""
-                        aria-hidden
-                        className="absolute z-10"
-                        style={CARD_PILL}
-                      />
-                      <div
-                        className="absolute z-10 -translate-y-1/2 truncate font-bytebounce text-[17px] leading-none text-[#ffeccf]"
-                        style={{ ...CARD_NAME, textShadow: '2px 2px 0 #3e2723' }}
-                      >
-                        {member.name}
-                      </div>
-                      <div
-                        className="absolute z-10 -translate-y-1/2 truncate text-center font-bytebounce text-[12px] leading-none text-[#ffd23f]"
-                        style={{ ...CARD_ROLE, textShadow: '1px 1px 0 #3a2418' }}
-                      >
-                        {member.role}
-                      </div>
-
-                      {href ? (
-                        <a
-                          href={href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={`${member.name} on Instagram`}
-                          className="absolute z-10 transition-transform hover:scale-110 active:scale-95"
-                          style={CARD_IG}
-                        >
-                          <img src="/images/committee/ig-button.png" alt="" className="h-full w-full" />
-                        </a>
-                      ) : (
-                        <span aria-hidden className="absolute z-10 opacity-45" style={CARD_IG}>
-                          <img src="/images/committee/ig-button.png" alt="" className="h-full w-full" />
-                        </span>
-                      )}
-                    </article>
-                  )
-                })}
+                {pageMembers.map((member) => (
+                  <CommitteeMemberCard
+                    key={member.id}
+                    member={member}
+                    divisionId={active.id}
+                  />
+                ))}
               </div>
             )}
 
@@ -351,7 +416,7 @@ export default function CommitteePage() {
                 >
                   <img src="/images/committee/page-prev.png" alt="" className="w-full" />
                 </button>
-                <span className="font-bytebounce text-[20px] leading-none text-[#6b4a2d]">
+                <span className="font-bytebounce text-[24px] leading-none text-[#6b4a2d]">
                   {currentPage + 1}/{pageCount}
                 </span>
                 <button
@@ -363,7 +428,7 @@ export default function CommitteePage() {
                   <img src="/images/committee/page-next.png" alt="" className="w-full" />
                 </button>
               </div>
-              <p className="mt-[2%] text-center font-bytebounce text-[17px] leading-none text-[#8a7355]">
+              <p className="mt-[2%] text-center font-bytebounce text-[24px] leading-none text-[#8a7355]">
                 {collected}/{divisionMembers.length} collected
               </p>
             </div>

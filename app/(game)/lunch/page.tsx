@@ -19,9 +19,10 @@ import {
   type LunchDay,
   type LunchOrder,
 } from '@/lib/lunch'
+import { formatJakartaDateTime } from '@/lib/time'
 
 function formatDeadline(iso: string) {
-  return new Date(iso).toLocaleString('en-GB', {
+  return formatJakartaDateTime(iso, {
     day: '2-digit',
     month: 'short',
     hour: '2-digit',

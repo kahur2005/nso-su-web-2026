@@ -1143,8 +1143,8 @@ export default function GuideBookPage() {
                   {section.body?.map((para) => (
                     <p
                       key={para}
-                      className="font-bytebounce leading-[0.95]"
-                      style={{ color: INK_BODY, fontSize: cqw(16, TYPE), marginTop: cqw(6) }}
+                      className="font-bytebounce leading-[1.05]"
+                      style={{ color: INK_BODY, fontSize: cqw(20, TYPE), marginTop: cqw(7) }}
                     >
                       {para}
                     </p>
@@ -1152,12 +1152,12 @@ export default function GuideBookPage() {
 
                   {section.items && (
                     <ol
-                      className="list-decimal font-bytebounce leading-[0.92]"
+                      className="list-decimal font-bytebounce leading-[1.05]"
                       style={{
                         color: INK_BODY,
-                        fontSize: cqw(16, TYPE),
-                        marginTop: cqw(6),
-                        paddingInlineStart: cqw(24),
+                        fontSize: cqw(20, TYPE),
+                        marginTop: cqw(7),
+                        paddingInlineStart: cqw(26),
                       }}
                     >
                       {section.items.map((item) => (
@@ -1168,14 +1168,14 @@ export default function GuideBookPage() {
 
                   {section.rows && (
                     <dl
-                      className="font-bytebounce leading-[0.92]"
-                      style={{ fontSize: cqw(16, TYPE), marginTop: cqw(6) }}
+                      className="font-bytebounce leading-[1.05]"
+                      style={{ fontSize: cqw(20, TYPE), marginTop: cqw(7) }}
                     >
                       {/* The margin is inline, so it beats a `first:mt-0`
                           class — the first row has to be zeroed here instead. */}
                       {section.rows.map((row, rIdx) => (
-                        <div key={row.label} style={{ marginTop: rIdx === 0 ? 0 : cqw(6) }}>
-                          <dt style={{ color: INK_TITLE, fontSize: cqw(17, TYPE) }}>{row.label}</dt>
+                        <div key={row.label} style={{ marginTop: rIdx === 0 ? 0 : cqw(7) }}>
+                          <dt style={{ color: INK_TITLE, fontSize: cqw(21, TYPE) }}>{row.label}</dt>
                           <dd style={{ color: INK_BODY, paddingInlineStart: cqw(12) }}>
                             {row.detail}
                           </dd>
@@ -1186,11 +1186,11 @@ export default function GuideBookPage() {
 
                   {section.template && (
                     <div
-                      className="font-bytebounce leading-[1.05]"
+                      className="font-bytebounce leading-[1.1]"
                       style={{
                         backgroundColor: TINT.paper,
                         color: INK_BODY,
-                        fontSize: cqw(15, TYPE),
+                        fontSize: cqw(19, TYPE),
                         marginTop: cqw(8),
                         borderRadius: cqw(8),
                         padding: `${cqw(8)} ${cqw(10)}`,
@@ -1245,12 +1245,12 @@ export default function GuideBookPage() {
                     📌 Notes
                   </h3>
                   <ul
-                    className="list-disc font-bytebounce leading-[0.92]"
+                    className="list-disc font-bytebounce leading-[1.05]"
                     style={{
                       color: INK_BODY,
-                      fontSize: cqw(15, TYPE),
+                      fontSize: cqw(19, TYPE),
                       marginTop: cqw(4),
-                      paddingInlineStart: cqw(20),
+                      paddingInlineStart: cqw(22),
                     }}
                   >
                     {page.notes.map((note) => (

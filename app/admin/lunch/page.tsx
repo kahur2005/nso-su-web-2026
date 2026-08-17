@@ -18,6 +18,7 @@ import {
 } from '@/lib/lunch'
 import LunchTabs from './LunchTabs'
 import { approveLunchOrder, rejectLunchOrder } from './actions'
+import { formatJakartaDateTime } from '@/lib/time'
 
 const STATUSES: LunchOrderStatus[] = [
   'awaiting_approval',
@@ -34,8 +35,7 @@ const STATUS_STYLE: Record<LunchOrderStatus, string> = {
 }
 
 function formatDateTime(iso: string) {
-  // Pinned locale: the server and the browser must agree on this string.
-  return new Date(iso).toLocaleString('en-GB', {
+  return formatJakartaDateTime(iso, {
     day: '2-digit',
     month: 'short',
     hour: '2-digit',

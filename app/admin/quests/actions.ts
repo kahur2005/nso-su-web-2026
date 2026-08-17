@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase'
 import { revalidatePath } from 'next/cache'
 import { isQuestType } from '@/lib/quests'
 import { resolveStudentDbId } from '@/lib/lunch-data'
+import { jakartaLocalInputToIso } from '@/lib/time'
 
 async function requireAdmin() {
   const session = await getServerSession(authOptions)
@@ -71,8 +72,8 @@ export async function createQuest(formData: FormData) {
     type === 'quiz' ? 0 : parseInt(String(formData.get('points') || '0'), 10)
   const fromRaw = String(formData.get('availableFrom') || '').trim()
   const untilRaw = String(formData.get('availableUntil') || '').trim()
-  const availableFrom = fromRaw ? new Date(fromRaw).toISOString() : null
-  const availableUntil = untilRaw ? new Date(untilRaw).toISOString() : null
+  const availableFrom = fromRaw ? jakartaLocalInputToIso(fromRaw) : null
+  const availableUntil = untilRaw ? jakartaLocalInputToIso(untilRaw) : null
 
   if (!title || !description) return
   if (type !== 'quiz' && (!Number.isFinite(points) || points <= 0)) return
@@ -108,8 +109,8 @@ export async function updateQuest(formData: FormData) {
   const points = parseInt(String(formData.get('points') || '0'), 10)
   const fromRaw = String(formData.get('availableFrom') || '').trim()
   const untilRaw = String(formData.get('availableUntil') || '').trim()
-  const availableFrom = fromRaw ? new Date(fromRaw).toISOString() : null
-  const availableUntil = untilRaw ? new Date(untilRaw).toISOString() : null
+  const availableFrom = fromRaw ? jakartaLocalInputToIso(fromRaw) : null
+  const availableUntil = untilRaw ? jakartaLocalInputToIso(untilRaw) : null
 
   if (!id || !title || !description) return
 

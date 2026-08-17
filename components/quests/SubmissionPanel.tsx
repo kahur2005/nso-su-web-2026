@@ -3,6 +3,9 @@
 import { useRef, useState } from 'react'
 import type { QuestSubmissionStatus } from '@/lib/quests'
 
+/** Matches guidebook / quest-card body copy. */
+const BODY = 'font-bytebounce text-[24px] leading-[1.05]'
+
 type Props = {
   questId: string
   submissionStatus: QuestSubmissionStatus
@@ -62,7 +65,7 @@ export default function SubmissionPanel({
   if (submissionStatus === 'awaiting_approval') {
     return (
       <div className="rounded border-2 border-[#c9a97b] bg-[#fff8e7] px-4 py-3">
-        <p className="font-bytebounce text-[16px] leading-snug text-[#6d4c41]">
+        <p className={`${BODY} text-[#6d4c41]`}>
           ⏳ Your submission is waiting for committee review.
         </p>
       </div>
@@ -72,9 +75,7 @@ export default function SubmissionPanel({
   if (submissionStatus === 'approved') {
     return (
       <div className="rounded border-2 border-[#7cb342] bg-[#f1f8e9] px-4 py-3">
-        <p className="font-bytebounce text-[16px] leading-snug text-[#33691e]">
-          ✅ Submission approved!
-        </p>
+        <p className={`${BODY} text-[#33691e]`}>✅ Submission approved!</p>
       </div>
     )
   }
@@ -82,14 +83,14 @@ export default function SubmissionPanel({
   return (
     <div className="space-y-3 rounded border-2 border-[#c9a97b] bg-[#fff8e7] px-4 py-3">
       {submissionStatus === 'rejected' && (
-        <p className="font-bytebounce text-[16px] leading-snug text-[#c62828]">
+        <p className={`${BODY} text-[#c62828]`}>
           ❌ Your last submission was rejected. You can upload again.
         </p>
       )}
 
       {canSubmit && (
         <>
-          <p className="font-bytebounce text-[15px] leading-snug text-[#6d4c41]">
+          <p className={`${BODY} text-[#6d4c41]`}>
             Upload photos or PDFs (max 10 files). JPEG, PNG, WebP, or PDF.
           </p>
 
@@ -104,11 +105,11 @@ export default function SubmissionPanel({
               setFiles(picked.slice(0, 10))
               setError(null)
             }}
-            className="block w-full font-bytebounce text-[14px] text-[#5d4037] file:mr-3 file:rounded file:border-2 file:border-[#3a2418] file:bg-[#8a5a37] file:px-3 file:py-1 file:font-bytebounce file:text-[14px] file:text-[#ffd23f]"
+            className={`block w-full ${BODY} text-[#5d4037] file:mr-3 file:rounded file:border-2 file:border-[#3a2418] file:bg-[#8a5a37] file:px-3 file:py-1.5 file:font-bytebounce file:text-[20px] file:text-[#ffd23f]`}
           />
 
           {files.length > 0 && (
-            <ul className="space-y-1 font-bytebounce text-[14px] text-[#6d4c41]">
+            <ul className={`space-y-1 ${BODY} text-[#6d4c41]`}>
               {files.map((f) => (
                 <li key={`${f.name}-${f.size}`} className="truncate">
                   • {f.name}
@@ -117,15 +118,13 @@ export default function SubmissionPanel({
             </ul>
           )}
 
-          {error && (
-            <p className="font-bytebounce text-[14px] text-[#c62828]">{error}</p>
-          )}
+          {error && <p className={`${BODY} text-[#c62828]`}>{error}</p>}
 
           <button
             type="button"
             disabled={submitting || files.length === 0}
             onClick={handleSubmit}
-            className="rounded border-2 border-[#3a2418] bg-[#8a5a37] px-4 py-2 font-bytebounce text-[16px] leading-none text-[#ffd23f] disabled:opacity-50"
+            className="rounded border-2 border-[#3a2418] bg-[#8a5a37] px-4 py-2 font-bytebounce text-[24px] leading-none text-[#ffd23f] disabled:opacity-50"
           >
             {submitting ? 'UPLOADING…' : 'SUBMIT FILES'}
           </button>
@@ -133,7 +132,7 @@ export default function SubmissionPanel({
       )}
 
       {disabled && submissionStatus !== 'rejected' && (
-        <p className="font-bytebounce text-[15px] text-[#a58962]">
+        <p className={`${BODY} text-[#a58962]`}>
           This quest is not open for submissions yet.
         </p>
       )}

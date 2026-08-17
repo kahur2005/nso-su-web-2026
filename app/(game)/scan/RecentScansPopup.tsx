@@ -3,6 +3,8 @@
 // Time / Name / Points table plus the all-time scan total.
 'use client'
 
+import { formatJakartaTime } from '@/lib/time'
+
 interface RecentScan {
   scannedAt: string
   pointsAwarded: number
@@ -71,10 +73,7 @@ export default function RecentScansPopup({ scans, total, onClose }: RecentScansP
                 style={{ color: BROWN }}
               >
                 <span className="w-11 shrink-0">
-                  {new Date(scan.scannedAt).toLocaleTimeString('en-GB', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
+                  {formatJakartaTime(scan.scannedAt)}
                 </span>
                 <span className="flex-1 truncate">{scan.npc?.committeeName ?? '???'}</span>
                 <span className="shrink-0">+{scan.pointsAwarded} pts</span>
