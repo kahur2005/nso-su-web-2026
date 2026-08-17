@@ -214,8 +214,8 @@ function QuestCard({
         imageRendering: 'pixelated',
       }}
     >
-      <div className="relative flex items-center gap-2 px-5 pb-10 pt-10">
-        <div className="min-w-0 flex-1">
+      <div className="relative flex flex-col gap-4 px-5 pb-10 pt-10">
+        <div className="min-w-0 w-full">
           {quest.isLocked && (
             <div className="mb-2 flex items-center gap-1.5 rounded border border-[#c9a97b] bg-[#fff3d9] px-2 py-1">
               <span className="text-base leading-none">🔒</span>
@@ -229,11 +229,11 @@ function QuestCard({
             <TypeBadge type={quest.type} />
           </div>
 
-          <h2 className="mt-2 font-bytebounce text-[23px] uppercase leading-none text-[#3e2723]">
+          <h2 className="mt-2 w-full font-bytebounce text-[28px] uppercase leading-none text-[#3e2723]">
             {quest.title}
           </h2>
 
-          <p className="mt-2 pl-3 font-bytebounce text-[24px] leading-[1.05] text-[#6d4c41]">
+          <p className="mt-2 w-full font-bytebounce text-[24px] leading-[1.05] text-[#6d4c41]">
             {quest.description}
           </p>
 
@@ -266,7 +266,7 @@ function QuestCard({
           </p>
         </div>
 
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="flex w-full items-center justify-between gap-3">
           <span
             className="font-bytebounce text-[58px] leading-none"
             style={GOLD_POINTS}
@@ -274,14 +274,15 @@ function QuestCard({
             +{quest.points}
           </span>
 
-          {cta && (
-            <span className="whitespace-nowrap rounded border-2 border-[#3a2418] bg-[#8a5a37] px-3 py-1.5 font-bytebounce text-[18px] leading-none text-[#ffd23f]">
-              {cta}
-            </span>
-          )}
+          <div className="flex items-center gap-3">
+            {cta && (
+              <span className="whitespace-nowrap rounded border-2 border-[#3a2418] bg-[#8a5a37] px-3 py-1.5 font-bytebounce text-[18px] leading-none text-[#ffd23f]">
+                {cta}
+              </span>
+            )}
+            {(isQrScan || isPanelQuest) && <Chevron />}
+          </div>
         </div>
-
-        {(isQrScan || isPanelQuest) && <Chevron />}
       </div>
     </article>
   )
