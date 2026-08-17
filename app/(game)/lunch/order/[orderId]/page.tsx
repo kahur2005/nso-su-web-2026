@@ -89,7 +89,7 @@ export default function LunchOrderPage() {
 
   if (loading) {
     return (
-      <LunchShell title="Order" backHref="/lunch">
+      <LunchShell title="Order">
         <div className="py-12">
           <LoadingSpinner text="LOADING ORDER..." />
         </div>
@@ -99,14 +99,14 @@ export default function LunchOrderPage() {
 
   if (notFound || !order) {
     return (
-      <LunchShell title="Order" backHref="/lunch">
+      <LunchShell title="Order">
         <Parchment className="mt-3.5 px-5 py-4">
-          <p className="font-bytebounce text-[19px] leading-tight text-[#8c2d1a]">
+          <p className="font-bytebounce text-[24px] leading-tight text-[#8c2d1a]">
             We could not find that order.
           </p>
           <Link
             href="/lunch"
-            className="mt-2 inline-block font-bytebounce text-[17px] text-[#8a5a37] underline"
+            className="mt-2 inline-block font-bytebounce text-[22px] text-[#8a5a37] underline"
           >
             Back to lunch
           </Link>
@@ -121,12 +121,11 @@ export default function LunchOrderPage() {
     <LunchShell
       title={order.status === 'pending_payment' ? 'Pay' : 'Receipt'}
       subtitle={`${order.restaurantName} · ${meta?.headerTitle ?? `Day ${order.dayKey}`}`}
-      backHref="/lunch"
     >
       {/* ---------------------------------------------------- receipt ---- */}
       <Parchment className="mt-3.5 px-5 py-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="font-mono text-[14px] text-[#6d4c41]">
+          <span className="font-mono text-[18px] text-[#6d4c41]">
             {order.orderCode}
           </span>
           <LunchStatusChip status={order.status} />
@@ -136,15 +135,15 @@ export default function LunchOrderPage() {
           {order.items.map((item) => (
             <div key={item.id}>
               <div className="flex justify-between gap-3">
-                <span className="font-bytebounce text-[18px] leading-tight text-[#3e2723]">
+                <span className="font-bytebounce text-[22px] leading-tight text-[#3e2723]">
                   {item.quantity}x {item.nameSnapshot}
                 </span>
-                <span className="shrink-0 font-bytebounce text-[18px] leading-tight text-[#8a5a37]">
+                <span className="shrink-0 font-bytebounce text-[22px] leading-tight text-[#8a5a37]">
                   {formatRupiah(item.lineTotal)}
                 </span>
               </div>
               {item.addOns.length > 0 && (
-                <p className="pl-4 font-bytebounce text-[15px] leading-tight text-[#a58962]">
+                <p className="pl-4 font-bytebounce text-[20px] leading-tight text-[#a58962]">
                   {item.addOns
                     .map((a) => `+ ${a.nameSnapshot} (${formatRupiah(a.price)})`)
                     .join(', ')}
@@ -155,13 +154,13 @@ export default function LunchOrderPage() {
         </div>
 
         {order.note && (
-          <p className="mt-3 border-t-2 border-dashed border-[#c9a97b] pt-3 font-bytebounce text-[17px] leading-tight text-[#6d4c41]">
+          <p className="mt-3 border-t-2 border-dashed border-[#c9a97b] pt-3 font-bytebounce text-[22px] leading-tight text-[#6d4c41]">
             <span className="text-[#a58962]">Note:</span> {order.note}
           </p>
         )}
 
         <div className="mt-3 flex items-baseline justify-between gap-3 border-t-2 border-dashed border-[#c9a97b] pt-3">
-          <span className="font-bytebounce text-[22px] uppercase leading-none text-[#3e2723]">
+          <span className="font-bytebounce text-[24px] uppercase leading-none text-[#3e2723]">
             Total
           </span>
           <span className="font-bytebounce text-[28px] leading-none text-[#8a5a37]">
@@ -174,10 +173,10 @@ export default function LunchOrderPage() {
       {order.status === 'pending_payment' && (
         <>
           <Parchment className="mt-4 px-5 py-4">
-            <h2 className="font-bytebounce text-[22px] uppercase leading-none text-[#3e2723]">
+            <h2 className="font-bytebounce text-[24px] uppercase leading-none text-[#3e2723]">
               1 · Scan to pay
             </h2>
-            <p className="mt-1.5 font-bytebounce text-[16px] leading-tight text-[#6d4c41]">
+            <p className="mt-1.5 font-bytebounce text-[22px] leading-tight text-[#6d4c41]">
               Open any QRIS-capable app and scan this. The amount is already
               filled in — you should see {formatRupiah(order.subtotal)}.
             </p>
@@ -199,7 +198,7 @@ export default function LunchOrderPage() {
                 </div>
               </div>
             ) : (
-              <p className="mt-3 font-bytebounce text-[17px] leading-tight text-[#8c2d1a]">
+              <p className="mt-3 font-bytebounce text-[22px] leading-tight text-[#8c2d1a]">
                 The payment code could not be generated. Please contact the
                 committee.
               </p>
@@ -207,10 +206,10 @@ export default function LunchOrderPage() {
           </Parchment>
 
           <Parchment className="mt-4 px-5 py-4">
-            <h2 className="font-bytebounce text-[22px] uppercase leading-none text-[#3e2723]">
+            <h2 className="font-bytebounce text-[24px] uppercase leading-none text-[#3e2723]">
               2 · Upload your proof
             </h2>
-            <p className="mt-1.5 font-bytebounce text-[16px] leading-tight text-[#6d4c41]">
+            <p className="mt-1.5 font-bytebounce text-[22px] leading-tight text-[#6d4c41]">
               Screenshot the success page from your banking app and attach it
               here. Committee checks it against the total.
             </p>
@@ -226,7 +225,7 @@ export default function LunchOrderPage() {
                   setError(null)
                 }}
               />
-              <span className="font-bytebounce text-[18px] leading-none text-[#3e2723]">
+              <span className="font-bytebounce text-[22px] leading-none text-[#3e2723]">
                 {proofName ?? 'Tap to choose a screenshot'}
               </span>
             </label>
@@ -234,7 +233,7 @@ export default function LunchOrderPage() {
             {error && (
               <p
                 role="alert"
-                className="mt-3 border-2 border-black bg-[#f6d5cd] px-3 py-2 font-bytebounce text-[16px] leading-tight text-[#8c2d1a]"
+                className="mt-3 border-2 border-black bg-[#f6d5cd] px-3 py-2 font-bytebounce text-[22px] leading-tight text-[#8c2d1a]"
               >
                 {error}
               </p>
@@ -244,7 +243,7 @@ export default function LunchOrderPage() {
               type="button"
               onClick={handleSubmitProof}
               disabled={uploading}
-              className="mt-4 w-full border-4 border-black bg-[#4a7c2f] px-4 py-4 font-bytebounce text-[22px] uppercase leading-none text-white disabled:opacity-60 active:translate-y-0.5"
+              className="mt-4 w-full border-4 border-black bg-[#4a7c2f] px-4 py-4 font-bytebounce text-[24px] uppercase leading-none text-white disabled:opacity-60 active:translate-y-0.5"
               style={{ boxShadow: '4px 4px 0px #000' }}
             >
               {uploading ? 'Submitting...' : 'Submit payment'}
@@ -256,7 +255,7 @@ export default function LunchOrderPage() {
       {/* --------------------------------------------- other statuses ---- */}
       {order.status === 'awaiting_approval' && (
         <Parchment className="mt-4 px-5 py-4">
-          <p className="font-bytebounce text-[19px] leading-tight text-[#8a5a37]">
+          <p className="font-bytebounce text-[24px] leading-tight text-[#8a5a37]">
             Payment received — committee is checking it now. This page updates
             once they approve; you do not need to do anything else.
           </p>
@@ -265,10 +264,10 @@ export default function LunchOrderPage() {
 
       {order.status === 'approved' && (
         <Parchment className="mt-4 px-5 py-4">
-          <p className="font-bytebounce text-[23px] uppercase leading-none text-[#3c651f]">
+          <p className="font-bytebounce text-[26px] uppercase leading-none text-[#3c651f]">
             ✅ Approved
           </p>
-          <p className="mt-2 font-bytebounce text-[18px] leading-tight text-[#6d4c41]">
+          <p className="mt-2 font-bytebounce text-[22px] leading-tight text-[#6d4c41]">
             Show this receipt at the {order.restaurantName} counter on{' '}
             {meta?.date ?? `day ${order.dayKey}`} to collect your meal.
           </p>
@@ -277,20 +276,20 @@ export default function LunchOrderPage() {
 
       {order.status === 'rejected' && (
         <Parchment className="mt-4 px-5 py-4">
-          <p className="font-bytebounce text-[23px] uppercase leading-none text-[#8c2d1a]">
+          <p className="font-bytebounce text-[26px] uppercase leading-none text-[#8c2d1a]">
             Rejected
           </p>
-          <p className="mt-2 font-bytebounce text-[18px] leading-tight text-[#6d4c41]">
+          <p className="mt-2 font-bytebounce text-[22px] leading-tight text-[#6d4c41]">
             {order.rejectionReason ??
               'Committee could not verify this payment.'}
           </p>
-          <p className="mt-2 font-bytebounce text-[17px] leading-tight text-[#6d4c41]">
+          <p className="mt-2 font-bytebounce text-[22px] leading-tight text-[#6d4c41]">
             Find a committee member if you believe this is a mistake, or place a
             new order.
           </p>
           <Link
             href="/lunch"
-            className="mt-2 inline-block font-bytebounce text-[17px] text-[#8a5a37] underline"
+            className="mt-2 inline-block font-bytebounce text-[22px] text-[#8a5a37] underline"
           >
             Back to lunch
           </Link>
@@ -300,7 +299,7 @@ export default function LunchOrderPage() {
       {/* The student's own uploaded proof, for their records. */}
       {order.paymentProofUrl && order.status !== 'pending_payment' && (
         <Parchment className="mt-4 mb-4 px-5 py-4">
-          <h2 className="font-bytebounce text-[19px] uppercase leading-none text-[#3e2723]">
+          <h2 className="font-bytebounce text-[24px] uppercase leading-none text-[#3e2723]">
             Your proof of payment
           </h2>
           <a

@@ -9,6 +9,7 @@
 // state without turning the whole roster page into a client component.
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { formatJakartaDateTime } from '@/lib/time'
 
 // Mirrors NpcForm's composeLabeledQr: stamps the name + generation time onto
 // the raw QR data-URL so the printed code is self-labeled.
@@ -78,7 +79,7 @@ export default function GenerateQrButton({
         return
       }
 
-      const generatedAt = new Date(data.npc?.createdAt ?? Date.now()).toLocaleString()
+      const generatedAt = formatJakartaDateTime(data.npc?.createdAt ?? Date.now())
       const labeled = await composeLabeledQr(data.qrCode, data.npc?.committeeName || name, generatedAt)
 
       const a = document.createElement('a')

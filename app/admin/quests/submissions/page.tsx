@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import QuestTabs from '../QuestTabs'
 import { approveQuestSubmission, rejectQuestSubmission } from '../actions'
+import { formatJakartaDateTime } from '@/lib/time'
 
 type SubmissionStatus = 'awaiting_approval' | 'approved' | 'rejected'
 
@@ -25,7 +26,7 @@ const STATUS_STYLE: Record<SubmissionStatus, string> = {
 }
 
 function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString('en-GB', {
+  return formatJakartaDateTime(iso, {
     day: '2-digit',
     month: 'short',
     hour: '2-digit',

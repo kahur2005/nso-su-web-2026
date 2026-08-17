@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { DIVISIONS } from '@/lib/divisions'
+import { formatJakartaDateTime } from '@/lib/time'
 
 const inputClass = `w-full bg-white border border-slate-300 rounded-md text-slate-800
   text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400`
@@ -89,7 +90,7 @@ export default function NpcForm() {
         return
       }
 
-      const generatedAt = new Date(data.npc?.createdAt ?? Date.now()).toLocaleString()
+      const generatedAt = formatJakartaDateTime(data.npc?.createdAt ?? Date.now())
       const labeled = await composeLabeledQr(data.qrCode, data.npc.committeeName, generatedAt)
       setGeneratedQr(labeled)
       setGeneratedName(data.npc.committeeName)

@@ -10,6 +10,7 @@ import { authOptions } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import { completeNpcScan } from '@/lib/scan/npc'
 import { completeQuestScan } from '@/lib/scan/quest'
+import { APP_TIME_ZONE_LABEL, formatJakartaTime } from '@/lib/time'
 
 interface QrJwtPayload {
   questId?: string
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
     if (decoded.validFrom && now < new Date(decoded.validFrom).getTime()) {
       return NextResponse.json({
         success: false,
-        error: `QR not active yet. Opens at ${new Date(decoded.validFrom).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+        error: `QR not active yet. Opens at ${formatJakartaTime(decoded.validFrom)} ${APP_TIME_ZONE_LABEL}`,
       })
     }
     if (decoded.validUntil && now > new Date(decoded.validUntil).getTime()) {

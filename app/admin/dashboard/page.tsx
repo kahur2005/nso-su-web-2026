@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { startOfJakartaDay } from '@/lib/time'
 import Link from 'next/link'
 import GroupEmblem from '@/components/ui/GroupEmblem'
 import {
@@ -11,8 +12,7 @@ import {
 } from 'lucide-react'
 
 async function getAdminStats() {
-  const todayStart = new Date()
-  todayStart.setHours(0, 0, 0, 0)
+  const todayStart = startOfJakartaDay()
 
   const [
     students, scans, npcs, quests, groups, announcements, today, genderRes,

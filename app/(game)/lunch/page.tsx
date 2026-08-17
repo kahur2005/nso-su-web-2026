@@ -19,9 +19,10 @@ import {
   type LunchDay,
   type LunchOrder,
 } from '@/lib/lunch'
+import { formatJakartaDateTime } from '@/lib/time'
 
 function formatDeadline(iso: string) {
-  return new Date(iso).toLocaleString('en-GB', {
+  return formatJakartaDateTime(iso, {
     day: '2-digit',
     month: 'short',
     hour: '2-digit',
@@ -56,7 +57,6 @@ export default function LunchPage() {
     <LunchShell
       title="Lunch"
       subtitle="Pre-order your meal, pay by QRIS, and pick it up on the day."
-      backHref="/dashboard"
     >
       {loading ? (
         <div className="py-12">
@@ -67,7 +67,7 @@ export default function LunchPage() {
           {/* Nudge for anything left mid-payment */}
           {unpaid.length > 0 && (
             <Parchment className="mt-3.5 px-5 py-3">
-              <p className="font-bytebounce text-[18px] leading-tight text-[#8c2d1a]">
+              <p className="font-bytebounce text-[22px] leading-tight text-[#8c2d1a]">
                 You have {unpaid.length} order{unpaid.length === 1 ? '' : 's'}{' '}
                 waiting to be paid.
               </p>
@@ -76,7 +76,7 @@ export default function LunchPage() {
 
           {/* ------------------------------------------------ history ---- */}
           <h2
-            className="mt-5 px-1 font-bytebounce text-[23px] uppercase leading-none text-white"
+            className="mt-5 px-1 font-bytebounce text-[26px] uppercase leading-none text-white"
             style={{ textShadow: '2px 2px 0 #3e2723' }}
           >
             Your orders
@@ -84,7 +84,7 @@ export default function LunchPage() {
 
           {orders.length === 0 ? (
             <p
-              className="py-5 text-center font-bytebounce text-[17px] text-white"
+              className="py-5 text-center font-bytebounce text-[22px] text-white"
               style={{ textShadow: '2px 2px 0 #3e2723' }}
             >
               Nothing ordered yet — pick a day below to start.
@@ -97,21 +97,21 @@ export default function LunchPage() {
                     <div className="flex items-center gap-2">
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="font-bytebounce text-[21px] uppercase leading-none text-[#3e2723]">
+                          <h3 className="font-bytebounce text-[24px] uppercase leading-none text-[#3e2723]">
                             {order.restaurantName}
                           </h3>
                           <LunchStatusChip status={order.status} />
                         </div>
-                        <p className="mt-1.5 font-bytebounce text-[16px] leading-tight text-[#6d4c41]">
+                        <p className="mt-1.5 font-bytebounce text-[22px] leading-tight text-[#6d4c41]">
                           {lunchDayMeta(order.dayKey)?.headerTitle ??
                             `Day ${order.dayKey}`}{' '}
                           · {order.items.length} item
                           {order.items.length === 1 ? '' : 's'} ·{' '}
-                          <span className="font-mono text-[14px]">
+                          <span className="font-mono text-[18px]">
                             {order.orderCode}
                           </span>
                         </p>
-                        <p className="mt-1 font-bytebounce text-[20px] leading-none text-[#8a5a37]">
+                        <p className="mt-1 font-bytebounce text-[24px] leading-none text-[#8a5a37]">
                           {formatRupiah(order.subtotal)}
                         </p>
                       </div>
@@ -125,7 +125,7 @@ export default function LunchPage() {
 
           {/* --------------------------------------------- day picker ---- */}
           <h2
-            className="mt-7 px-1 font-bytebounce text-[23px] uppercase leading-none text-white"
+            className="mt-7 px-1 font-bytebounce text-[26px] uppercase leading-none text-white"
             style={{ textShadow: '2px 2px 0 #3e2723' }}
           >
             Order for a day
@@ -140,13 +140,13 @@ export default function LunchPage() {
                 <Parchment as="article" className={`px-5 py-3 ${open ? '' : 'opacity-75'}`}>
                   <div className="flex items-center gap-2">
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-bytebounce text-[23px] uppercase leading-none text-[#3e2723]">
+                      <h3 className="font-bytebounce text-[26px] uppercase leading-none text-[#3e2723]">
                         {meta.headerTitle}
                       </h3>
-                      <p className="mt-1.5 font-bytebounce text-[17px] leading-tight text-[#6d4c41]">
+                      <p className="mt-1.5 font-bytebounce text-[22px] leading-tight text-[#6d4c41]">
                         {meta.date}
                       </p>
-                      <p className="mt-1 font-bytebounce text-[16px] leading-none text-[#a58962]">
+                      <p className="mt-1 font-bytebounce text-[22px] leading-none text-[#a58962]">
                         {open
                           ? day?.orderDeadline
                             ? `Order before ${formatDeadline(day.orderDeadline)}`

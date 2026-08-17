@@ -49,7 +49,6 @@ export default function LunchDayPage() {
     <LunchShell
       title={meta?.headerTitle ?? 'Lunch'}
       subtitle={meta ? `${meta.date} · choose one restaurant` : undefined}
-      backHref="/lunch"
     >
       {loading ? (
         <div className="py-12">
@@ -57,19 +56,19 @@ export default function LunchDayPage() {
         </div>
       ) : !open ? (
         <Parchment className="mt-3.5 px-5 py-4">
-          <p className="font-bytebounce text-[19px] leading-tight text-[#8c2d1a]">
+          <p className="font-bytebounce text-[24px] leading-tight text-[#8c2d1a]">
             Ordering is closed for this day.
           </p>
           <Link
             href="/lunch"
-            className="mt-2 inline-block font-bytebounce text-[17px] text-[#8a5a37] underline"
+            className="mt-2 inline-block font-bytebounce text-[22px] text-[#8a5a37] underline"
           >
             Pick another day
           </Link>
         </Parchment>
       ) : restaurants.length === 0 ? (
         <p
-          className="py-10 text-center font-bytebounce text-[18px] text-white"
+          className="py-10 text-center font-bytebounce text-[22px] text-white"
           style={{ textShadow: '2px 2px 0 #3e2723' }}
         >
           No restaurants have been added yet. Check back soon!
@@ -93,11 +92,11 @@ export default function LunchDayPage() {
                     />
                   )}
                   <div className="min-w-0 flex-1">
-                    <h2 className="font-bytebounce text-[23px] uppercase leading-none text-[#3e2723]">
+                    <h2 className="font-bytebounce text-[26px] uppercase leading-none text-[#3e2723]">
                       {restaurant.name}
                     </h2>
                     {restaurant.description && (
-                      <p className="mt-1.5 font-bytebounce text-[17px] leading-tight text-[#6d4c41]">
+                      <p className="mt-1.5 font-bytebounce text-[22px] leading-tight text-[#6d4c41]">
                         {restaurant.description}
                       </p>
                     )}

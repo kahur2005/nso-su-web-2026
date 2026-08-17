@@ -8,6 +8,7 @@ import PixelCard from '@/components/ui/PixelCard'
 import PixelButton from '@/components/ui/PixelButton'
 import WoodButton from '@/components/ui/WoodButton'
 import RecentScansPopup from './RecentScansPopup'
+import { isSameJakartaDay } from '@/lib/time'
 
 const ACCENT = '#4CAF50'
 
@@ -513,10 +514,7 @@ export default function ScanPage() {
           {[
             {
               label: "Today's scans",
-              value: recentScans.filter(s => {
-                const today = new Date().toDateString()
-                return new Date(s.scannedAt).toDateString() === today
-              }).length,
+              value: recentScans.filter((s) => isSameJakartaDay(s.scannedAt)).length,
             },
             { label: 'Total Collected', value: totalScans },
           ].map((stat) => (

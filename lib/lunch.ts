@@ -6,6 +6,7 @@
 // lib/timeline.ts / lib/timeline-data.ts.
 
 import { TIMELINE_DAYS, type TimelineDayMeta } from '@/lib/timeline'
+import { APP_TIME_ZONE } from '@/lib/time'
 
 /**
  * The days you can order lunch for: the five on-campus days.
@@ -374,6 +375,7 @@ function indonesianDate(raw: string | undefined): string | null {
   const parsed = new Date(raw)
   if (Number.isNaN(parsed.getTime())) return raw
   return parsed.toLocaleDateString('id-ID', {
+    timeZone: APP_TIME_ZONE,
     weekday: 'long',
     day: 'numeric',
     month: 'long',
