@@ -44,7 +44,7 @@ export default function HouseBanner({ groupName, groupColor, mascotSrc }: HouseB
         style={{ paddingBottom: TIP_DEPTH + 16 }}
       >
         <p
-          className="font-bytebounce text-[22px] leading-none text-[#ffecb3] sm:text-[24px]"
+          className="font-bytebounce text-fluid-xl leading-none text-[#ffecb3]"
           style={{ textShadow: '1px 1px 0 rgba(0,0,0,0.4)' }}
         >
           HOUSE OF
@@ -64,7 +64,7 @@ export default function HouseBanner({ groupName, groupColor, mascotSrc }: HouseB
         )}
 
         <p
-          className="w-full break-words text-center font-bytebounce text-[26px] leading-none text-[#ffecb3] sm:text-[28px]"
+          className="w-full break-words text-center font-bytebounce text-fluid-2xl leading-none text-[#ffecb3]"
           style={{ textShadow: '2px 2px 0 rgba(0,0,0,0.45)' }}
         >
           {/* "None", not "Unassigned" — the long word wraps and overflows the

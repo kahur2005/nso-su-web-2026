@@ -98,20 +98,20 @@ export default function IntroOverlay({ steps, open, onFinish }: IntroOverlayProp
       >
         <div className="rounded-lg border-4 border-[#3a2418] bg-[#fdf6e3] p-4 shadow-2xl">
           <div className="flex justify-between items-center mb-2">
-            <span className="font-bytebounce text-[16px] text-[#b8860b]">
+            <span className="font-bytebounce text-fluid-sm text-[#b8860b]">
               STEP {step + 1}/{steps.length}
             </span>
             <button
               onClick={onFinish}
-              className="font-bytebounce text-[15px] text-[#8a5a37] hover:text-[#3e2723] underline"
+              className="font-bytebounce text-fluid-sm text-[#8a5a37] hover:text-[#3e2723] underline"
             >
               SKIP ✕
             </button>
           </div>
-          <h3 className="font-bytebounce text-[20px] leading-tight text-[#3e2723] mb-1">
+          <h3 className="font-bytebounce text-fluid-md leading-tight text-[#3e2723] mb-1">
             {current.title}
           </h3>
-          <p className="font-bytebounce text-[15px] leading-relaxed text-[#5d4330] mb-4">
+          <p className="font-bytebounce text-fluid-sm leading-relaxed text-[#5d4330] mb-4">
             {current.description}
           </p>
           <div className="flex justify-between gap-3">
@@ -119,14 +119,14 @@ export default function IntroOverlay({ steps, open, onFinish }: IntroOverlayProp
               type="button"
               disabled={step === 0}
               onClick={() => setStep((s) => Math.max(0, s - 1))}
-              className="rounded border-2 border-[#3a2418] bg-[#f5e7c6] px-3 py-1.5 font-bytebounce text-[16px] text-[#3e2723] disabled:opacity-40"
+              className="rounded border-2 border-[#3a2418] bg-[#f5e7c6] px-3 py-1.5 font-bytebounce text-fluid-sm text-[#3e2723] disabled:opacity-40"
             >
               ← PREV
             </button>
             <button
               type="button"
               onClick={() => (last ? onFinish() : setStep((s) => s + 1))}
-              className="rounded border-2 border-[#3a2418] bg-[#8a5a37] px-4 py-1.5 font-bytebounce text-[16px] text-[#ffd23f] active:translate-y-0.5"
+              className="rounded border-2 border-[#3a2418] bg-[#8a5a37] px-4 py-1.5 font-bytebounce text-fluid-sm text-[#ffd23f] active:translate-y-0.5"
             >
               {last ? 'FINISH ✓' : 'NEXT →'}
             </button>

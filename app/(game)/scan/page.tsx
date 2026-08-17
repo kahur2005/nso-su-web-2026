@@ -285,7 +285,7 @@ export default function ScanPage() {
       />
 
       <div className="max-w-lg mx-auto px-4 py-4">
-        <h1 className="title-gold font-bytebounce text-[56px] leading-none text-center mb-4">
+        <h1 className="title-gold font-bytebounce text-fluid-6xl leading-none text-center mb-4">
           Scan QR Code
         </h1>
 
@@ -310,7 +310,7 @@ export default function ScanPage() {
               imageRendering: 'pixelated',
             }}
           >
-            <div className="font-bytebounce text-[19px] leading-[0.8] text-[#7d5a3d] text-center mb-3">
+            <div className="font-bytebounce text-fluid-md leading-[0.8] text-[#7d5a3d] text-center mb-3">
               <p>Point your camera at a</p>
               <p className="text-[#2eaa31]">Committee QR Code</p>
               <p>to get a fun fact!</p>
@@ -343,7 +343,7 @@ export default function ScanPage() {
                 <div className="absolute inset-0 flex flex-col items-center justify-center
                   gap-3 bg-[#3e2723]/95 border-4 border-red-700 p-4 text-center">
                   <span className="text-4xl">🚫</span>
-                  <p className="font-pixel text-[10px] text-red-300 leading-relaxed">
+                  <p className="font-pixel text-fluid-2xs text-red-300 leading-relaxed">
                     {cameraError}
                   </p>
                 </div>
@@ -352,21 +352,21 @@ export default function ScanPage() {
 
             {/* Controls */}
             <div className="mt-5 flex gap-4 justify-center" data-tour="scan-controls">
-              <WoodButton onClick={flipCamera} className="h-[54px] flex-1 max-w-[130px]" textClassName="text-[34px]">
+              <WoodButton onClick={flipCamera} className="h-[54px] flex-1 max-w-[130px]" textClassName="text-fluid-4xl">
                 Flip
               </WoodButton>
-              <WoodButton onClick={onUploadClick} className="h-[54px] flex-1 max-w-[130px]" textClassName="text-[34px]">
+              <WoodButton onClick={onUploadClick} className="h-[54px] flex-1 max-w-[130px]" textClassName="text-fluid-4xl">
                 Upload
               </WoodButton>
             </div>
 
             <div className="mt-3 flex justify-center">
               {cameraOn ? (
-                <WoodButton onClick={stopCamera} className="h-[54px] w-full max-w-[276px]" textClassName="text-[30px]">
+                <WoodButton onClick={stopCamera} className="h-[54px] w-full max-w-[276px]" textClassName="text-fluid-3xl">
                   Close Camera
                 </WoodButton>
               ) : (
-                <WoodButton onClick={() => startCamera(facingMode)} className="h-[54px] w-full max-w-[276px]" textClassName="text-[30px]">
+                <WoodButton onClick={() => startCamera(facingMode)} className="h-[54px] w-full max-w-[276px]" textClassName="text-fluid-3xl">
                   {cameraError ? 'Retry Camera' : 'Start Camera'}
                 </WoodButton>
               )}
@@ -374,7 +374,7 @@ export default function ScanPage() {
 
             {loading && (
               <div className="text-center mt-3">
-                <p className="font-bytebounce text-[20px] text-[#7d5a3d] blink">
+                <p className="font-bytebounce text-fluid-md text-[#7d5a3d] blink">
                   Processing scan...
                 </p>
               </div>
@@ -408,7 +408,7 @@ export default function ScanPage() {
                         {result.questTitle}
                       </p>
                       {result.questDescription && (
-                        <p className="font-pixel text-[10px] text-gray-400 mt-2 leading-relaxed">
+                        <p className="font-pixel text-fluid-2xs text-gray-400 mt-2 leading-relaxed">
                           {result.questDescription}
                         </p>
                       )}
@@ -427,7 +427,7 @@ export default function ScanPage() {
                           <span className="text-3xl">🏅</span>
                         )}
                         <div className="min-w-0 text-left">
-                          <p className="font-pixel text-[10px] text-yellow-300">
+                          <p className="font-pixel text-fluid-2xs text-yellow-300">
                             ACHIEVEMENT UNLOCKED
                           </p>
                           <p className="font-pixel text-xs text-white mt-1">
@@ -527,7 +527,7 @@ export default function ScanPage() {
                 imageRendering: 'pixelated',
               }}
             >
-              <p className="font-bytebounce text-[22px] leading-none text-[#6d4c41]">
+              <p className="font-bytebounce text-fluid-lg leading-none text-[#6d4c41]">
                 {stat.label}
               </p>
               <p className="font-bytebounce text-[106px] leading-[0.75] text-[#3e2723] flex-1 flex items-start -mt-1">
@@ -542,7 +542,7 @@ export default function ScanPage() {
           <WoodButton
             onClick={() => setShowRecent(true)}
             className="h-[48px] w-full"
-            textClassName="text-[30px]"
+            textClassName="text-fluid-3xl"
           >
             Recent Scans
           </WoodButton>

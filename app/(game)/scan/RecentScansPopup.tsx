@@ -47,7 +47,7 @@ export default function RecentScansPopup({ scans, total, onClose }: RecentScansP
           style={{ left: '27%', right: '16%', top: '12.5%', bottom: '7.5%' }}
         >
           <h2
-            className="font-bytebounce text-[30px] leading-none text-center mb-3"
+            className="font-bytebounce text-fluid-3xl leading-none text-center mb-3"
             style={{ color: BROWN }}
           >
             Recent Scans
@@ -55,7 +55,7 @@ export default function RecentScansPopup({ scans, total, onClose }: RecentScansP
 
           {/* Table header */}
           <div
-            className="flex font-bytebounce text-[16px] leading-none gap-2"
+            className="flex font-bytebounce text-fluid-sm leading-none gap-2"
             style={{ color: BROWN }}
           >
             <span className="w-11 shrink-0">Time</span>
@@ -69,7 +69,7 @@ export default function RecentScansPopup({ scans, total, onClose }: RecentScansP
             {rows.map((scan, i) => (
               <div
                 key={i}
-                className="flex font-bytebounce text-[16px] leading-[1.15] gap-2"
+                className="flex font-bytebounce text-fluid-sm leading-[1.15] gap-2"
                 style={{ color: BROWN }}
               >
                 <span className="w-11 shrink-0">
@@ -81,7 +81,7 @@ export default function RecentScansPopup({ scans, total, onClose }: RecentScansP
             ))}
             {rows.length === 0 && (
               <p
-                className="font-bytebounce text-[16px] text-center py-3"
+                className="font-bytebounce text-fluid-sm text-center py-3"
                 style={{ color: BROWN }}
               >
                 No scans yet - go find an NPC!
@@ -93,7 +93,7 @@ export default function RecentScansPopup({ scans, total, onClose }: RecentScansP
 
           {/* Total */}
           <div
-            className="flex justify-between font-bytebounce text-[18px] leading-none"
+            className="flex justify-between font-bytebounce text-fluid-base leading-none"
             style={{ color: BROWN }}
           >
             <span>Total Scanned:</span>

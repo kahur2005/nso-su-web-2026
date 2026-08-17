@@ -40,7 +40,7 @@ export default function AuthShell({
 
         {subtitle && (
           <p
-            className="mt-3 text-center font-bytebounce text-[20px] leading-tight text-[#e0b391]"
+            className="mt-3 text-center font-bytebounce text-fluid-md leading-tight text-[#e0b391]"
             style={{ textShadow: '2px 1.4px 0 #4e342e' }}
           >
             {subtitle}
@@ -51,7 +51,7 @@ export default function AuthShell({
 
         <Link
           href="/login"
-          className="mt-6 font-bytebounce text-[20px] text-[#e0b391] underline-offset-4 hover:underline"
+          className="mt-6 font-bytebounce text-fluid-md text-[#e0b391] underline-offset-4 hover:underline"
           style={{ textShadow: '2px 1.4px 0 #4e342e' }}
         >
           Back to login
@@ -63,14 +63,14 @@ export default function AuthShell({
 
 /** Shared input styling so the auth screens stay visually identical. */
 export const authInputClass =
-  'mt-1 h-[52px] w-full rounded-[13px] border-2 border-[#e0b391] bg-white px-4 font-bytebounce text-[22px] text-[#4e342e] placeholder:text-[#c9b6a4] focus:border-[#fbc94c] focus:outline-none'
+  'mt-1 h-[clamp(44px,13vw,56px)] w-full rounded-[13px] border-2 border-[#e0b391] bg-white px-4 font-bytebounce text-fluid-lg text-[#4e342e] placeholder:text-[#c9b6a4] focus:border-[#fbc94c] focus:outline-none'
 
 /** Shared label styling. */
-export const authLabelClass = 'block font-bytebounce text-[22px] text-[#e0b391]'
+export const authLabelClass = 'block font-bytebounce text-fluid-lg text-[#e0b391]'
 
 export const authLabelShadow = { textShadow: '2px 1.4px 0 #4e342e' } as const
 
 export const authButtonClass =
-  'wood-plank mt-8 block h-[52px] w-full font-bytebounce text-[28px] text-[#e0b391] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60'
+  'wood-plank mt-8 block h-[clamp(44px,13vw,56px)] w-full font-bytebounce text-fluid-2xl text-[#e0b391] transition-transform duration-75 hover:brightness-110 active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60'
 
 export const authButtonShadow = { textShadow: '2.7px 1.8px 0 #4e342e' } as const

@@ -102,10 +102,10 @@ export default function GlPanelPage() {
     return (
       <PageWrapper>
         <div className="game-column py-12 text-center">
-          <h1 className="title-gold font-bytebounce text-[28px]">
+          <h1 className="title-gold font-bytebounce text-fluid-2xl">
             RESTRICTED AREA
           </h1>
-          <p className="mt-2 font-bytebounce text-[18px] text-white">
+          <p className="mt-2 font-bytebounce text-fluid-base text-white">
             Only Group Leaders (GL) and Committee Members have access to point assignment.
           </p>
         </div>
@@ -120,7 +120,7 @@ export default function GlPanelPage() {
           GL POINT PANEL
         </h1>
         <p
-          className="mt-1 text-center font-bytebounce text-[18px] leading-tight text-white"
+          className="mt-1 text-center font-bytebounce text-fluid-base leading-tight text-white"
           style={{ textShadow: '2px 2px 0 #4e342e' }}
         >
           Assign group & student task points
@@ -133,12 +133,12 @@ export default function GlPanelPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search student name or NSO-ID..."
-            className="flex-1 rounded-md border-2 border-[#3a2418] bg-[#fdf6e3] px-3 py-2 font-bytebounce text-[18px] text-[#3e2723] focus:outline-none"
+            className="flex-1 rounded-md border-2 border-[#3a2418] bg-[#fdf6e3] px-3 py-2 font-bytebounce text-fluid-base text-[#3e2723] focus:outline-none"
           />
           <button
             type="submit"
             disabled={searching}
-            className="rounded border-2 border-[#3a2418] bg-[#8a5a37] px-4 py-2 font-bytebounce text-[18px] text-[#ffd23f] active:translate-y-0.5"
+            className="rounded border-2 border-[#3a2418] bg-[#8a5a37] px-4 py-2 font-bytebounce text-fluid-base text-[#ffd23f] active:translate-y-0.5"
           >
             {searching ? '...' : 'Search'}
           </button>
@@ -152,7 +152,7 @@ export default function GlPanelPage() {
                 key={s.id}
                 type="button"
                 onClick={() => setSelectedStudent(s)}
-                className={`w-full text-left p-2 rounded flex justify-between items-center font-bytebounce text-[17px] ${
+                className={`w-full text-left p-2 rounded flex justify-between items-center font-bytebounce text-fluid-base ${
                   selectedStudent?.id === s.id
                     ? 'bg-[#8a5a37] text-[#ffd23f]'
                     : 'bg-[#fdf6e3] text-[#3e2723] hover:bg-[#e0d3ae]'
@@ -160,7 +160,7 @@ export default function GlPanelPage() {
               >
                 <div>
                   <span className="font-bold">{s.name}</span>
-                  <span className="text-[14px] opacity-75 ml-2">({s.studentId})</span>
+                  <span className="text-fluid-xs opacity-75 ml-2">({s.studentId})</span>
                 </div>
                 <span className="font-bold">{s.points} pts</span>
               </button>
@@ -171,19 +171,19 @@ export default function GlPanelPage() {
         {/* Selected Student Award Form */}
         {selectedStudent && (
           <form onSubmit={handleAward} className="mt-4 rounded-md border-2 border-[#3a2418] bg-[#fdf6e3] p-4 space-y-3">
-            <h2 className="font-bytebounce text-[20px] text-[#3e2723]">
+            <h2 className="font-bytebounce text-fluid-md text-[#3e2723]">
               Assigning to: <span className="text-[#b8860b]">{selectedStudent.name}</span>
             </h2>
 
             <div>
-              <label className="block font-bytebounce text-[16px] text-[#5d4330]">Point Amount</label>
+              <label className="block font-bytebounce text-fluid-sm text-[#5d4330]">Point Amount</label>
               <div className="flex gap-2 mt-1">
                 {[5, 10, 20, 50].map((pts) => (
                   <button
                     key={pts}
                     type="button"
                     onClick={() => setAmount(pts)}
-                    className={`flex-1 py-1 rounded border-2 border-[#3a2418] font-bytebounce text-[16px] ${
+                    className={`flex-1 py-1 rounded border-2 border-[#3a2418] font-bytebounce text-fluid-sm ${
                       amount === pts ? 'bg-[#8a5a37] text-[#ffd23f]' : 'bg-[#f5e7c6] text-[#3e2723]'
                     }`}
                   >
@@ -195,18 +195,18 @@ export default function GlPanelPage() {
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(Number(e.target.value))}
-                className="mt-2 w-full rounded border-2 border-[#3a2418] bg-white px-3 py-1.5 font-bytebounce text-[18px] text-[#3e2723]"
+                className="mt-2 w-full rounded border-2 border-[#3a2418] bg-white px-3 py-1.5 font-bytebounce text-fluid-base text-[#3e2723]"
               />
             </div>
 
             <div>
-              <label className="block font-bytebounce text-[16px] text-[#5d4330]">Reason / Task Name</label>
+              <label className="block font-bytebounce text-fluid-sm text-[#5d4330]">Reason / Task Name</label>
               <input
                 type="text"
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="e.g. Completed Group Icebreaker"
-                className="mt-1 w-full rounded border-2 border-[#3a2418] bg-white px-3 py-1.5 font-bytebounce text-[18px] text-[#3e2723]"
+                className="mt-1 w-full rounded border-2 border-[#3a2418] bg-white px-3 py-1.5 font-bytebounce text-fluid-base text-[#3e2723]"
                 required
               />
             </div>
@@ -214,7 +214,7 @@ export default function GlPanelPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded border-2 border-[#3a2418] bg-[#8a5a37] py-2 font-bytebounce text-[20px] text-[#ffd23f] active:translate-y-0.5 disabled:opacity-50"
+              className="w-full rounded border-2 border-[#3a2418] bg-[#8a5a37] py-2 font-bytebounce text-fluid-md text-[#ffd23f] active:translate-y-0.5 disabled:opacity-50"
             >
               {loading ? 'Submitting...' : 'Confirm Points'}
             </button>
@@ -222,13 +222,13 @@ export default function GlPanelPage() {
         )}
 
         {message && (
-          <p className="mt-3 text-center font-bytebounce text-[18px] text-[#4a7c2f]">
+          <p className="mt-3 text-center font-bytebounce text-fluid-base text-[#4a7c2f]">
             {message}
           </p>
         )}
 
         {error && (
-          <p className="mt-3 text-center font-bytebounce text-[18px] text-[#d6101d]">
+          <p className="mt-3 text-center font-bytebounce text-fluid-base text-[#d6101d]">
             {error}
           </p>
         )}

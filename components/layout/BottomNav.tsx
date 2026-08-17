@@ -99,7 +99,7 @@ export default function BottomNav() {
                 />
               )}
               <span
-                className={`absolute left-1/2 -translate-x-1/2 font-bytebounce text-[18px] leading-none whitespace-nowrap ${item.label === 'QR Scan' ? 'top-[44px]' : 'top-[52px]'} ${isActive ? 'text-[#fff3d9]' : 'text-[#e0b391]'}`}
+                className={`absolute left-1/2 -translate-x-1/2 font-bytebounce text-fluid-base leading-none whitespace-nowrap ${item.label === 'QR Scan' ? 'top-[44px]' : 'top-[52px]'} ${isActive ? 'text-[#fff3d9]' : 'text-[#e0b391]'}`}
                 style={{ textShadow: LABEL_SHADOW }}
               >
                 {item.label}

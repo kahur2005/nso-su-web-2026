@@ -415,33 +415,59 @@ body {
   color: #8a5a37;
 }
 
+/* ── Fluid text scale ────────────────────────────────────────────────────
+   clamp(min, preferred, max) utilities that replace hardcoded text-[Npx]
+   Tailwind classes.  The vw term is tuned so the font scales smoothly
+   between a 320px phone and the 800px game-column cap.
+
+   Mapping from old fixed sizes:
+     10–12px  → text-fluid-2xs   13–14px → text-fluid-xs
+     15–16px  → text-fluid-sm    17–18px → text-fluid-base
+     19–20px  → text-fluid-md    21–22px → text-fluid-lg
+     23–25px  → text-fluid-xl    26–28px → text-fluid-2xl
+     29–32px  → text-fluid-3xl   34–40px → text-fluid-4xl
+     44–52px  → text-fluid-5xl   56–68px → text-fluid-6xl
+   ────────────────────────────────────────────────────────────────────── */
+.text-fluid-2xs { font-size: clamp(10px, 2.5vw, 13px); }
+.text-fluid-xs  { font-size: clamp(13px, 3vw, 15px); }
+.text-fluid-sm  { font-size: clamp(14px, 3.5vw, 17px); }
+.text-fluid-base{ font-size: clamp(16px, 4vw, 19px); }
+.text-fluid-md  { font-size: clamp(18px, 4.5vw, 22px); }
+.text-fluid-lg  { font-size: clamp(20px, 5vw, 25px); }
+.text-fluid-xl  { font-size: clamp(22px, 5.5vw, 28px); }
+.text-fluid-2xl { font-size: clamp(26px, 6.5vw, 32px); }
+.text-fluid-3xl { font-size: clamp(28px, 7.5vw, 36px); }
+.text-fluid-4xl { font-size: clamp(30px, 9vw, 42px); }
+.text-fluid-5xl { font-size: clamp(38px, 12vw, 54px); }
+.text-fluid-6xl { font-size: clamp(46px, 15vw, 68px); }
+
 .pixel-icon-sm {
-  width: 20px;
-  height: 20px;
+  width: clamp(18px, 5vw, 22px);
+  height: clamp(18px, 5vw, 22px);
   object-fit: contain;
   image-rendering: pixelated;
   flex-shrink: 0;
 }
 
 .pixel-icon-md {
-  width: 32px;
-  height: 32px;
+  width: clamp(28px, 7vw, 36px);
+  height: clamp(28px, 7vw, 36px);
   object-fit: contain;
   image-rendering: pixelated;
   flex-shrink: 0;
 }
 
 .pixel-icon-lg {
-  width: 48px;
-  height: 48px;
+  width: clamp(40px, 10vw, 52px);
+  height: clamp(40px, 10vw, 52px);
   object-fit: contain;
   image-rendering: pixelated;
   flex-shrink: 0;
 }
 
 .pixel-icon-hero {
-  width: 64px;
-  height: 64px;
+  width: clamp(52px, 14vw, 72px);
+  height: clamp(52px, 14vw, 72px);
   object-fit: contain;
   image-rendering: pixelated;
   flex-shrink: 0;

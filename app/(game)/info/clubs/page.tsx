@@ -101,10 +101,10 @@ function ClubDetailModal({ club, onClose }: { club: Club; onClose: () => void })
             className="w-20 h-20 object-contain mb-3"
             style={{ imageRendering: 'pixelated' }}
           />
-          <h2 className="font-bytebounce text-[26px] text-[#3e2723] leading-tight">
+          <h2 className="font-bytebounce text-fluid-2xl text-[#3e2723] leading-tight">
             {club.name}
           </h2>
-          <span className="font-bytebounce text-[14px] text-[#8a5c2e] uppercase mt-0.5">
+          <span className="font-bytebounce text-fluid-xs text-[#8a5c2e] uppercase mt-0.5">
             {club.category}
           </span>
           {/* Photo carousel — hidden entirely when the club has no images */}
@@ -164,7 +164,7 @@ function ClubDetailModal({ club, onClose }: { club: Club; onClose: () => void })
             </div>
           )}
 
-          <p className="font-bytebounce text-[15px] text-[#5d4330] leading-snug mt-3">
+          <p className="font-bytebounce text-fluid-sm text-[#5d4330] leading-snug mt-3">
             {club.description || 'Join UKM clubs to connect with fellow students and develop your skills.'}
           </p>
 
@@ -174,7 +174,7 @@ function ClubDetailModal({ club, onClose }: { club: Club; onClose: () => void })
                 href={club.instagram.startsWith('http') ? club.instagram : `https://instagram.com/${club.instagram.replace('@', '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 wood-plank py-2.5 font-bytebounce text-[16px] text-[#fff3d9] text-center"
+                className="flex-1 wood-plank py-2.5 font-bytebounce text-fluid-sm text-[#fff3d9] text-center"
               >
                 📸 Instagram
               </a>
@@ -184,7 +184,7 @@ function ClubDetailModal({ club, onClose }: { club: Club; onClose: () => void })
                 href={club.registrationUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 wood-plank py-2.5 font-bytebounce text-[16px] text-[#ffd23f] text-center"
+                className="flex-1 wood-plank py-2.5 font-bytebounce text-fluid-sm text-[#ffd23f] text-center"
               >
                 📝 Register
               </a>
@@ -241,7 +241,7 @@ export default function UkmClubsPage() {
         <div className="relative mt-4">
           <span
             aria-hidden
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-bytebounce text-[18px] text-[#8a5c2e]"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-bytebounce text-fluid-base text-[#8a5c2e]"
           >
             🔍
           </span>
@@ -251,14 +251,14 @@ export default function UkmClubsPage() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search clubs..."
             aria-label="Search clubs"
-            className="w-full rounded-md border-2 border-[#3a2418] bg-[#fdf6e3] py-2 pl-10 pr-10 font-bytebounce text-[18px] text-[#3e2723] placeholder:text-[#a08a6e] focus:outline-none"
+            className="w-full rounded-md border-2 border-[#3a2418] bg-[#fdf6e3] py-2 pl-10 pr-10 font-bytebounce text-fluid-base text-[#3e2723] placeholder:text-[#a08a6e] focus:outline-none"
           />
           {query && (
             <button
               type="button"
               onClick={() => setQuery('')}
               aria-label="Clear search"
-              className="absolute right-3 top-1/2 -translate-y-1/2 font-bytebounce text-[18px] text-[#5d4330] hover:text-[#a04040]"
+              className="absolute right-3 top-1/2 -translate-y-1/2 font-bytebounce text-fluid-base text-[#5d4330] hover:text-[#a04040]"
             >
               ✕
             </button>
@@ -270,7 +270,7 @@ export default function UkmClubsPage() {
             <LoadingSpinner text="LOADING CLUBS..." />
           </div>
         ) : visibleClubs.length === 0 ? (
-          <p className="mt-10 text-center font-bytebounce text-[20px] text-[#fff3d9]">
+          <p className="mt-10 text-center font-bytebounce text-fluid-md text-[#fff3d9]">
             NO CLUBS MATCH &quot;{query.trim()}&quot;
           </p>
         ) : (
@@ -298,7 +298,7 @@ export default function UkmClubsPage() {
                     className="w-14 h-14 object-contain mb-2"
                     style={{ imageRendering: 'pixelated' }}
                   />
-                  <p className="font-bytebounce text-[18px] text-[#3e2723] leading-tight text-center px-2.5 w-full break-words">
+                  <p className="font-bytebounce text-fluid-base text-[#3e2723] leading-tight text-center px-2.5 w-full break-words">
                     {club.name}
                   </p>
                 </button>
