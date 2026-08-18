@@ -74,7 +74,7 @@ create table "NPC" (
   "division"      text,
   "instagram"     text,
   "funFact"       text not null,
-  "points"        integer not null default 10,
+  "points"        integer not null default 3,
   "qrToken"       text unique,
   "qrCode"        text,
   "avatarUrl"     text,

@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'NPC ID or Quest ID is required.' }, { status: 400 })
   }
 
-  let points = 10
+  let points = 3
   let label = 'Committee Fun Fact'
 
   if (npcId) {

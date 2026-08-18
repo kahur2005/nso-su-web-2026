@@ -12,28 +12,28 @@
 INSERT INTO "NPC" ("id", "committeeName", "role", "division", "instagram", "funFact", "points", "avatarUrl", "isActive")
 VALUES
   -- SC (Steering Committee)
-  (gen_random_uuid()::text, 'Jessica Tan', 'Project Leader', 'SC', 'jessicatan_su', 'Speaks 4 languages fluently and can solve a Rubiks cube in under 30 seconds!', 15, null, true),
-  (gen_random_uuid()::text, 'Budi Santoso', 'Vice Project Leader', 'SC', 'budisantoso_nso', 'Has attended every single SU orientation since 2022!', 15, null, true),
+  (gen_random_uuid()::text, 'Jessica Tan', 'Project Leader', 'SC', 'jessicatan_su', 'Speaks 4 languages fluently and can solve a Rubiks cube in under 30 seconds!', 3, null, true),
+  (gen_random_uuid()::text, 'Budi Santoso', 'Vice Project Leader', 'SC', 'budisantoso_nso', 'Has attended every single SU orientation since 2022!', 3, null, true),
 
   -- BPH (Badan Pengurus Harian)
-  (gen_random_uuid()::text, 'Amanda Putri', 'Secretary General', 'BPH', 'amanda_p', 'Obsessed with pixel art games and coded her first site at age 12.', 10, null, true),
-  (gen_random_uuid()::text, 'Daniel Wijaya', 'Treasurer', 'BPH', 'danielw_su', 'Can calculate budget splits in his head faster than Excel!', 10, null, true),
+  (gen_random_uuid()::text, 'Amanda Putri', 'Secretary General', 'BPH', 'amanda_p', 'Obsessed with pixel art games and coded her first site at age 12.', 3, null, true),
+  (gen_random_uuid()::text, 'Daniel Wijaya', 'Treasurer', 'BPH', 'danielw_su', 'Can calculate budget splits in his head faster than Excel!', 3, null, true),
 
   -- ACAD (Academics & Events)
-  (gen_random_uuid()::text, 'Clara Lee', 'Event Coordinator', 'ACAD', 'claralee_event', 'Has hosted over 50 campus stage shows and concerts.', 10, null, true),
-  (gen_random_uuid()::text, 'Kevin Pratama', 'Academic Mentor Lead', 'ACAD', 'kevinp_acad', 'Won 1st place in the national science olympiad in high school.', 10, null, true),
+  (gen_random_uuid()::text, 'Clara Lee', 'Event Coordinator', 'ACAD', 'claralee_event', 'Has hosted over 50 campus stage shows and concerts.', 3, null, true),
+  (gen_random_uuid()::text, 'Kevin Pratama', 'Academic Mentor Lead', 'ACAD', 'kevinp_acad', 'Won 1st place in the national science olympiad in high school.', 3, null, true),
 
   -- SPONSOR (Sponsorship & Partnership)
-  (gen_random_uuid()::text, 'Rian Hidayat', 'Head of Sponsorship', 'SPONSOR', 'rian_sponsorship', 'Secured 15 major brand partners for NSO 2026 in just two weeks!', 10, null, true),
-  (gen_random_uuid()::text, 'Siti Rahma', 'Partner Liaison', 'SPONSOR', 'siti_partner', 'Loves coffee and has tried over 100 different specialty beans.', 10, null, true),
+  (gen_random_uuid()::text, 'Rian Hidayat', 'Head of Sponsorship', 'SPONSOR', 'rian_sponsorship', 'Secured 15 major brand partners for NSO 2026 in just two weeks!', 3, null, true),
+  (gen_random_uuid()::text, 'Siti Rahma', 'Partner Liaison', 'SPONSOR', 'siti_partner', 'Loves coffee and has tried over 100 different specialty beans.', 3, null, true),
 
   -- DOCS (Documentation & Design)
-  (gen_random_uuid()::text, 'Maya Kusuma', 'Creative Lead', 'DOCS', 'maya_docs', 'Designed the pixel UI theme and banners for NSO 2026!', 10, null, true),
-  (gen_random_uuid()::text, 'Fikri Haikal', 'Head Photographer', 'DOCS', 'fikri_photos', 'Never goes anywhere without his vintage film camera.', 10, null, true),
+  (gen_random_uuid()::text, 'Maya Kusuma', 'Creative Lead', 'DOCS', 'maya_docs', 'Designed the pixel UI theme and banners for NSO 2026!', 3, null, true),
+  (gen_random_uuid()::text, 'Fikri Haikal', 'Head Photographer', 'DOCS', 'fikri_photos', 'Never goes anywhere without his vintage film camera.', 3, null, true),
 
   -- LOG (Logistics & Operations)
-  (gen_random_uuid()::text, 'Alex Chen', 'Head of Logistics', 'LOG', 'alexchen_su', 'Has drunk 5 cups of matcha every single day of orientation planning!', 10, null, true),
-  (gen_random_uuid()::text, 'Nadia Utami', 'Venue Coordinator', 'LOG', 'nadia_logistics', 'Knows every secret shortcut and hidden room across the entire campus.', 10, null, true)
+  (gen_random_uuid()::text, 'Alex Chen', 'Head of Logistics', 'LOG', 'alexchen_su', 'Has drunk 5 cups of matcha every single day of orientation planning!', 3, null, true),
+  (gen_random_uuid()::text, 'Nadia Utami', 'Venue Coordinator', 'LOG', 'nadia_logistics', 'Knows every secret shortcut and hidden room across the entire campus.', 3, null, true)
 ON CONFLICT DO NOTHING;
 
 -- ----------------------------------------------------------------------------

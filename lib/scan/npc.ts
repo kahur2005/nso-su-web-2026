@@ -29,7 +29,7 @@ export async function completeNpcScan(
 ): Promise<ScanOutcome> {
   const { data: npc, error: npcError } = await supabase
     .from('NPC')
-    .select('isActive, qrToken, scanCount, maxScans')
+    .select('isActive, qrToken, scanCount, maxScans, points')
     .eq('id', npcId)
     .maybeSingle()
 
@@ -67,11 +67,14 @@ export async function completeNpcScan(
   }
 
   // Atomic: duplicate guard, ScanLog insert, and all the point/xp/counter
-  // increments happen inside the RPC.
+  // increments happen inside the RPC. Points come from the NPC row (default 3),
+  // mirroring quest scan behaviour so old printouts award current configured points.
+  const pointsToAward = typeof npc.points === 'number' ? npc.points : (points ?? 3)
+
   const { data: result, error } = await supabase.rpc('scan_npc', {
     p_student_id: studentInternalId,
     p_npc_id: npcId,
-    p_points: points,
+    p_points: pointsToAward,
   })
 
   if (error) {

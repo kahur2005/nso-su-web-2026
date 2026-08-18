@@ -4,16 +4,16 @@
 -- Run AFTER schema.sql and AFTER seed_committee_and_quests.sql.
 -- ----------------------------------------------------------------------------
 -- This file:
---   1. Updates NPC scan points to 1 pt each (per the fun-fact rules).
+--   1. Updates NPC scan points to 3 pts each (per the fun-fact rules).
 --   2. Truncates placeholder quests and inserts all activities as Quest rows.
 --   3. Inserts Achievement definitions.
 -- ============================================================================
 
 -- ---------------------------------------------------------------------------
--- 1. Fix NPC (fun fact) scan points: 1 point per fun fact collected
+-- 1. Fix NPC (fun fact) scan points: 3 points per fun fact collected
 -- ---------------------------------------------------------------------------
 UPDATE "NPC"
-SET "points" = 1
+SET "points" = 3
 WHERE "isActive" = true;
 
 -- ---------------------------------------------------------------------------

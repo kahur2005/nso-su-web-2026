@@ -82,6 +82,18 @@ export default function CommitteeForm() {
         </div>
 
         <div>
+          <label className={labelClass}>Points</label>
+          <input
+            type="number"
+            name="points"
+            min={1}
+            defaultValue={3}
+            className={inputClass}
+            required
+          />
+        </div>
+
+        <div>
           <label className={labelClass}>Instagram</label>
           <input
             name="instagram"

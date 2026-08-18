@@ -22,7 +22,7 @@ export default function NpcForm() {
     division: '',
     instagram: '',
     funFact: '',
-    points: 10,
+    points: 3,
     maxScans: '' as number | '',  // blank = unlimited
   })
 
@@ -94,7 +94,7 @@ export default function NpcForm() {
       const labeled = await composeLabeledQr(data.qrCode, data.npc.committeeName, generatedAt)
       setGeneratedQr(labeled)
       setGeneratedName(data.npc.committeeName)
-      setForm({ committeeName: '', role: '', division: '', instagram: '', funFact: '', points: 10, maxScans: '' })
+      setForm({ committeeName: '', role: '', division: '', instagram: '', funFact: '', points: 3, maxScans: '' })
       router.refresh()
     } catch {
       setError('Connection error')
