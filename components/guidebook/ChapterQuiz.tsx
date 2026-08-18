@@ -1,20 +1,10 @@
-// components/guidebook/ChapterQuiz.tsx
-// End-of-chapter quiz: two questions, one submit, one try.
-//
-// The lock is server-side (GuidebookQuizAttempt's unique (studentId, chapterId)) —
-// everything here is presentation on top of an `attempt` the parent fetched.
-// Submitting spends the attempt whether the answers were right or wrong, and
-// the Claim button only exists once the server has said both were right.
 'use client'
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { QuizQuestion } from '@/lib/guidebook/quiz'
 import { POINTS_PER_CHAPTER } from '@/lib/guidebook/quiz'
-// This renders inside the guidebook's `container-type: inline-size` book, so it
-// is sized on the same 387px design grid as the page around it. See scale.ts.
 import { cqw, TYPE } from '@/lib/guidebook/scale'
 
-/** What the server knows about this student's attempt at this chapter. */
 export type Attempt = {
   chapterId: string
   isCorrect: boolean
@@ -29,7 +19,6 @@ type Props = {
   chapterId: string
   questions: readonly [QuizQuestion, QuizQuestion]
   attempt: Attempt | null
-  /** Called after a successful submit or claim so the parent can re-sync. */
   onAttemptChange: (attempt: Attempt) => void
 }
 
@@ -37,7 +26,6 @@ export default function ChapterQuiz({ chapterId, questions, attempt, onAttemptCh
   const [picked, setPicked] = useState<(number | null)[]>([null, null])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  // The result popup. Shown after submit, and again after a claim succeeds.
   const [popup, setPopup] = useState<'correct' | 'wrong' | 'claimed' | null>(null)
 
   const locked = attempt !== null
@@ -56,8 +44,6 @@ export default function ChapterQuiz({ chapterId, questions, attempt, onAttemptCh
       })
       const data = await res.json()
       if (!res.ok) {
-        // A 409 means the attempt was already spent elsewhere (another tab, or
-        // a stale page). Lock the UI to match the server rather than retrying.
         if (data.alreadyAttempted) {
           onAttemptChange({ chapterId, isCorrect: false, pointsAwarded: 0, claimedAt: null })
         }
@@ -150,8 +136,6 @@ export default function ChapterQuiz({ chapterId, questions, attempt, onAttemptCh
                     backgroundColor: selected ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.25)',
                     borderRadius: cqw(7),
                     gap: cqw(8),
-                    // The whole row is the tap target, so this padding is what
-                    // keeps an option comfortably tappable on a phone.
                     padding: `${cqw(6)} ${cqw(8)}`,
                   }}
                 >

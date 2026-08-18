@@ -1,12 +1,3 @@
-// app/api/lunch/orders/[id]/proof/route.ts
-// The student submits their proof of payment: a screenshot of the QRIS receipt
-// from their banking app. Uploading it is what moves the order from
-// 'pending_payment' to 'awaiting_approval' and puts it in the admin queue.
-//
-// Note on privacy: uploadImage() creates a PUBLIC Supabase Storage bucket, so
-// proofs are readable by anyone who has the URL. The filename is a random
-// UUID, so the URL is not guessable, but this is not access control. It is the
-// same tradeoff the avatar and committee-photo buckets already make.
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { NextResponse } from 'next/server'
@@ -45,8 +36,7 @@ export async function POST(
   if (!order) {
     return NextResponse.json({ error: 'Order not found' }, { status: 404 })
   }
-  // Owner only — an admin has no reason to upload on a student's behalf, and
-  // allowing it would muddy who actually paid.
+
   if (order.studentId !== studentDbId) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
@@ -75,8 +65,7 @@ export async function POST(
     return NextResponse.json({ error: 'Upload failed. Please try again.' }, { status: 500 })
   }
 
-  // The status guard is repeated in the WHERE clause so two submits racing each
-  // other cannot both win — the second matches no rows.
+  // Update order status atomically.
   const { data: updated, error: updateError } = await supabase
     .from('LunchOrder')
     .update({

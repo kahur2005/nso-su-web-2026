@@ -1,10 +1,3 @@
-// app/api/quests/qr/route.ts
-// Generate (or regenerate) the QR code for a quest. Admin only.
-//
-// The quest counterpart of /api/qr/generate, kept separate because that route
-// is NPC-shaped — it creates committee members as a side effect of making a QR.
-// Quests are created first in /admin/quests, so this route only ever attaches a
-// code to a quest that already exists.
 import QRCode from 'qrcode'
 import jwt from 'jsonwebtoken'
 import { supabase } from '@/lib/supabase'
@@ -12,12 +5,6 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 
-/* Fun-fact codes are signed for 7 days because committee members are handed
- * theirs during the event. A quest poster may be printed weeks ahead, so a
- * 7-day token would be dead before orientation starts. Expiry is not the
- * revocation mechanism here anyway: lib/scan/quest.ts rejects any token that
- * is not the one currently stored on the quest, so regenerating a code retires
- * the old print immediately regardless of how long it had left. */
 const QUEST_TOKEN_TTL = '120d'
 
 export async function POST(request: Request) {
@@ -45,9 +32,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Quest not found' }, { status: 404 })
   }
 
-  // Only the quest id is signed. Points are read from the Quest row at scan
-  // time (inside complete_quest), so editing a quest's points does not strand
-  // already-printed codes on the old value.
   const token = jwt.sign({ kind: 'quest', questId: quest.id }, process.env.QR_SECRET_KEY!, {
     expiresIn: QUEST_TOKEN_TTL,
   })
@@ -59,7 +43,6 @@ export async function POST(request: Request) {
     color: { dark: '#000000', light: '#FFFFFF' },
   })
 
-  // Overwriting qrToken is what supersedes any previous printout.
   const { data: updated, error: updateError } = await supabase
     .from('Quest')
     .update({ qrToken: token, qrCode: qrCodeImage })

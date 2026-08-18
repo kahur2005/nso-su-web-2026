@@ -1,9 +1,3 @@
-// components/profile/PlayerBanner.tsx
-// The wood sign at the top of /profile (Figma VCnH1k8cwo2dWaLjL7YRVS node 8:2).
-// The sign itself is `.wood-plank` rather than a sprite: the frame's board is
-// that class's exact palette — #3e2723 border, #ba8f6e highlight, then the
-// #88684e / #6d4c41 / #4e342e bands — so a crop would add an asset and a
-// corner-transparency problem for no visual gain.
 import PixelAvatar from '@/components/ui/PixelAvatar'
 import { hairKey, type ParsedAvatar } from '@/lib/avatar'
 
@@ -18,11 +12,6 @@ interface PlayerBannerProps {
   into: number
   span: number
   avatar: ParsedAvatar
-  /**
-   * Backdrop behind the avatar — the student's house artwork once they're in a
-   * group, or the neutral `avatar-bg.png` until then. Resolved by the page so
-   * this stays a presentational component (see avatarBgSrc in profile/page.tsx).
-   */
   avatarBg: string
 }
 

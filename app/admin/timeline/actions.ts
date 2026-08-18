@@ -1,9 +1,3 @@
-// app/admin/timeline/actions.ts
-// Agenda-row CRUD for the six fixed event days.
-//
-// Only rows are writable. The days and their dates are settled for NSO 2026
-// and live in lib/timeline.ts as code, so there is deliberately no action here
-// that renames a day or moves a date.
 'use server'
 
 import { getServerSession } from 'next-auth'
@@ -19,11 +13,6 @@ async function requireAdmin() {
   }
 }
 
-/**
- * Both student-facing timeline routes. /map/timeline is the older duplicate
- * hub — unlinked but still routing — so it is refreshed too rather than left
- * showing a stale agenda (see the revalidate note in CLAUDE.md).
- */
 function revalidateTimeline() {
   revalidatePath('/admin/timeline')
   revalidatePath('/info/timeline')
@@ -39,8 +28,6 @@ export async function createTimelineEvent(formData: FormData) {
 
   if (!isTimelineDayKey(dayKey) || !time || !activity) return
 
-  // Append to the end of that day by default so a new row never lands in the
-  // middle of an agenda the admin has already ordered.
   const { data: last } = await supabase
     .from('TimelineEvent')
     .select('sortOrder')
@@ -67,8 +54,6 @@ export async function updateTimelineEvent(formData: FormData) {
   const activity = String(formData.get('activity') || '').trim()
   const sortOrderRaw = String(formData.get('sortOrder') || '').trim()
 
-  // Blanking a field would render an empty cell on the calendar, so treat it
-  // as a no-op instead — deleting is its own explicit action.
   if (!id || !time || !activity) return
 
   const sortOrder = Number.parseInt(sortOrderRaw, 10)

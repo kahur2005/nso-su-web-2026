@@ -1,8 +1,3 @@
-// app/api/auth/forgot-password/route.ts
-//
-// Step 1 of the reset flow: take an email, mint a single-use token, email the
-// link. Always answers with the same generic success body so the endpoint can't
-// be used to enumerate which emails have accounts.
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { sendMail } from '@/lib/mailer'
@@ -15,13 +10,9 @@ import {
   resolveResetBase,
 } from '@/lib/password-reset'
 
-/**
- * Identical for "we sent it", "no such account", and "you just asked 10s ago".
- * Any variation here — including a different response time — leaks membership.
- */
 const GENERIC = { ok: true, message: 'If that email has an account, a reset link is on its way.' }
 
-/** Public site origin from the incoming request (works behind Vercel’s proxy). */
+/** Extract public site origin from request headers. */
 function publicBaseFromRequest(request: Request): string | null {
   const origin = request.headers.get('origin')?.trim() || null
   if (origin) return origin.replace(/\/+$/, '')
@@ -48,8 +39,6 @@ function jsonWithResetBase(
     process.env.NEXTAUTH_URL,
     process.env.VERCEL_URL,
   ])
-  // Temporary: surface the resolved email-link host so we can confirm Production
-  // without reading the mailbox. Remove after the localhost-link bug is verified fixed.
   const res = NextResponse.json({ ...body, _debugResetBase: resolved }, init)
   res.headers.set('x-nso-reset-base', resolved)
   return res
@@ -59,12 +48,6 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null)
   const email = String(body?.email || '').toLowerCase().trim()
   const requestBase = publicBaseFromRequest(request)
-
-  // #region agent log
-  const reqPayload = {sessionId:'06b2cb',runId:'post-fix',hypothesisId:'C-D-F',location:'app/api/auth/forgot-password/route.ts:POST',message:'forgot-password request origin',data:{requestUrl:request.url,host:request.headers.get('host'),origin:request.headers.get('origin'),xForwardedHost:request.headers.get('x-forwarded-host'),xForwardedProto:request.headers.get('x-forwarded-proto'),publicBase:requestBase,hasEmail:Boolean(email)},timestamp:Date.now()}
-  fetch('http://127.0.0.1:7683/ingest/491e9167-62e2-4f60-bb4c-3c2656e9f6ec',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'06b2cb'},body:JSON.stringify(reqPayload)}).catch(()=>{});
-  console.info('[nso-debug][06b2cb]', JSON.stringify(reqPayload))
-  // #endregion
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return jsonWithResetBase({ error: 'Please enter a valid email.' }, request, { status: 400 })
@@ -76,8 +59,6 @@ export async function POST(request: Request) {
     .eq('email', email)
     .maybeSingle()
 
-  // A broken lookup is our fault, not the user's — surface it rather than
-  // pretending we sent an email that we never attempted.
   if (lookupError) {
     console.error('[forgot-password] Student lookup failed:', lookupError)
     return jsonWithResetBase(
@@ -87,12 +68,9 @@ export async function POST(request: Request) {
     )
   }
 
-  // Unknown email: stop here, but answer exactly as if we had sent one.
   if (!student) return jsonWithResetBase(GENERIC, request)
 
-  // Throttle. An unused, unexpired token minted within the cooldown means we
-  // already emailed this person very recently; sending again would just burn
-  // the Gmail daily quota. Silently succeed.
+  // Verify rate limit cooldown period.
   const cooldownStart = new Date(Date.now() - RESET_REQUEST_COOLDOWN_MS).toISOString()
   const { data: recent, error: recentError } = await supabase
     .from('PasswordResetToken')
@@ -102,9 +80,6 @@ export async function POST(request: Request) {
     .gt('createdAt', cooldownStart)
     .limit(1)
 
-  // Do NOT swallow this. If PasswordResetToken is missing (the migration was
-  // never run), failing loudly here is what stops this feature from silently
-  // behaving like the SingleUseToken drift documented in CLAUDE.md.
   if (recentError) {
     console.error('[forgot-password] Throttle check failed:', recentError)
     return jsonWithResetBase(
@@ -138,20 +113,9 @@ export async function POST(request: Request) {
     link,
   })
 
-  // #region agent log
-  let linkOrigin: string | null = null
-  try { linkOrigin = new URL(link).origin } catch { linkOrigin = 'invalid-url' }
-  const sendPayload = {sessionId:'06b2cb',runId:'post-fix',hypothesisId:'B-E-H',location:'app/api/auth/forgot-password/route.ts:beforeSend',message:'email link origin before send',data:{linkOrigin,isLocalhost:/localhost|127\.0\.0\.1/i.test(linkOrigin||'')},timestamp:Date.now()}
-  fetch('http://127.0.0.1:7683/ingest/491e9167-62e2-4f60-bb4c-3c2656e9f6ec',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'06b2cb'},body:JSON.stringify(sendPayload)}).catch(()=>{});
-  console.info('[nso-debug][06b2cb]', JSON.stringify(sendPayload))
-  // #endregion
-
   try {
     await sendMail({ to: student.email, subject, text, html })
   } catch (err) {
-    // The token row now exists but no email carries it — harmless (it expires
-    // unused), and the user can retry after the cooldown. Report the failure
-    // rather than claiming success we can't back up.
     console.error('[forgot-password] Send failed:', err)
     return jsonWithResetBase(
       { error: "We couldn't send the email right now. Please try again in a minute." },

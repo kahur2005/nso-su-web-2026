@@ -1,18 +1,5 @@
-// components/profile/HouseBanner.tsx
-// The "HOUSE OF" pennant beside the stat cards. Drawn in CSS rather than
-// exported: sprite exports out of this Figma file carry stray near-white edge
-// pixels, and the shape is a flat fill, a crossbar and a notch.
-//
-// clip-path removes any real border, so the #3e2723 outline is four 2px
-// drop-shadows, which trace the clipped silhouette including the bottom point.
-// The shape is its own absolutely-positioned layer with the content sitting
-// above it: `filter` applies to an element's whole subtree, so painting the
-// pennant and its text together would outline every glyph and the mascot too.
-//
-// The fill is the group's own colour, so the name is cream rather than the
-// frame's tan #d37a38 — tan vanishes against a yellow or orange house.
 const PENNANT_FALLBACK = '#bf360c'
-const TIP_DEPTH = 44 // px, measured off the frame
+const TIP_DEPTH = 44
 
 interface HouseBannerProps {
   groupName: string | null
@@ -23,8 +10,6 @@ interface HouseBannerProps {
 export default function HouseBanner({ groupName, groupColor, mascotSrc }: HouseBannerProps) {
   const fill = groupColor || PENNANT_FALLBACK
 
-  // -translate-x nudges the pennant left without changing the flex layout, so
-  // the stat cards beside it keep their width.
   return (
     <div className="relative w-[180px] shrink-0 -mt-3 -mr-12 -translate-x-3 sm:-mr-16 sm:-mt-4 sm:w-[200px] sm:-translate-x-4">
       {/* Shape layer: using the uploaded group banner image. */}

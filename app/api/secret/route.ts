@@ -1,4 +1,3 @@
-// GET /api/secret — claim status + quest QR (if claimed) for the easter-egg page.
 import { getServerSession } from 'next-auth'
 import { NextResponse } from 'next/server'
 import { authOptions } from '@/lib/auth'

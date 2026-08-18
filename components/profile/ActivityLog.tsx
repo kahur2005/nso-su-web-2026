@@ -1,8 +1,3 @@
-// components/profile/ActivityLog.tsx
-// The frame's activity feed: parchment rows with the scanned committee member,
-// a fun-fact sub-line, and the point delta on the right — green when positive,
-// red when negative. "See All" expands the list in place, so no extra route is
-// needed. This is the page's only client component; it exists for that state.
 'use client'
 import { useState } from 'react'
 import SectionHeading from './SectionHeading'
@@ -13,11 +8,9 @@ export interface ActivityRow {
   title: string
   points: number
   scannedAt: string
-  /** What earned the points. Drives the headline verb and the sub-line. */
   kind?: 'scan' | 'guidebook'
 }
 
-/** Rows shown before "See All" is pressed — the frame shows a short feed. */
 const COLLAPSED_ROWS = 3
 
 function formatDate(iso: string) {

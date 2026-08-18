@@ -1,10 +1,3 @@
-// app/admin/guide/page.tsx
-// Onboarding for admins: what every tab in this panel is for and the order to
-// use them in. Replaces app/admin/quests/onboarding, which only covered quest
-// uploads and described a flow that no longer exists.
-//
-// Static content — kept in one array so adding a tab here is a one-line change
-// next to adding it to ADMIN_NAV.
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'

@@ -1,12 +1,3 @@
-// app/api/lunch/orders/[id]/route.ts
-// One order, for the receipt / pay screen. Readable by the student who placed
-// it and by admins; anyone else gets a 403 whether or not the order exists.
-//
-// The QRIS payload is re-rendered to a data URL here rather than stored as an
-// image, matching how /api/qr/live and /api/qr/generate hand QR codes to the
-// client. It is only attached while payment is still outstanding — once the
-// order is submitted the code is spent and showing it again invites a second
-// payment.
 import QRCode from 'qrcode'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'

@@ -1,8 +1,3 @@
-// components/ui/PixelAvatar.tsx
-// Composite pixel avatar: skin base + clothes + eyes + brows + mouth + hair + hijab overlays.
-// Pass size in px (square). All part props are optional — falls back gracefully.
-// Layer order (bottom→top): skin → clothes → eyes → brows → mouth → hair → hijab
-
 interface PixelAvatarProps {
   /** e.g. "skin3" */
   skin?: string | null

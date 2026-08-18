@@ -1,4 +1,3 @@
-// components/admin/NpcForm.tsx
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -23,11 +22,10 @@ export default function NpcForm() {
     instagram: '',
     funFact: '',
     points: 10,
-    maxScans: '' as number | '',  // blank = unlimited
+    maxScans: '' as number | '',
   })
 
-  // Composite the raw QR data-URL onto a canvas with the NPC name and the time
-  // it was generated, returning a new PNG data-URL (used for display + download).
+  // Combines the QR image, name, and timestamp into a single canvas data URL.
   function composeLabeledQr(qrDataUrl: string, name: string, generatedAt: string) {
     return new Promise<string>((resolve) => {
       const img = new Image()

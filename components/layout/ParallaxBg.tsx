@@ -1,5 +1,3 @@
-// components/layout/ParallaxBg.tsx
-// Static background wrapper for in-game pages.
 'use client'
 
 export default function ParallaxBg({ src = '/images/scan/bg.png' }: { src?: string }) {

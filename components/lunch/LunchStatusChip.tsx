@@ -1,7 +1,3 @@
-// components/lunch/LunchStatusChip.tsx
-// Where an order stands, in one glance. Colours are chosen so the two states
-// that need the student to do something (pay, or fix a rejection) stand out
-// from the two that do not.
 import { LUNCH_STATUS_LABEL, type LunchOrderStatus } from '@/lib/lunch'
 
 const STYLE: Record<LunchOrderStatus, string> = {

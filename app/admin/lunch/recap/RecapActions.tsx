@@ -1,10 +1,3 @@
-// app/admin/lunch/recap/RecapActions.tsx
-// Copy-to-clipboard and download-as-.xlsx for the recap.
-//
-// The copy button builds its text from the same recapToRows() the server used
-// to render the table and the spreadsheet, so all three agree. The download is
-// a plain link to /api/lunch/recap, which re-queries server-side — that keeps
-// the numbers authoritative and means the browser handles the file save.
 'use client'
 import { useEffect, useState } from 'react'
 import { buildRecapText, type RecapTextOrder } from '@/lib/lunch'
@@ -35,9 +28,7 @@ export default function RecapActions({
       await navigator.clipboard.writeText(tsv)
       setCopied('ok')
     } catch {
-      // navigator.clipboard needs a secure context and permission, neither of
-      // which is guaranteed. Fall back to a hidden textarea + execCommand,
-      // which still works when it is blocked.
+      // Fall back to execCommand if Clipboard API is unavailable.
       try {
         const area = document.createElement('textarea')
         area.value = tsv

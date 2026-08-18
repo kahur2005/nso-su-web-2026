@@ -1,4 +1,3 @@
-// components/admin/EditCommitteeMemberModal.tsx
 'use client'
 
 import { useState, useTransition } from 'react'

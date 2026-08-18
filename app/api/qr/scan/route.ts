@@ -1,8 +1,3 @@
-// app/api/qr/scan/route.ts
-// Single entry point for every QR a student can scan. Verifies the signed token
-// once, checks optional date-window claims (validFrom / validUntil — for daily
-// QR codes), enforces single-use 1-time token nonces (jti), resolves the student,
-// then dispatches to the per-kind handler.
 import jwt from 'jsonwebtoken'
 import { supabase } from '@/lib/supabase'
 import { getServerSession } from 'next-auth'
@@ -33,7 +28,7 @@ export async function POST(request: Request) {
   try {
     const decoded = jwt.verify(token, process.env.QR_SECRET_KEY!) as QrJwtPayload
 
-    // ── Daily QR date-window check ──────────────────────────────────────────
+    // Validate active time window.
     const now = Date.now()
     if (decoded.validFrom && now < new Date(decoded.validFrom).getTime()) {
       return NextResponse.json({
@@ -48,7 +43,7 @@ export async function POST(request: Request) {
       })
     }
 
-    // ── Single-use 1-time token check ───────────────────────────────────────
+    // Validate single-use nonce if present.
     if (decoded.jti) {
       try {
         const { data: usedToken } = await supabase
@@ -64,7 +59,7 @@ export async function POST(request: Request) {
           })
         }
       } catch {
-        // Fallback if table not created yet
+        // Ignore table lookup errors if table does not exist.
       }
     }
 
@@ -87,7 +82,6 @@ export async function POST(request: Request) {
       ? await completeQuestScan(studentInternalId, decoded.questId, token)
       : await completeNpcScan(studentInternalId, decoded.npcId ?? '', decoded.points ?? 10, token, isDynamicToken)
 
-    // Mark single-use token as consumed upon success
     if (outcome.body?.success && decoded.jti) {
       try {
         await supabase.from('SingleUseToken').insert({
@@ -95,7 +89,7 @@ export async function POST(request: Request) {
           scannedBy: studentInternalId,
         })
       } catch {
-        // Fallback if unmigrated
+        // Ignore insert errors.
       }
     }
 

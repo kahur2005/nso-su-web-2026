@@ -1,6 +1,3 @@
-// app/(game)/info/maps/page.tsx
-// Campus Map page — clean vertical scroll of floor plan maps (19th, 7th, 6th, Lower Ground)
-// with header text, pixel map images, and full-screen zoom modal.
 'use client'
 import { useState } from 'react'
 import PageWrapper from '@/components/layout/PageWrapper'
@@ -40,9 +37,6 @@ const GREEN_TITLE = {
     '3px 3px 0 #125615, -3px 3px 0 #125615, 3px -3px 0 #125615, -3px -3px 0 #125615, 0 5px 0 #125615',
 }
 
-// Same scroll-art bleed as /info/committee: the parchment body is only ~73% of
-// scroll-*.png, so stretching the art past the block makes the visible scroll
-// (and the floor maps inside it) fill the game column instead of looking inset.
 const SCROLL_ART_BLEED = '18.59%'
 const SCROLL_MARGIN_X = '3%'
 const SCROLL_PAD_X = '2.5%'

@@ -1,4 +1,3 @@
-// app/api/auth/register/route.ts
 import { supabase } from '@/lib/supabase'
 import { hashPassword } from '@/lib/password'
 import { NextResponse } from 'next/server'
@@ -19,12 +18,10 @@ export async function POST(request: Request) {
   const major       = String(body.major       || '').trim()
   const hobby       = String(body.hobby       || '').trim()
 
-  // gender: 'M' | 'F' | 'other' | null
   const VALID_GENDERS = ['M', 'F', 'other'] as const
   const rawGender = String(body.gender || '').trim()
   const gender = (VALID_GENDERS as readonly string[]).includes(rawGender) ? rawGender : null
 
-  // Build avatarConfig JSONB — replaces flat avatarSkin/Hair/Eyes/Brows columns
   const avatarConfig = {
     skin:      String(body.avatarSkin       || 'skin1').trim(),
     clothes:   body.avatarClothes           ? String(body.avatarClothes).trim()     : null,

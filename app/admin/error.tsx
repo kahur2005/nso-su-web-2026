@@ -1,11 +1,7 @@
-'use client' // Error boundaries must be Client Components
+'use client'
 
 import { useEffect } from 'react'
 
-// Catches runtime errors anywhere under /admin, including requireAdmin()'s
-// `throw new Error('Unauthorized')` in app/admin/actions.ts, which previously
-// had nothing to catch it. Styled in the admin light theme, not the student
-// pixel/RPG theme.
 export default function AdminError({
   error,
   reset,

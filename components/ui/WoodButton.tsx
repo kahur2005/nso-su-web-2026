@@ -1,6 +1,3 @@
-// components/ui/WoodButton.tsx
-// 3-slice wooden plank button (same plank art as the bottom nav):
-// fixed end caps + horizontally stretched middle, ByteBounce label.
 'use client'
 
 interface WoodButtonProps {

@@ -1,12 +1,3 @@
-// app/admin/lunch/recap/page.tsx
-// The production list: for each restaurant, how many of every dish were
-// ordered, which add-ons go with them, and what that restaurant is owed.
-//
-// This is the page you read out to a vendor. The Orders tab is per-student and
-// answers "did this person pay?"; this one is per-restaurant and answers "how
-// much food do we need, and what do we owe you?".
-//
-// Defaults to a single day, because that is the unit a vendor cooks for.
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
@@ -39,7 +30,8 @@ export default async function AdminLunchRecapPage({
     scope: scopeParam,
     restaurant: restaurantParam,
   } = await searchParams
-  const dayKey = LUNCH_DAYS.some((d) => d.key === dayParam) ? dayParam : undefined
+
+  const dayKey = LUNCH_DAYS.find((d) => d.key === dayParam)?.key ?? LUNCH_DAYS[0].key
   const scope = scopeParam && isLunchRecapScope(scopeParam) ? scopeParam : 'paid'
 
   const orders = await getAdminOrders({
@@ -47,8 +39,7 @@ export default async function AdminLunchRecapPage({
     dayKey,
   })
 
-  // The restaurant list comes from the orders in scope, not from the menu, so
-  // the chips only ever offer vendors that actually have something to cook.
+  // List only restaurants with active orders.
   const restaurantNames = [...new Set(orders.map((o) => o.restaurantName))].sort()
   const restaurant =
     restaurantParam && restaurantNames.includes(restaurantParam)
@@ -60,8 +51,7 @@ export default async function AdminLunchRecapPage({
     : orders
   const recap = buildLunchRecap(scopedOrders)
 
-  // Trimmed to just what the copy-out needs, so no student email or payment
-  // detail is serialised into the client bundle.
+  // Serialized data for the client.
   const recapTextOrders: RecapTextOrder[] = scopedOrders.map((o) => ({
     id: o.id,
     restaurantName: o.restaurantName,
@@ -91,8 +81,6 @@ export default async function AdminLunchRecapPage({
   }
 
   const downloadQuery = queryFor({})
-  // The route defaults to 'paid' too, but be explicit so a saved link keeps
-  // meaning the same thing if that default ever changes.
   downloadQuery.set('scope', scope)
   const downloadHref = `/api/lunch/recap?${downloadQuery.toString()}`
 

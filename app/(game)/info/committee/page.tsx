@@ -1,6 +1,3 @@
-// app/(game)/info/committee/page.tsx
-// Committee introduction page — pixel parchment scroll with colour-coded division bookmarks,
-// ribbon banners, name plaques, fun-fact progress, and Instagram links.
 'use client'
 import PageWrapper from '@/components/layout/PageWrapper'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
@@ -20,24 +17,13 @@ interface CommitteeMember {
 
 const PER_PAGE = 3
 
-/** Gold display text with the design's brown pixel outline. */
 const OUTLINE_GOLD = {
   color: '#ffd23f',
   textShadow:
     '3px 3px 0 #4e342e, -3px 3px 0 #4e342e, 3px -3px 0 #4e342e, -3px -3px 0 #4e342e, 0 5px 0 #4e342e',
 }
 
-// Card metrics. The card is no longer a fixed 245:115 box — it grows downward
-// to fit its fun fact, which runs anywhere from 11 to 260 characters and used
-// to overflow the frame and draw over the member below. Everything here was
-// originally a percentage of the card's *height*, which drifts once the height
-// is content-driven, so vertical values are `cqw` instead: 1cqw = 1% of the
-// card's width, which is what the art actually scales with. To convert an old
-// value: oldPercentOfHeight * 115 / 245.
-const CARD_MIN_ASPECT = '46.94%' // 115/245 — the frame's drawn proportions, now a floor
-// Portrait is oversized and hung past the top of the frame so the cut-out
-// "pops out" of the card. Feet stay near the bottom edge; head clears the
-// top border. Fun-fact column starts further right so it clears the wider bust.
+const CARD_MIN_ASPECT = '46.94%'
 const CARD_PORTRAIT = {
   left: '-2%',
   top: '-18cqw',
@@ -49,8 +35,6 @@ const CARD_PILL = { left: '14.5%', top: '13.8cqw', width: '62.5%', height: '11.5
 const CARD_IG = { left: '76.14%', top: '-0.62cqw', width: '15.78%', height: '14.50cqw' }
 const CARD_NAME = { left: '18%', right: '27%', top: '8.6cqw' }
 const CARD_ROLE = { left: '16%', right: '27%', top: '18.8cqw' }
-// The fun fact is the one thing in normal flow, so it is what sets the height.
-// The top padding clears the name plaque and division pill above it.
 const CARD_FACT = {
   left: '40%',
   right: '5%',
@@ -70,15 +54,6 @@ const CARD_EXPAND_BTN = {
   minWidth: 24,
 }
 
-// `card-frame.png` 9-sliced, so the card can be any height without the border
-// stretching. Slices are source px, in CSS order top/right/bottom/left: 31 is
-// the 17px transparent strip above the frame plus its 8px border, 4px gap and
-// 2px inner line; 14 is that same border/gap/line on the left. Right and bottom
-// are larger (25/26) on purpose — the little triangle ornament sits at
-// x=220..230, y=89..95, so those slices pull it into the bottom-right *corner*
-// piece, which is drawn at a fixed size, instead of leaving it in an edge piece
-// that stretches. Border widths are cqw so the frame keeps its pixel
-// proportions at every card size.
 const CARD_FRAME = {
   borderStyle: 'solid',
   borderColor: 'transparent',
@@ -90,34 +65,13 @@ const CARD_FRAME = {
     'drop-shadow(2px 0 0 #FAC875) drop-shadow(-2px 0 0 #FAC875) drop-shadow(0 2px 0 #FAC875) drop-shadow(0 -2px 0 #FAC875)',
 } as const
 
-// The scroll art is mostly transparent padding: `scroll-mid.png` is 420px wide
-// but its parchment body is only x=58..364 of that, 73%. Rendered at the block
-// width, that wasted ~27% is why the parchment looked narrow on a phone — the
-// block was already 350px on a 390px screen, the parchment just drew 255px of
-// it. So the art layer is stretched past the block by SCROLL_ART_BLEED on each
-// side, sized so the *parchment body* lines up with the block edges instead:
-// 100 / 72.86 = 1.3717x wider, i.e. 18.59% beyond each edge.
-//
-// Everything below is therefore a percentage of the parchment, not of the
-// image. Converting an old value: (old% - 13.81) / 72.86 * 100. The vertical
-// paddings scale by the same 1.3717, because they exist to clear the top and
-// bottom rolls, and those rolls grew with the art.
 const SCROLL_ART_BLEED = '18.59%'
 const RIBBON = { left: '3.64%', width: '94.14%' }
-// Stretch cards almost to the parchment body edges (was ~80% wide / inset 12%).
 const CARD_COLUMN = { marginLeft: '3%', width: '94%', marginTop: '-3.43%' }
 const SCROLL_PAD_TOP = '22.04%'
 const SCROLL_PAD_BOTTOM = '20.58%'
 const RIBBON_TITLE_CENTRE = '38.1%'
 
-// Room the scroll has to leave itself, as a share of the game column. The art
-// overhangs the parchment on both sides and neither overhang scales with it:
-// the bottom roll's curl sticks out 7.8% of the parchment width to the left,
-// and the division bookmarks are a fixed 52px hanging off the right edge. The
-// two edges are set by different viewports: the bookmarks are tightest on the
-// narrowest phone (360px, where they land ~4px clear of the screen), the curl
-// is tightest at 448px, where the game column stops growing but its own offset
-// from the screen edge does not yet.
 const SCROLL_MARGIN_LEFT = '2.6%'
 const SCROLL_MARGIN_RIGHT = '11.5%'
 
@@ -141,9 +95,6 @@ function CommitteeMemberCard({
   const canExpand = member.isScanned
 
   return (
-    // Collapsed height is locked to CARD_MIN_ASPECT for both scanned and
-    // unscanned cards. Expanding puts the fun fact back in normal flow so
-    // the frame can grow with the full text.
     <article className="@container relative z-0 grid w-full overflow-visible">
       <div
         aria-hidden
@@ -335,8 +286,6 @@ export default function CommitteePage() {
 
           {/* Division bookmarks */}
           <div
-            // `left-full` — the parchment now ends at the block's right edge,
-            // and these tabs hang off it exactly as before.
             className="absolute left-full top-[25.7%] z-20 flex flex-col gap-[10px]"
             role="tablist"
             aria-label="Committee divisions"

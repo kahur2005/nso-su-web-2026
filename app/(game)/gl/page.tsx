@@ -1,6 +1,3 @@
-// app/(game)/gl/page.tsx
-// Group Leader (GL) / IT Logi Point Panel. Allows GLs to award or deduct points
-// for students in their group or across the event.
 'use client'
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'

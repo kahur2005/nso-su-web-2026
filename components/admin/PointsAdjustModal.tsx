@@ -1,7 +1,4 @@
 'use client'
-// Modal for manually adjusting a single player's points. Always routes through
-// the `adjustPoints` server action (which calls the atomic `adjust_points` RPC),
-// so xp/level/group totals stay in sync — never write a second points path here.
 import { useState, useTransition } from 'react'
 import { X } from 'lucide-react'
 import { adjustPoints } from '@/app/admin/actions'

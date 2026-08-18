@@ -1,7 +1,3 @@
-// components/layout/BottomNav.tsx
-// Wooden-plank bottom nav (Figma node 258:678): pixel icons + ByteBounce labels.
-// The "Me" tab renders the student's own pixel avatar, fetched once per tab
-// session from /api/me/avatar and cached in sessionStorage.
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -64,7 +60,6 @@ export default function BottomNav() {
               aria-current={isActive ? 'page' : undefined}
             >
               {item.icon === 'qr' ? (
-                // Parchment QR panel pokes above the plank
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src="/images/nav/qr-scan.png"

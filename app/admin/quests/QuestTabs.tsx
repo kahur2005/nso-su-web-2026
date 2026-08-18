@@ -1,9 +1,3 @@
-// app/admin/quests/QuestTabs.tsx
-// Sub-navigation for quest admin screens.
-//
-// These are tabs rather than two ADMIN_NAV entries because AdminShell marks
-// the active rail item with `pathname.startsWith(href)` — a second entry would
-// prefix-collide with '/admin/quests'.
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'

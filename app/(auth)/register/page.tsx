@@ -32,7 +32,6 @@ const labelShadow = { textShadow: "2px 1.4px 0 #4e342e" };
 const inputClass =
   "mt-1 w-full rounded-[13px] border-2 border-[#e0b391] bg-white px-4 font-bytebounce text-fluid-lg text-[#4e342e] placeholder:text-[#c9b6a4] focus:border-[#fbc94c] focus:outline-none";
 
-// ── Avatar option data ──────────────────────────────────────────────────────
 const SKINS = [
   "skin1",
   "skin2",
@@ -72,7 +71,6 @@ const HIJABS: Array<{ key: string | null; label: string }> = [
   })),
 ];
 
-// Hair options: base key used for the file path + display label
 const HAIR_STYLES = [
   { key: null, label: "Bald" },
   { key: "hairb1", label: "Short A" },
@@ -86,26 +84,18 @@ const HAIR_STYLES = [
   { key: "hairg5", label: "Long E" },
 ];
 
-// Color variants per hair style (suffix appended to key)
 const HAIR_COLORS: { suffix: string; label: string; swatch: string }[] = [
   { suffix: "", label: "Dark", swatch: "#2c1a0e" },
   { suffix: ".2", label: "Brown", swatch: "#6b3a1f" },
   { suffix: ".3", label: "Blonde", swatch: "#FFF49B" },
 ];
 
-// Mouth options
 const MOUTHS: Array<string | null> = [
   null,
   ...Array.from({ length: 7 }, (_, i) => `mouth${i + 1}`),
   "mouth4.2",
 ];
-// ───────────────────────────────────────────────────────────────────────────
 
-// Per-step validation. The form is `noValidate` so the browser never blocks a
-// submit silently: relying on native `required` meant a missed field just moved
-// focus back up the form with no message, which reads as "the Next button did
-// nothing" (or worse, as a page refresh). Every rule here has a visible reason.
-// Mirrors the server-side checks in app/api/auth/register/route.ts.
 type StepProblem = { field: string; message: string };
 
 function validateStep(step: number, form: RegisterForm): StepProblem | null {
@@ -149,8 +139,6 @@ function validateStep(step: number, form: RegisterForm): StepProblem | null {
           'Please answer the achievement question — type "none" to skip.',
       };
   }
-
-  // Step 3 is the avatar builder: every part has a default, so nothing to check.
 
   if (step === 4) {
     if (blank(form.medicalNote))
@@ -231,9 +219,7 @@ export default function RegisterPage() {
     gender: "",
   });
   const [avatarSkin, setAvatarSkin] = useState("skin1");
-  const [avatarClothes, setAvatarClothes] = useState<string | null>(
-    "roundshirt1",
-  );
+  const [avatarClothes, setAvatarClothes] = useState<string | null>("shirt1");
   const [avatarHairStyle, setAvatarHairStyle] = useState<string | null>(
     "hairb1",
   );
@@ -245,7 +231,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Hydrate draft from sessionStorage on mount
+  // Restore draft from local storage.
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem("nso_register_draft");
@@ -268,7 +254,7 @@ export default function RegisterPage() {
     } catch {}
   }, []);
 
-  // Persist draft to sessionStorage on state changes
+  // Save draft to local storage.
   useEffect(() => {
     try {
       sessionStorage.setItem(
@@ -322,8 +308,6 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
 
-    // Show the first problem instead of letting the submit die quietly, and put
-    // the cursor on the offending field so it's obvious which one is missing.
     const problem = validateStep(step, form);
     if (problem) {
       setError(problem.message);
@@ -336,7 +320,6 @@ export default function RegisterPage() {
       return;
     }
 
-    // Final step — register, then auto sign-in.
     setLoading(true);
     try {
       const res = await fetch("/api/auth/register", {

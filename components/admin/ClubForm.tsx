@@ -1,4 +1,3 @@
-// components/admin/ClubForm.tsx
 'use client'
 import { useActionState, useState } from 'react'
 import { createClub, type ClubFormState } from '@/app/admin/actions'
@@ -10,15 +9,9 @@ const inputClass = `w-full bg-white border border-slate-300 rounded-md text-slat
 
 const labelClass = 'text-xs font-medium text-slate-500 block mb-1'
 
-const MAX_FILE_BYTES = 5 * 1024 * 1024 // 5MB per file
+const MAX_FILE_BYTES = 5 * 1024 * 1024
 const MAX_FILES = 12
-// The server action's whole request is capped by next.config.ts's
-// experimental.serverActions.bodySizeLimit (8mb). Several ordinary-sized
-// files can each pass the per-file check yet still blow that combined
-// budget, which fails during Next's request parsing — before the server
-// action (and its `warning` state) ever runs. Keep comfortably under 8MB to
-// leave headroom for the rest of the form fields and multipart overhead.
-const MAX_TOTAL_BYTES = 7 * 1024 * 1024 // 7MB aggregate
+const MAX_TOTAL_BYTES = 7 * 1024 * 1024
 
 export default function ClubForm() {
   const [state, formAction, pending] = useActionState(createClub, initialState)

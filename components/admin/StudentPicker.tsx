@@ -33,7 +33,6 @@ export default function StudentPicker({
       .slice(0, 10)
   }, [query, students])
 
-  // If query exactly matches a student name or ID, auto-resolve
   const effectiveStudentId = useMemo(() => {
     if (selected) return selected.studentId
     const q = query.trim().toLowerCase()

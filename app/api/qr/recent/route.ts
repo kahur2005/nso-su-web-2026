@@ -1,4 +1,3 @@
-// app/api/qr/recent/route.ts
 import { supabase } from '@/lib/supabase'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -27,7 +26,6 @@ export async function GET() {
     .order('scannedAt', { ascending: false })
     .limit(20)
 
-  // All-time scan count (the list above is capped at 20)
   const { count } = await supabase
     .from('ScanLog')
     .select('*', { count: 'exact', head: true })

@@ -1,8 +1,3 @@
-// app/api/quests/route.ts
-// The student's quest library. Every active quest that is currently available
-// (availableFrom <= now AND now <= availableUntil, if those fields are set) is
-// listed. Quests with a future availableFrom are shown with an "opens at" label
-// so students can plan; quests whose window has closed are hidden.
 import { supabase } from '@/lib/supabase'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'

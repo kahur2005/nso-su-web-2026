@@ -1,6 +1,3 @@
-// app/api/quests/[id]/quiz/route.ts
-// Multiple-choice quiz for quiz-type quests. Correct answers lock; wrong answers
-// retryable. Points only for newly correct answers via adjust_points RPC.
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { NextResponse } from 'next/server'

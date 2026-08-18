@@ -1,5 +1,3 @@
-// app/admin/quests/submissions/page.tsx
-// Review queue for student file submissions on submission-type quests.
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'

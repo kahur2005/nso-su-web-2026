@@ -1,5 +1,3 @@
-// app/(game)/info/page.tsx
-// Info Station Parchment Hub — links to guidebook, committee, timeline, clubs, and map.
 import PageWrapper from '@/components/layout/PageWrapper'
 import PageIntro from '@/components/onboarding/PageIntro'
 import Link from 'next/link'

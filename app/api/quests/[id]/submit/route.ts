@@ -1,6 +1,3 @@
-// app/api/quests/[id]/submit/route.ts
-// Student multi-file upload for submission-type quests. Window gating is enforced
-// server-side via assertQuestOpenForStudent (unlike QR scan).
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { NextResponse } from 'next/server'

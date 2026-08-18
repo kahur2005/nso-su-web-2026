@@ -1,13 +1,6 @@
-// app/api/leaderboard/feed/route.ts
-// Returns a chronological log of points events (quest completions + scan logs + guidebook quiz claims)
-// used by the leaderboard "RECORD" tab.
 import { supabase } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
 
-/* The RECORD tab shows the 10 most recent points events. All source queries
- * are capped at the same number rather than something larger: an event that
- * lands in the merged top 10 by time is necessarily within its own source's
- * most-recent 10, so fetching deeper cannot change the result. */
 const FEED_LIMIT = 10
 
 const CHAPTER_LABELS: Record<string, string> = {

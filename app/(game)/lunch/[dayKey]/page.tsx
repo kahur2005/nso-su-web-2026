@@ -1,8 +1,3 @@
-// app/(game)/lunch/[dayKey]/page.tsx
-// Pick a restaurant for the chosen day.
-//
-// Every restaurant is available on every open day — there is no per-day
-// restaurant roster, because committee books the same vendors for the week.
 'use client'
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'

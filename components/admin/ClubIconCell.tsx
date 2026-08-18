@@ -1,13 +1,9 @@
-// components/admin/ClubIconCell.tsx
 'use client'
 import { useActionState, useRef } from 'react'
 import { updateClubIcon, type ClubFormState } from '@/app/admin/actions'
 
 const initialState: ClubFormState = { warning: null }
 
-// Shows a club's current tile icon and lets an admin replace it in place —
-// picking a file submits immediately, so there is no extra save button in the
-// row. Clubs created before icons existed show "None" until one is uploaded.
 export default function ClubIconCell({
   id,
   name,

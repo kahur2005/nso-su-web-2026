@@ -10,11 +10,6 @@ export interface AdminNavItem {
   icon: LucideIcon
 }
 
-// Order matters here: AdminShell highlights the active item via
-// `pathname.startsWith(href)`, so a more specific href must not come after a
-// shorter one it would collide with. `/admin/dashboard` doesn't prefix-match
-// (or get prefix-matched by) any other entry, so its position is otherwise
-// free — kept first as the panel's landing/overview page.
 export const ADMIN_NAV: AdminNavItem[] = [
   { href: '/admin/dashboard', label: 'Overview', icon: LayoutDashboard },
   { href: '/admin/committee', label: 'Committee Info', icon: IdCard },
@@ -25,9 +20,6 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: '/admin/points', label: 'Points', icon: Star },
   { href: '/admin/announcements', label: 'Announcements', icon: Megaphone },
   { href: '/admin/timeline', label: 'Timeline', icon: CalendarDays },
-  // One entry only: /admin/lunch/menu and /admin/lunch/settings are reached
-  // through the tab strip in app/admin/lunch/LunchTabs.tsx, because a second
-  // rail entry would prefix-collide with this one.
   { href: '/admin/lunch', label: 'Lunch', icon: UtensilsCrossed },
   { href: '/admin/clubs', label: 'Clubs', icon: Building2 },
   { href: '/admin/guide', label: 'Guide', icon: BookOpen },

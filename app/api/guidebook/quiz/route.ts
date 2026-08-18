@@ -1,12 +1,3 @@
-// app/api/guidebook/quiz/route.ts
-// GET  — every attempt this student has made, so the guidebook can lock the
-//        chapters they have already answered before rendering anything.
-// POST — grade and lock one chapter. Writing the row IS the lock: the table's
-//        unique (studentId, chapterId) rejects a second submit, so a student
-//        gets exactly one try whether they were right or wrong.
-//
-// No points are awarded here. Claiming is a separate action the student takes
-// from the popup — see ./claim/route.ts.
 import { supabase } from '@/lib/supabase'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -16,7 +7,7 @@ import { gradeChapter } from '@/lib/guidebook/answers'
 
 const TABLE = 'GuidebookQuizAttempt'
 
-/** Resolve the session onto a Student row, returning its internal id. */
+/** Find internal student ID from session. */
 async function resolveStudent(session: any) {
   const user = session.user as any
   const { data } = await supabase
@@ -39,9 +30,6 @@ export async function GET() {
     .select('chapterId, isCorrect, pointsAwarded, claimedAt')
     .eq('studentId', studentId)
 
-  // The table is created by supabase/migrations/20260727_guidebook_quiz.sql.
-  // Until that is applied this 500s rather than pretending every chapter is
-  // unattempted — silently returning [] would let a student re-answer forever.
   if (error) {
     console.error('guidebook/quiz GET:', error)
     return NextResponse.json({ error: 'Quiz storage unavailable.' }, { status: 500 })
@@ -61,7 +49,7 @@ export async function POST(request: Request) {
   if (typeof chapterId !== 'string' || !QUIZZES[chapterId]) {
     return NextResponse.json({ error: 'Unknown chapter.' }, { status: 400 })
   }
-  // Both questions must be answered before the attempt is spent.
+
   if (!Array.isArray(answers) || answers.length !== 2 || answers.some((a) => a === null)) {
     return NextResponse.json({ error: 'Answer both questions first.' }, { status: 400 })
   }
@@ -76,8 +64,6 @@ export async function POST(request: Request) {
     .insert({ studentId, chapterId, isCorrect, pointsAwarded: 0 })
 
   if (error) {
-    // 23505 = unique_violation — they already used their one attempt. Report
-    // it as a conflict so the client can re-sync instead of showing a result.
     if ((error as any).code === '23505') {
       return NextResponse.json(
         { error: 'You have already answered this chapter.', alreadyAttempted: true },

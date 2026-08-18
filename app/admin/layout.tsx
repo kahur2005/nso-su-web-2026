@@ -1,6 +1,3 @@
-// Scopes the light ERP design system to /admin/*. This is the repo's first
-// nested layout -- the student app deliberately has none, but the admin panel
-// swaps the entire design system, so a layout is the right tool here.
 import { Poppins } from 'next/font/google'
 import AdminShell from '@/components/admin/AdminShell'
 

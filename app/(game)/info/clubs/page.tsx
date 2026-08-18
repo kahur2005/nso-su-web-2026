@@ -1,5 +1,3 @@
-// app/(game)/info/clubs/page.tsx
-// UKM CLUBS page — parchment tiles grid matching Figma pixel art reference.
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import PageWrapper from '@/components/layout/PageWrapper'
@@ -69,12 +67,9 @@ const DEFAULT_CLUBS: Club[] = [
 function ClubDetailModal({ club, onClose }: { club: Club; onClose: () => void }) {
   const icon = getClubIcon(club)
   const [slide, setSlide] = useState(0)
-  // A club row written before the images column existed can come back null.
   const images = club.images ?? []
   const count = images.length
 
-  // `count` is 0 for a club with no uploaded images; the modulo would be NaN,
-  // so bail out and let the carousel block render nothing instead.
   const prev = () => count && setSlide((s) => (s - 1 + count) % count)
   const next = () => count && setSlide((s) => (s + 1) % count)
 
@@ -283,9 +278,6 @@ export default function UkmClubsPage() {
                   onClick={() => setSelected(club)}
                   className="px-6 py-5 flex flex-col items-center justify-center transition-all hover:scale-[1.02] hover:brightness-105 active:scale-[0.97]"
                   style={{
-                    // The parchment frame is baked into the art (border + fill),
-                    // so it is stretched to the tile rather than tiled or
-                    // cropped — the pixel border must reach every edge.
                     backgroundImage: 'url(/images/clubs/background-clubs.png)',
                     backgroundSize: '100% 100%',
                     backgroundRepeat: 'no-repeat',
@@ -309,8 +301,6 @@ export default function UkmClubsPage() {
       </div>
 
       {selected && (
-        // Keyed on the club so the carousel's slide index resets when a
-        // different club is opened rather than carrying over.
         <ClubDetailModal key={selected.id} club={selected} onClose={() => setSelected(null)} />
       )}
     </PageWrapper>

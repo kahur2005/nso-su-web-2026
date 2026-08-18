@@ -1,5 +1,3 @@
-// components/admin/QuestQuestionEditor.tsx
-// Quiz question builder for admin quest edit. Frozen once any student answers.
 'use client'
 
 import { useState } from 'react'

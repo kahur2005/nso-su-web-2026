@@ -1,4 +1,3 @@
-// components/layout/PageWrapper.tsx
 import Navbar from './Navbar'
 import BottomNav from './BottomNav'
 
@@ -13,8 +12,6 @@ export default function PageWrapper({
 }: PageWrapperProps) {
   return (
     <div className="min-h-screen scanlines">
-      {/* Static sky artwork behind every logged-in page (same fixed pattern
-          as /scan; pages with their own fixed bg render after and win) */}
       <div
         className="fixed inset-0 -z-10"
         style={{
@@ -24,8 +21,6 @@ export default function PageWrapper({
         }}
       />
       {showNav && <Navbar />}
-      {/* Navbar is position:fixed, so it reserves no space in the flow —
-          pad by its height (--nav-h) to keep content clear of it. */}
       <main
         className={`pb-28 md:pb-12 lg:pb-16 px-2 sm:px-4 md:px-6 ${
           showNav ? 'pt-[var(--nav-h)]' : ''

@@ -1,4 +1,3 @@
-// Public read of the club directory shown at /map/clubs.
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 

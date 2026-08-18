@@ -1,8 +1,3 @@
-// components/lunch/CartBar.tsx
-// The sticky "N items · Rp X · View cart" bar on the menu screen.
-//
-// It sits above BottomNav (h-20) rather than replacing it, so a student can
-// still navigate away mid-order — the cart is in localStorage and survives.
 'use client'
 import Link from 'next/link'
 import { cartSubtotal, formatRupiah, type CartLine } from '@/lib/lunch'

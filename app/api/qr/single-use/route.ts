@@ -1,7 +1,3 @@
-// app/api/qr/single-use/route.ts
-// Generates a unique, 1-time single-use QR link and image for a committee member
-// or quest. Perfect for sending a direct QR to an individual student who asks for
-// a missing fun fact. Consumed once upon scan — cannot be shared or re-scanned.
 import QRCode from 'qrcode'
 import jwt from 'jsonwebtoken'
 import { randomUUID } from 'crypto'
@@ -56,7 +52,6 @@ export async function POST(request: Request) {
     label = quest.title
   }
 
-  // Mint a unique single-use token with jti UUID valid for 24h
   const jti = `1-TIME-${randomUUID().slice(0, 8).toUpperCase()}`
   const token = jwt.sign(
     {

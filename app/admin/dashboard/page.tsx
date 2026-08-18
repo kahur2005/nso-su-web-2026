@@ -1,4 +1,3 @@
-// app/admin/dashboard/page.tsx
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
@@ -30,7 +29,7 @@ async function getAdminStats() {
     supabase.from('Student').select('gender, isAdmin'),
   ])
 
-  // Safely compute gender counts for non-admin students
+  // Compute gender totals for students who are not administrators.
   let genderCounts: { M: number; F: number; other: number; unspecified: number } = {
     M: 0,
     F: 0,

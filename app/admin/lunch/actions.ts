@@ -1,7 +1,3 @@
-// app/admin/lunch/actions.ts
-// Every admin write for the lunch feature. Server actions rather than API
-// routes, matching the rest of app/admin/* — the pages are server components
-// and each control is a plain <form action={...}>.
 'use server'
 
 import { getServerSession } from 'next-auth'
@@ -34,8 +30,7 @@ function text(formData: FormData, key: string): string {
   return String(formData.get(key) || '').trim()
 }
 
-/** Prices are whole rupiah. A blank or negative field becomes 0 rather than
- *  NaN, which Postgres would reject with an opaque error. */
+/** Parse numeric price in Rupiah. Return 0 if invalid. */
 function money(formData: FormData, key: string): number {
   const n = parseInt(text(formData, key).replace(/\D/g, ''), 10)
   return Number.isFinite(n) && n > 0 ? n : 0
@@ -49,8 +44,6 @@ function int(formData: FormData, key: string, fallback = 0): number {
 function checked(formData: FormData, key: string): boolean {
   return formData.get(key) === 'on' || formData.get(key) === 'true'
 }
-
-// ---------------------------------------------------------- restaurants ----
 
 export async function createRestaurant(formData: FormData) {
   await requireAdmin()
@@ -87,7 +80,6 @@ export async function updateRestaurant(formData: FormData) {
     isActive: checked(formData, 'isActive'),
   }
 
-  // Leaving the file input empty must keep the current photo, not clear it.
   const image = formData.get('image')
   if (image instanceof File && image.size > 0) {
     const uploaded = await uploadImage('lunch-restaurants', image)
@@ -100,12 +92,7 @@ export async function updateRestaurant(formData: FormData) {
   revalidate()
 }
 
-/**
- * Soft delete, for the same reason as deleteQuest: LunchMenuItem cascades on a
- * real delete, and LunchOrderItem.menuItemId points at it. The snapshots on the
- * order rows mean a receipt would still read correctly, but the audit trail
- * back to what was actually sold would be gone.
- */
+/** Soft delete restaurant by ID. */
 export async function deleteRestaurant(formData: FormData) {
   await requireAdmin()
 
@@ -120,8 +107,6 @@ export async function deleteRestaurant(formData: FormData) {
 
   revalidate()
 }
-
-// ------------------------------------------------------------ menu items ----
 
 export async function createMenuItem(formData: FormData) {
   await requireAdmin()
@@ -189,8 +174,6 @@ export async function deleteMenuItem(formData: FormData) {
   revalidate()
 }
 
-// --------------------------------------------------------------- add-ons ----
-
 export async function createAddOn(formData: FormData) {
   await requireAdmin()
 
@@ -231,11 +214,7 @@ export async function updateAddOn(formData: FormData) {
   revalidate()
 }
 
-/**
- * Hard delete — unlike restaurants and menu items, an add-on has no history
- * worth keeping: LunchOrderItemAddOn already carries its own name and price
- * snapshot, and its addOnId column is nullable and unconstrained.
- */
+/** Delete add-on item by ID. */
 export async function deleteAddOn(formData: FormData) {
   await requireAdmin()
 
@@ -248,19 +227,11 @@ export async function deleteAddOn(formData: FormData) {
   revalidate()
 }
 
-// -------------------------------------------------------------- settings ----
-
 export async function updateLunchSettings(formData: FormData) {
   await requireAdmin()
 
-  // Only line breaks and tabs are stripped. Do NOT strip ordinary spaces —
-  // they are part of the merchant name and city fields, and removing them
-  // leaves every following length prefix pointing at the wrong offset.
   const qrisStatic = normalizeQrisPayload(String(formData.get('qrisStatic') || ''))
 
-  // A payload that fails its own checksum was damaged somewhere between the
-  // bank and this form. Storing it would mint QR codes that scan fine and then
-  // fail at the counter, so refuse it and tell the admin why.
   if (qrisStatic && !isValidQrisPayload(qrisStatic)) {
     redirect('/admin/lunch/settings?qris=invalid')
   }
@@ -283,8 +254,6 @@ export async function updateLunchDay(formData: FormData) {
 
   const deadlineRaw = text(formData, 'orderDeadline')
 
-  // Upsert rather than update: a day row can be missing if the seed in the
-  // migration was skipped, and the admin should be able to fix that here.
   const { error } = await supabase.from('LunchDay').upsert(
     {
       dayKey,
@@ -298,15 +267,7 @@ export async function updateLunchDay(formData: FormData) {
   revalidate()
 }
 
-// ---------------------------------------------------------------- review ----
-
-/**
- * Approve or reject a submitted order.
- *
- * Both guard on the current status in the WHERE clause, so a double-click, a
- * back-button resubmit, or two committee members clicking at once can only take
- * effect once — the loser matches no rows and changes nothing.
- */
+/** Approve or reject a submitted order. */
 async function reviewOrder(
   formData: FormData,
   status: 'approved' | 'rejected',

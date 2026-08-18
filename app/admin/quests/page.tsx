@@ -1,9 +1,3 @@
-// app/admin/quests/page.tsx
-// Quest admin: QR, submission, and quiz missions.
-//
-// Rebuilt in the AdminShell style the rest of the panel uses; this page
-// previously rendered the student app's dark pixel styling via AdminHeader and
-// was not reachable from the nav at all.
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'

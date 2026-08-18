@@ -1,8 +1,4 @@
 'use client'
-// SearchableList's filter/render callbacks are functions, which cannot cross
-// the server -> client boundary as props. This wrapper owns those callbacks
-// (and the row-click modal state) client-side and receives the plain student
-// array from the server page instead. Do not import `supabase` here.
 import { useState } from 'react'
 import SearchableList from '@/components/admin/SearchableList'
 import DataTable from '@/components/admin/DataTable'
@@ -31,8 +27,6 @@ export default function PointsSearchableTable({ students }: { students: PointsRo
         items={students}
         placeholder="Search by name, email, student ID, or group..."
         filter={(student, query) =>
-          // `query` arrives pre-trimmed and pre-lowercased by SearchableList, so
-          // only the item side needs lowercasing here.
           student.name.toLowerCase().includes(query) ||
           student.email.toLowerCase().includes(query) ||
           student.studentId.toLowerCase().includes(query) ||

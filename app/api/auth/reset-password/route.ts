@@ -1,9 +1,3 @@
-// app/api/auth/reset-password/route.ts
-//
-// Step 2 of the reset flow.
-//   GET  ?token=…            → is this link still good? (so the page can say
-//                              "expired" before the user types a password)
-//   POST { token, password } → claim the token and set the new password.
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { hashPassword } from '@/lib/password'
@@ -51,9 +45,7 @@ export async function POST(request: Request) {
   const tokenHash = hashResetToken(token)
   const now = new Date().toISOString()
 
-  // Claim the token FIRST, as one conditional UPDATE. Postgres serialises this,
-  // so two racing clicks on the same link can't both come back with a row —
-  // that is what makes the link genuinely single-use.
+  // Claim token in a single update operation.
   const { data: claimed, error: claimError } = await supabase
     .from('PasswordResetToken')
     .update({ usedAt: now })
@@ -79,7 +71,6 @@ export async function POST(request: Request) {
 
   if (pwError) {
     console.error('[reset-password] Password update failed:', pwError)
-    // Release the claim so the user's link isn't burned by our own failure.
     const { error: rollbackError } = await supabase
       .from('PasswordResetToken')
       .update({ usedAt: null })
@@ -93,16 +84,13 @@ export async function POST(request: Request) {
     )
   }
 
-  // Burn every other outstanding link for this student — an older reset email
-  // still sitting in their inbox must not keep working.
+  // Invalidate all remaining tokens for this student.
   const { error: sweepError } = await supabase
     .from('PasswordResetToken')
     .update({ usedAt: now })
     .eq('studentId', claimed.studentId)
     .is('usedAt', null)
   if (sweepError) {
-    // Not fatal: the password is already changed and the leftovers expire
-    // within the hour. Worth knowing about, not worth failing the request.
     console.error('[reset-password] Failed to sweep outstanding tokens:', sweepError)
   }
 

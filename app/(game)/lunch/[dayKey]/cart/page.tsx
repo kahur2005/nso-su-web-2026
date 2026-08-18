@@ -1,10 +1,3 @@
-// app/(game)/lunch/[dayKey]/cart/page.tsx
-// Review the cart, then pay.
-//
-// Pressing Pay is the first moment anything reaches the database: the cart is
-// posted to /api/lunch/orders, which re-reads every price server-side and
-// returns an order to pay for. The local cart is cleared only after that
-// succeeds, so a failed request leaves the student's basket intact.
 'use client'
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
@@ -60,7 +53,6 @@ export default function LunchCartPage() {
           dayKey,
           restaurantId,
           note: note.trim(),
-          // Ids and quantities only. The server does not trust anything else.
           lines: lines.map((l) => ({
             menuItemId: l.menuItemId,
             quantity: l.quantity,

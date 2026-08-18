@@ -1,10 +1,3 @@
-// app/(game)/lunch/[dayKey]/[restaurantId]/page.tsx
-// The menu. Tap a dish to open the quantity/add-ons sheet; the cart bar at the
-// bottom carries the running total through to the summary.
-//
-// The cart holds one day and one restaurant at a time. Adding from a second
-// restaurant asks before discarding, rather than silently merging into an order
-// no single vendor could fill.
 'use client'
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
@@ -54,7 +47,6 @@ export default function LunchMenuPage() {
       .finally(() => setLoading(false))
   }, [dayKey, restaurantId, router])
 
-  // Auto-dismiss the "added" confirmation.
   useEffect(() => {
     if (!toast) return
     const t = setTimeout(() => setToast(null), 2200)
@@ -80,8 +72,6 @@ export default function LunchMenuPage() {
   }
 
   const meta = lunchDayMeta(dayKey)
-  // Only show the cart bar for THIS day+restaurant; a cart left over from
-  // somewhere else would link to the wrong summary.
   const cartLines =
     cartDayKey === dayKey && cartRestaurantId === restaurantId ? lines : []
 

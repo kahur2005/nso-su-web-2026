@@ -1,5 +1,3 @@
-// components/admin/QuestForm.tsx
-// Create/edit form for a quest. Pass a `quest` to edit, omit it to create.
 'use client'
 import { useRef, useState } from 'react'
 import { createQuest, updateQuest } from '@/app/admin/quests/actions'

@@ -1,14 +1,3 @@
-// app/(game)/lunch/order/[orderId]/page.tsx
-// One order, in whichever of its four states it happens to be:
-//
-//   pending_payment   -> QRIS code for the exact total + upload proof + submit
-//   awaiting_approval -> receipt, with a "committee is checking" banner
-//   approved          -> receipt, stamped
-//   rejected          -> receipt, with the committee's reason and what to do
-//
-// One page rather than four routes because it is one thing the student keeps
-// coming back to, and the URL they bookmark should not change under them when
-// committee approves.
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'next/navigation'
@@ -78,7 +67,6 @@ export default function LunchOrderPage() {
         return
       }
 
-      // Re-read rather than patching local state: the server owns the status.
       await load()
     } catch {
       setError('Could not reach the server. Check your connection and try again.')

@@ -1,6 +1,3 @@
-// app/(game)/scan/RecentScansPopup.tsx
-// Receipt-scroll popup (Figma node 269:99): last 10 scans as a
-// Time / Name / Points table plus the all-time scan total.
 'use client'
 
 import { formatJakartaTime } from '@/lib/time'

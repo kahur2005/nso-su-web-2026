@@ -1,13 +1,3 @@
-// components/layout/Navbar.tsx
-// Top bar. Two layouts off one markup tree:
-//   – mobile: (back) — "NSO 2026" centered — EXIT. The nav rail is hidden here
-//     because BottomNav takes over, which is what frees the middle slot.
-//   – md+: (back) "NSO 2026" — wood-plank nav rail — EXIT, i.e. the logo goes
-//     back into the flow on the left and the rail keeps the centre.
-// The logo is one element that switches from absolutely-centred to static at
-// md, so there is only ever one "NSO 2026" in the DOM.
-// Pinned with position:fixed and a height of --nav-h; PageWrapper reserves the
-// same amount of top padding on <main> so nothing renders underneath it.
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -19,12 +9,6 @@ import { useStudentAvatar } from '@/lib/hooks/useStudentAvatar'
 const LOGO_SHADOW = '2px 2px 0 #3e2723'
 const EXIT_SHADOW  = '2px 2px 0 #3e2723'
 
-// Which pages get a back arrow, and where it goes. This is the whole rule —
-// a route absent from here renders no back button, which is why the header is
-// bare on the five nav destinations (/dashboard, /info, /scan, /leaderboard,
-// /profile). These used to be per-page sprites drawn inside each page's
-// `.game-column`; they live here now so there is exactly one of them.
-// Sub-pages are matched by prefix, so /info/guidebook/anything still resolves.
 const BACK_TARGETS: Array<[prefix: string, href: string]> = [
   ['/info/clubs', '/info'],
   ['/info/committee', '/info'],
@@ -36,11 +20,8 @@ const BACK_TARGETS: Array<[prefix: string, href: string]> = [
 
 function lunchBackHref(pathname: string): string | null {
   if (pathname !== '/lunch' && !pathname.startsWith('/lunch/')) return null
-  // Landing → dashboard (same as the tile that opens lunch).
   if (pathname === '/lunch' || pathname === '/lunch/') return '/dashboard'
-  // Order receipts always return to the lunch home, not /lunch/order.
   if (pathname.startsWith('/lunch/order')) return '/lunch'
-  // Nested day / restaurant / cart: pop one path segment.
   const parts = pathname.replace(/\/$/, '').split('/')
   parts.pop()
   const parent = parts.join('/')

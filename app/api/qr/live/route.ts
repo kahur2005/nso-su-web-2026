@@ -1,49 +1,47 @@
-// app/api/qr/live/route.ts
-// Live 1-Time QR Code Generator.
-// Generates a short-lived (60-second) signed JWT QR code for a committee member
-// to present on their phone to a line of students.
-//
-// STATELESS: Does NOT save the token in the DB, preserving 0 database bloat
-// and preventing off-site screenshot sharing. duplicate scans per student are
-// guarded by `ScanLog` (studentId, npcId) inside `scan_npc`.
-import QRCode from 'qrcode'
-import jwt from 'jsonwebtoken'
-import { supabase } from '@/lib/supabase'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { NextResponse } from 'next/server'
+import QRCode from "qrcode";
+import jwt from "jsonwebtoken";
+import { supabase } from "@/lib/supabase";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession(authOptions);
   if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { searchParams } = new URL(request.url)
-  const npcId = searchParams.get('npcId')
+  const { searchParams } = new URL(request.url);
+  const npcId = searchParams.get("npcId");
 
   if (!npcId) {
-    return NextResponse.json({ error: 'NPC ID is required' }, { status: 400 })
+    return NextResponse.json({ error: "NPC ID is required" }, { status: 400 });
   }
 
   const { data: npc, error } = await supabase
-    .from('NPC')
-    .select('id, committeeName, role, points, isActive')
-    .eq('id', npcId)
-    .maybeSingle()
+    .from("NPC")
+    .select("id, committeeName, role, points, isActive")
+    .eq("id", npcId)
+    .maybeSingle();
 
   if (error || !npc) {
-    return NextResponse.json({ error: 'Committee member not found' }, { status: 404 })
+    return NextResponse.json(
+      { error: "Committee member not found" },
+      { status: 404 },
+    );
   }
 
   if (!npc.isActive) {
-    return NextResponse.json({ error: 'This committee member is inactive' }, { status: 400 })
+    return NextResponse.json(
+      { error: "This committee member is inactive" },
+      { status: 400 },
+    );
   }
 
-  const now = Date.now()
-  const expiresAt = now + 60 * 1000 // 60s validity window
+  const now = Date.now();
+  const expiresAt = now + 90 * 1000;
 
-  // Short-lived rolling JWT token
+  // Generate short-lived JWT token valid for 60 seconds.
   const token = jwt.sign(
     {
       npcId: npc.id,
@@ -52,15 +50,15 @@ export async function GET(request: Request) {
       live: true,
     },
     process.env.QR_SECRET_KEY!,
-    { expiresIn: '60s' }
-  )
+    { expiresIn: "90s" },
+  );
 
-  const scanUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/scan?token=${token}`
+  const scanUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/scan?token=${token}`;
   const qrCodeImage = await QRCode.toDataURL(scanUrl, {
     width: 400,
     margin: 2,
-    color: { dark: '#000000', light: '#FFFFFF' },
-  })
+    color: { dark: "#000000", light: "#FFFFFF" },
+  });
 
   return NextResponse.json({
     success: true,
@@ -69,5 +67,5 @@ export async function GET(request: Request) {
     npcName: npc.committeeName,
     role: npc.role,
     points: npc.points,
-  })
+  });
 }

@@ -1,4 +1,3 @@
-// components/admin/CommitteeForm.tsx
 'use client'
 import { useActionState, useState } from 'react'
 import { DIVISIONS } from '@/lib/divisions'
@@ -11,7 +10,7 @@ const inputClass = `w-full bg-white border border-slate-300 rounded-md text-slat
 
 const labelClass = 'text-xs font-medium text-slate-500 block mb-1'
 
-const MAX_FILE_BYTES = 5 * 1024 * 1024 // 5MB
+const MAX_FILE_BYTES = 5 * 1024 * 1024
 
 export default function CommitteeForm() {
   const [state, formAction, pending] = useActionState(createCommitteeMember, initialState)

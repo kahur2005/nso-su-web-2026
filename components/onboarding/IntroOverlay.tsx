@@ -1,9 +1,8 @@
-// components/onboarding/IntroOverlay.tsx
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 
 export interface IntroStep {
-  target: string // matches a `data-tour="<target>"` attribute on the page
+  target: string
   title: string
   description: string
 }
@@ -40,7 +39,6 @@ export default function IntroOverlay({ steps, open, onFinish }: IntroOverlayProp
     const onScrollOrResize = () => measure()
     window.addEventListener('scroll', onScrollOrResize, true)
     window.addEventListener('resize', onScrollOrResize)
-    // Smooth-scrolling needs a re-measure once it settles into place.
     const settle = window.setTimeout(measure, 400)
     return () => {
       window.cancelAnimationFrame(raf)
@@ -64,7 +62,6 @@ export default function IntroOverlay({ steps, open, onFinish }: IntroOverlayProp
       }
     : null
 
-  // Place the tooltip below the highlighted area if there's room, otherwise above.
   const tooltipWidth = Math.min(TOOLTIP_WIDTH, window.innerWidth - 32)
   const left = rect
     ? Math.min(Math.max(rect.left, 16), window.innerWidth - tooltipWidth - 16)

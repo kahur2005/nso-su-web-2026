@@ -1,4 +1,3 @@
-// app/(game)/rulebook/page.tsx
 import PageWrapper from '@/components/layout/PageWrapper'
 import Link from 'next/link'
 

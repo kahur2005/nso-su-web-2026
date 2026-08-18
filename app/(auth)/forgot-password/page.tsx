@@ -13,7 +13,6 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [sent, setSent] = useState(false)
-  // Temporary debug readout for the localhost reset-link investigation.
   const [debugResetBase, setDebugResetBase] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,8 +32,7 @@ export default function ForgotPasswordPage() {
         setError(data.error || 'Something went wrong. Please try again.')
         return
       }
-      // Success is deliberately vague — the API never reveals whether this
-      // email has an account, and the UI must not either.
+
       if (typeof data._debugResetBase === 'string') {
         setDebugResetBase(data._debugResetBase)
       }

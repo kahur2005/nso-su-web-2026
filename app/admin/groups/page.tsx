@@ -1,4 +1,3 @@
-// app/admin/groups/page.tsx
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
@@ -20,11 +19,6 @@ export default async function AdminGroupsPage() {
     redirect('/dashboard')
   }
 
-  /* Pull each member's points rather than just a count: the stored
-   * `Group.totalPoints` is a denormalised counter that only `scan_npc` and
-   * `adjust_points` maintain, so it misses any points a student already had
-   * when they were assigned to the group — see app/api/leaderboard/route.ts.
-   * Totalling the roster here is correct whatever order things happened in. */
   const { data: rawGroups } = await supabase
     .from('Group')
     .select('*, members:Student(points, isAdmin)')
@@ -62,13 +56,11 @@ export default async function AdminGroupsPage() {
       groupName: s.group?.name ?? null,
     }))
 
-  // Groups sorted by name for the logo grid (the ranking table below keeps
-  // the points-descending order already applied by the query).
   const groupsByName = [...groups].sort((a, b) => a.name.localeCompare(b.name))
 
   return (
     <div className="space-y-6">
-      {/* Stats */}
+      {/* Statistics */}
       <div className="grid grid-cols-2 gap-4">
         <div className="border border-slate-200 rounded-lg bg-white p-5 text-center">
           <p className="text-xs font-medium text-slate-500">Groups</p>
@@ -80,9 +72,7 @@ export default async function AdminGroupsPage() {
         </div>
       </div>
 
-      {/* Logo grid — the 15 fixed, pre-seeded groups. There is no create-group
-          flow: the roster is fixed and every group already has a designed
-          logo, so an ad-hoc 16th group would have no art. */}
+      {/* Group logo list */}
       <div>
         <h2 className="text-sm font-semibold text-slate-800 mb-3">Groups</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">

@@ -1,7 +1,3 @@
-// app/(game)/profile/page.tsx
-// Figma Me-page redesign: forest background, wood-plank player banner,
-// 2×2 parchment stat cards (total points, fun facts, quests completed, house),
-// wood-plank achievements section with rows, wood-plank activity log rows.
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
@@ -23,7 +19,6 @@ const MASCOTS = new Set([
   'minotaur','nymph','pegasus','phoenix','siren','sphinx','unicorn','wyvern',
 ])
 
-/** Canonical mascot key for a group name, or null if it isn't one of the 15. */
 function groupKey(name: string | null | undefined): string | null {
   if (!name) return null
   let key = name.trim().toLowerCase().replace(/[^a-z]/g, '')
@@ -36,13 +31,8 @@ function mascotSrc(name: string | undefined): string | null {
   return key ? `/images/group/${key}.png` : null
 }
 
-// The house backdrop behind the profile avatar. Files follow `<group>-bg.png`,
-// with one exception: the design spells Nymph "NYMPTH" (same quirk the
-// leaderboard normalizes), so its artwork shipped as `nympth-bg.png` while the
-// Group row is named "Nymph". Map it here rather than renaming the asset.
 const BG_FILENAME: Record<string, string> = { nymph: 'nympth' }
 
-/** Falls back to the neutral backdrop until a student is placed in a house. */
 function avatarBgSrc(name: string | null | undefined): string {
   const key = groupKey(name)
   if (!key) return '/images/profile/avatar-bg.png'
@@ -75,9 +65,6 @@ async function getProfileData(studentId: string, studentDbId?: string) {
         .select('*, quest:Quest(*)')
         .eq('studentId', student.id)
         .eq('status', 'completed'),
-      // Claimed guidebook quizzes. Tolerates the table not existing yet —
-      // supabase-js returns the error rather than throwing, and the rest of
-      // the profile must still render if the migration has not been applied.
       supabase
         .from('GuidebookQuizAttempt')
         .select('id, chapterId, pointsAwarded, claimedAt')
@@ -111,7 +98,6 @@ async function getAchievements(studentInternalId: string) {
   }))
 }
 
-/* ── Level display names ────────────────────────────────────────────────── */
 const LEVEL_TITLES = [
   '', 'Freshman', 'Explorer', 'Veteran', 'Champion', 'Legend'
 ]
@@ -140,8 +126,7 @@ export default async function ProfilePage() {
 
   const av = parseAvatarConfig(student.avatarConfig)
 
-  // Point history is two sources now — committee scans and claimed guidebook
-  // quizzes — merged newest-first so the feed reads as one timeline.
+  // Merge scan logs and quiz claims into a single reverse-chronological feed.
   const activityRows: ActivityRow[] = [
     ...(student.scanLogs ?? []).map((log: any) => ({
       id: log.id,

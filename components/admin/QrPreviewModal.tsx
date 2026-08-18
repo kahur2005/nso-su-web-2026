@@ -1,11 +1,4 @@
 'use client'
-// Preview for a stored QR code.
-//
-// The QR is stored as a `data:image/png;base64,...` string. Browsers block
-// top-level navigation to data: URLs, so `<a href={dataUrl} target="_blank">`
-// silently opens a blank tab -- which is what this modal replaces. Downloading
-// a data: URL via an anchor's `download` attribute is still allowed, so the
-// download button below works (same trick NpcForm/GenerateQrButton already use).
 import { useEffect } from 'react'
 import { X, Download } from 'lucide-react'
 
@@ -18,7 +11,6 @@ export default function QrPreviewModal({
   qrCode: string
   onClose: () => void
 }) {
-  // Escape closes, matching the backdrop click.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose()

@@ -1,8 +1,3 @@
-// app/admin/achievements/actions.ts
-// Admin writes for achievements. Co-located with the page rather than added to
-// app/admin/actions.ts, which is already ~290 lines covering five unrelated
-// areas; the CLAUDE.md guidance is to prefer server actions over new API
-// routes, which this still follows.
 'use server'
 
 import { getServerSession } from 'next-auth'
@@ -47,8 +42,6 @@ export async function updateAchievement(formData: FormData) {
 
   const patch: Record<string, unknown> = { name, description }
 
-  // Only overwrite the art when a new file was actually chosen — an empty file
-  // input must not wipe the existing badge.
   const imageUrl = await uploadImage('achievements', formData.get('image') as File | null)
   if (imageUrl) patch.imageUrl = imageUrl
 
@@ -56,12 +49,7 @@ export async function updateAchievement(formData: FormData) {
   revalidate()
 }
 
-/**
- * Achievements are hard-deleted: unlike a quest, an achievement carries no
- * scan history of its own. `StudentAchievement` cascades (students lose the
- * badge) and `Quest.achievementId` is `on delete set null`, so quests that
- * granted it survive and simply stop granting anything.
- */
+/** Delete achievement by ID. */
 export async function deleteAchievement(formData: FormData) {
   await requireAdmin()
 

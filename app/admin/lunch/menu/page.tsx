@@ -1,12 +1,3 @@
-// app/admin/lunch/menu/page.tsx
-// Restaurants, their menu items, and each item's add-ons — the whole tree on
-// one page so committee can see what students will see. Server component;
-// every control is a plain <form action={serverAction}>, as in
-// app/admin/timeline/page.tsx.
-//
-// Deletes here are soft (isDeleted) for restaurants and items: orders already
-// paid for point back at these rows. Add-ons delete for real — the order rows
-// snapshot their name and price, so nothing is lost.
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'

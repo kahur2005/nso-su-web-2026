@@ -1,7 +1,3 @@
-// components/admin/DeleteAchievementButton.tsx
-// Deleting an achievement is a real delete: StudentAchievement cascades, so any
-// student who earned the badge loses it. The confirm says so explicitly when
-// somebody has actually unlocked it.
 'use client'
 import { useState } from 'react'
 import { deleteAchievement } from '@/app/admin/achievements/actions'

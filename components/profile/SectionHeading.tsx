@@ -1,7 +1,3 @@
-// components/profile/SectionHeading.tsx
-// Icon + cream display title, with an optional right-hand slot (a count, or
-// the activity log's See All button). The cream/brown treatment is the same
-// one the /quests header uses, so the two pages read as one design.
 import type { ReactNode } from 'react'
 
 const CREAM_HEADING = {

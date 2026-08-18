@@ -1,4 +1,3 @@
-// POST /api/secret/claim — mark the easter egg claimed for this student.
 import { getServerSession } from 'next-auth'
 import { NextResponse } from 'next/server'
 import { authOptions } from '@/lib/auth'
@@ -34,7 +33,6 @@ export async function POST() {
     studentId: studentDbId,
   })
 
-  // Unique race on double-click: treat as already claimed.
   if (error && error.code !== '23505') {
     console.error('POST /api/secret/claim insert:', error)
     return NextResponse.json({ error: 'Could not save claim' }, { status: 500 })

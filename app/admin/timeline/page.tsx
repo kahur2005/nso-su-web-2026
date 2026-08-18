@@ -1,10 +1,3 @@
-// app/admin/timeline/page.tsx
-// Edits the agenda behind /info/timeline. All six days are listed at once so
-// the whole schedule is visible without tab state — this is a server component
-// and every control is a plain form posting to a server action.
-//
-// The day names and dates are intentionally read-only: they are fixed for
-// NSO 2026 and defined in lib/timeline.ts, not in the database.
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'

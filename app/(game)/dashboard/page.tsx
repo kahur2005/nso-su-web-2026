@@ -1,8 +1,3 @@
-// app/(game)/dashboard/page.tsx
-// Figma node 14-2: pixel-art village dashboard — parchment announcement sheet,
-// 2×2 wooden quick-action plaques beside the points/fun-facts tally, then the
-// active-quest sheets. Header (Navbar) and footer (BottomNav) come from
-// PageWrapper and are deliberately untouched.
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
@@ -50,7 +45,6 @@ async function getDashboardData(studentId: string) {
   };
 }
 
-/* ── Quick-action tiles (Figma 2×2 grid with SVG icons) ────────────────── */
 const TILE_ICON = "w-16 h-16 sm:w-[72px] sm:h-[72px]";
 
 type QuickTile = {
@@ -58,7 +52,7 @@ type QuickTile = {
   icon: string;
   label: string;
   iconClass: string;
-  /** Optional optical-alignment nudge; see the guidebook tile for the why. */
+  /** Optical alignment transform. */
   iconTransform?: string;
 };
 
@@ -67,28 +61,6 @@ const quickTiles: QuickTile[] = [
     href: "/info/guidebook",
     icon: "/images/dashboard/guidebook.svg",
     label: "Guidebook",
-    // The book art needs to render larger than the other three, because inside
-    // its own 64×64 canvas the ink only spans rows 26–58 — barely half the
-    // frame, against 49 of 64 rows for timeline.svg.
-    //
-    // That size boost used to come from a bigger box (w-20 / w-[88px]), which
-    // caused both misalignments on this tile. A taller box made this the
-    // tallest content group in the grid, so `justify-center` stopped absorbing
-    // any slack here while it still did on the other tiles — dropping the label
-    // 8px below its neighbours' — and it also amplified the art's own lopsided
-    // padding (26px empty above vs 5px below, i.e. an ink centre 16.41% below
-    // the canvas centre, against 2.15% for timeline.svg).
-    //
-    // So the box is now the shared TILE_ICON and the size comes from `scale`
-    // instead. Transforms don't affect layout, so all four groups are the same
-    // height and every label lines up; `scale(1.25)` reproduces the old 80/88px
-    // render, and the translate cancels what scaling the off-centre art leaves
-    // over: 1.25 × 16.41% − 2.15% = 18.36%. Being percentages of the box, this
-    // holds at every breakpoint. The lift is transparent padding only — no ink
-    // leaves the plaque.
-    //
-    // The real fix is recentring the art inside guidebook.svg, after which this
-    // whole transform should go away.
     iconClass: TILE_ICON,
     iconTransform: "translateY(-18.36%) scale(1.25)",
   },

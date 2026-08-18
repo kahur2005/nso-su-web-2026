@@ -1,7 +1,3 @@
-// app/admin/quests/actions.ts
-// Admin writes for quests (QR, submission, quiz). See the note in
-// ../achievements/actions.ts on why these live beside their page rather than
-// in app/admin/actions.ts.
 'use server'
 
 import { getServerSession } from 'next-auth'
@@ -26,7 +22,6 @@ function revalidate() {
   revalidatePath('/quests')
 }
 
-/** '' from an unselected <select> must become null, not the empty string. */
 function achievementIdOrNull(formData: FormData): string | null {
   const value = String(formData.get('achievementId') || '').trim()
   return value || null
@@ -242,8 +237,6 @@ export async function saveQuestQuestions(
   revalidate()
 }
 
-/** Activate/deactivate. A deactivated quest stays listed for admins and keeps
- *  its QR, but lib/scan/quest.ts refuses new scans against it. */
 export async function toggleQuestActive(formData: FormData) {
   await requireAdmin()
 
@@ -255,12 +248,7 @@ export async function toggleQuestActive(formData: FormData) {
   revalidate()
 }
 
-/**
- * Soft delete, matching `deactivateCommitteeMember`. `QuestProgress` cascades
- * on a real delete, which would erase students' completion history while
- * leaving the points they earned unexplained. Flipping isDeleted hides the
- * quest everywhere and stops scans, but the record survives.
- */
+/** Soft delete quest by ID. */
 export async function deleteQuest(formData: FormData) {
   await requireAdmin()
 
@@ -270,8 +258,6 @@ export async function deleteQuest(formData: FormData) {
   await supabase.from('Quest').update({ isDeleted: true, isActive: false }).eq('id', id)
   revalidate()
 }
-
-// -------------------------------------------------------- submission review ----
 
 type QuestReviewRow = {
   id: string

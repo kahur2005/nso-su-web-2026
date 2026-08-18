@@ -1,4 +1,3 @@
-// components/ui/PixelButton.tsx
 interface PixelButtonProps {
   children: React.ReactNode
   onClick?: () => void

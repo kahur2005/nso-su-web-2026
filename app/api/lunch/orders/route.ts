@@ -1,15 +1,3 @@
-// app/api/lunch/orders/route.ts
-// GET  — this student's own order history.
-// POST — place an order. THIS IS THE TRUST BOUNDARY for the whole feature.
-//
-// The client sends ids and quantities only. Every price, name and total in the
-// stored order is read back out of the database here, so a tampered request
-// body cannot buy a Rp 50.000 nasi goreng for Rp 1. The same goes for the
-// deadline: the cutoff is enforced HERE, not just greyed out in the UI.
-//
-// (Compare Quest.availableFrom/availableUntil, which the app checks only when
-// rendering — a not-yet-open quest poster still scans successfully. That gap is
-// documented in CLAUDE.md; do not reproduce it.)
 import { randomUUID } from 'crypto'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -24,7 +12,6 @@ import {
   resolveStudentDbId,
 } from '@/lib/lunch-data'
 
-/** Same shape as the studentId generator in /api/auth/register. */
 function newOrderCode(): string {
   return `LNC-${randomUUID().slice(0, 8).toUpperCase()}`
 }
@@ -75,7 +62,6 @@ export async function POST(request: NextRequest) {
   const dayKey = String(body.dayKey ?? '')
   const restaurantId = String(body.restaurantId ?? '')
   const rawLines = Array.isArray(body.lines) ? (body.lines as IncomingLine[]) : []
-  // Capped so a pasted essay cannot bloat the vendor's WhatsApp message.
   const note = String(body.note ?? '').trim().slice(0, 300) || null
 
   if (!isLunchDayKey(dayKey)) {
@@ -88,7 +74,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Your cart is empty' }, { status: 400 })
   }
 
-  // --- 1. the day must be open, and we must be before its cutoff ----------
+  // 1. Verify day is open and deadline has not passed.
   const day = await getLunchDay(dayKey)
   if (!day || !day.isOpen) {
     return NextResponse.json(
@@ -103,7 +89,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // --- 2. the restaurant must exist and be open for business -------------
+  // 2. Verify restaurant is active.
   const { data: restaurant, error: restaurantError } = await supabase
     .from('LunchRestaurant')
     .select('id, name')
@@ -123,7 +109,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // --- 3. re-read every item and add-on, and recompute the money ---------
+  // 3. Fetch items and add-ons from database and recalculate totals.
   const requestedItemIds = [...new Set(rawLines.map((l) => String(l.menuItemId ?? '')))]
   const requestedAddOnIds = [
     ...new Set(
@@ -194,8 +180,6 @@ export async function POST(request: NextRequest) {
     const addOns = []
     for (const id of addOnIds) {
       const addOn = addOnById.get(id)
-      // An add-on belonging to a different menu item would let a student
-      // attach a cheap extra to an expensive dish, so check the parent too.
       if (!addOn || addOn.menuItemId !== item.id) {
         return NextResponse.json(
           { error: 'One of the add-ons in your cart is no longer available.' },
@@ -221,7 +205,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Order total must be above zero.' }, { status: 400 })
   }
 
-  // --- 4. mint the dynamic QRIS payload ----------------------------------
+  // 4. Generate dynamic QRIS payload.
   const qrisStatic = await getQrisStatic()
   if (!qrisStatic) {
     return NextResponse.json(
@@ -241,7 +225,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // --- 5. write the order, then its children -----------------------------
+  // 5. Insert order and line items.
   const { data: order, error: orderError } = await supabase
     .from('LunchOrder')
     .insert({
@@ -263,9 +247,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Could not place the order' }, { status: 500 })
   }
 
-  // There is no transaction helper in this app, so if a child insert fails we
-  // delete the parent by hand rather than leaving a payable order with no
-  // items in it. The FK cascade cleans up anything that did land.
   async function rollback(reason: string, err: unknown) {
     console.error(`lunch orders: ${reason}:`, err)
     await supabase.from('LunchOrder').delete().eq('id', order!.id)
@@ -290,8 +271,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Could not place the order' }, { status: 500 })
   }
 
-  // .insert() with an array returns rows in the order they were sent, so the
-  // nth id belongs to the nth resolved line.
   const addOnRows = resolved.flatMap((l, i) =>
     l.addOns.map((a) => ({
       orderItemId: insertedItems[i].id,

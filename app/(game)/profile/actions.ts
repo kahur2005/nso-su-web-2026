@@ -5,10 +5,7 @@ import { authOptions } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import { revalidatePath } from 'next/cache'
 
-// Lets the logged-in student update their own name and Instagram handle.
-// Avatar customisation is set once at registration; the legacy avatarUrl
-// photo upload path has been removed (the pixel avatar system is the only
-// display now).
+// Updates student profile data.
 export async function updateProfile(formData: FormData) {
   const session = await getServerSession(authOptions)
   const studentId = (session?.user as any)?.studentId
@@ -20,7 +17,7 @@ export async function updateProfile(formData: FormData) {
   const update: Record<string, unknown> = {
     instagram: instagram || null,
   }
-  if (name) update.name = name // name is required — ignore blank submissions
+  if (name) update.name = name
 
   await supabase.from('Student').update(update).eq('studentId', studentId)
 

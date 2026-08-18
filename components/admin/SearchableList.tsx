@@ -1,6 +1,4 @@
 'use client'
-// Client-side filter box. Datasets here are small (hundreds of rows at most),
-// so filtering in memory avoids a round trip per keystroke.
 import { useMemo, useState } from 'react'
 import { Search } from 'lucide-react'
 

@@ -1,4 +1,3 @@
-// components/ui/PixelCard.tsx
 interface PixelCardProps {
   children: React.ReactNode
   className?: string

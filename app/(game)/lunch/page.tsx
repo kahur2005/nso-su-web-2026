@@ -1,9 +1,3 @@
-// app/(game)/lunch/page.tsx
-// The lunch landing screen: what you have already ordered, then which day you
-// want to order for.
-//
-// History comes first on purpose. Most visits after the first are a student
-// checking whether their payment went through, not starting a new order.
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'

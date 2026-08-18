@@ -1,6 +1,4 @@
 'use client'
-// ERP-style admin frame: a collapsible left rail plus the content column.
-// Collapsed state persists in localStorage so it survives navigation.
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'

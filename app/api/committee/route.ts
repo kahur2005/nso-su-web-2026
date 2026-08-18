@@ -1,6 +1,3 @@
-// Public read of the committee roster. Fun facts are gated: `isScanned` tells
-// the client whether this student has scanned that member's QR, and the real
-// funFact is only included when they have.
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -84,13 +81,12 @@ export async function GET() {
     }
   })
   members.sort((a, b) => {
-    // Head of Division first within same division
     if (a.division === b.division) {
       const aIsHead = /head|ketua/i.test(a.role)
       const bIsHead = /head|ketua/i.test(b.role)
       if (aIsHead !== bIsHead) return aIsHead ? -1 : 1
     }
-    return 0  // preserve existing order otherwise
+    return 0
   })
 
   return NextResponse.json({ members })

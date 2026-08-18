@@ -1,18 +1,9 @@
-// components/admin/GenerateQrButton.tsx
 'use client'
-// Completes the workflow /admin/committee promises ("no QR until one is
-// generated in QR & Fun Facts") without actually leaving that page: this
-// calls the same /api/qr/generate route NpcForm uses, but passes the
-// existing npcId so the route UPDATEs that row instead of inserting a second
-// NPC for the same person. 'use client' for the same reason as
-// DeleteClubButton/DeactivateCommitteeButton — a fetch + confirm/loading
-// state without turning the whole roster page into a client component.
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatJakartaDateTime } from '@/lib/time'
 
-// Mirrors NpcForm's composeLabeledQr: stamps the name + generation time onto
-// the raw QR data-URL so the printed code is self-labeled.
+// Combines the QR image, name, and timestamp into a single canvas data URL.
 function composeLabeledQr(qrDataUrl: string, name: string, generatedAt: string) {
   return new Promise<string>((resolve) => {
     const img = new Image()

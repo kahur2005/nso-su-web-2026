@@ -1,7 +1,3 @@
-// app/admin/achievements/page.tsx
-// Achievement badges. An achievement is only ever unlocked by completing a
-// quest that links to it, so one with no quest pointing at it is unobtainable —
-// the table calls that out rather than letting it sit there silently.
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'

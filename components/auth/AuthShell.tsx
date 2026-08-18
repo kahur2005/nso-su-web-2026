@@ -1,9 +1,3 @@
-// components/auth/AuthShell.tsx
-//
-// The forest-background + crest frame shared by the forgot/reset password
-// screens, lifted from app/(auth)/login/page.tsx so the three read as one flow.
-// Login itself still inlines its own copy — this exists for the new pages
-// rather than as a refactor of a page that already works.
 import Link from 'next/link'
 
 export default function AuthShell({

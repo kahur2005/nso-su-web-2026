@@ -1,14 +1,3 @@
-// app/(game)/info/guidebook/page.tsx
-// Figma guidebook: a full-bleed spiral-bound open book rendered as a vertical
-// 3-slice (top cap / repeating ringed page / bottom cap) so it grows with the
-// content, with eight colour-coded bookmark ribbons down the right gutter.
-// The two controls are independent: a bookmark opens a chapter, and the pager
-// under the page walks that chapter's own pages (so "1/7" means page 1 of 7
-// inside the open bookmark, not bookmark 1 of 7).
-//
-// Copy is transcribed from "NSO 2026 GUIDEBOOK CONTENT.docx" — its eight
-// titled sections are the eight bookmarks, in document order. Long sections
-// are split across pages so no single page runs past roughly one screen.
 'use client'
 import { useCallback, useEffect, useState, type CSSProperties } from 'react'
 import PageWrapper from '@/components/layout/PageWrapper'
@@ -16,94 +5,62 @@ import ChapterQuiz, { type Attempt } from '@/components/guidebook/ChapterQuiz'
 import { QUIZZES, MAX_GUIDEBOOK_POINTS } from '@/lib/guidebook/quiz'
 import { cqw, TYPE } from '@/lib/guidebook/scale'
 
-/* ── Design tokens lifted from the Figma frame ───────────────────────────── */
+/* ── Design tokens ───────────────────────────────────────────────────────── */
 
-// Translucent panel tints (rgba straight from the design).
 const TINT = {
   green: 'rgba(101,198,54,0.41)',
   red: 'rgba(242,93,93,0.36)',
   yellow: 'rgba(252,249,64,0.46)',
   blue: 'rgba(64,196,255,0.36)',
   purple: 'rgba(171,71,188,0.33)',
-  // Near-white sheet used behind verbatim email/message templates so they read
-  // as something you copy rather than something you skim.
   paper: 'rgba(255,255,255,0.55)',
 } as const
 
-const INK_TITLE = '#3e2218' // section headings on the cream page
-const INK_BODY = '#5d3a20'  // list + notes copy
-// "1/7". Was #88684e, which measured 4.33:1 on the page cream (#ffecb3) and so
-// missed WCAG AA for normal text; this is 7.16:1 and still reads as faded ink.
+const INK_TITLE = '#3e2218'
+const INK_BODY = '#5d3a20'
 const INK_PAGER = '#63482f'
 
-// The book art is 387px wide in Figma. Everything below is that px value as a
-// percentage of the frame so the whole book scales with `.game-column`.
 const PAGE = {
-  contentLeft: '7.2%',  // x=28 — left edge of the content panels
-  // x=293 in the frame, but the gutter only has to clear the ribbon rail. The
-  // ribbons were trimmed below their design width (see BOOKMARK), so the old
-  // 24.3% reserved ~24px of dead gutter — real money when the text column is
-  // only ~250px on a phone. This is sized to the widest (active) ribbon plus a
-  // little air; widen it again if BOOKMARK.activeW grows.
+  contentLeft: '7.2%',
   contentRight: '20%',
-  // Flush with the book's outer border (x=384). This cannot go negative any
-  // more: the book is full-bleed on phones, so its right edge is the viewport
-  // edge and `body { overflow-x: hidden }` would clip an overhanging tail.
   bookmarkRight: '0%',
 }
 
-// Ribbon geometry, kept together so the gutter above can be reasoned about.
-// `h` is the visible ribbon; `padY` is transparent hit area on top of it
-// (painted away with background-clip: content-box) so an 8-item rail of ~23px
-// ribbons still offers a ~39px touch target on a phone.
-const RIBBON_H = 25 // visible height, design px
-const RIBBON_PAD_Y = 8.5 // transparent hit area per side, design px
+const RIBBON_H = 25
+const RIBBON_PAD_Y = 8.5
+
 const BOOKMARK = {
-  w: cqw(58),
-  activeW: cqw(68),
-  hoverW: cqw(63),
-  padY: cqw(RIBBON_PAD_Y),
-  // box-border, so this is the visible ribbon plus both paddings. Derived
-  // rather than written out, so the paint height and the hit height can't drift.
-  totalH: cqw(RIBBON_H + RIBBON_PAD_Y * 2),
-  gap: cqw(3),
-}
-
-/* ── Content ─────────────────────────────────────────────────────────────── */
-
-/** A label→detail pair. The docx uses two-column tables for these. */
-type Row = { label: string; detail: string }
+  w: '34px',
+  activeW: '43px',
+  hoverW: '40px',
+  h: `${RIBBON_H}px`,
+  padY: `${RIBBON_PAD_Y}px`,
+  totalH: `${RIBBON_H + RIBBON_PAD_Y * 2}px`,
+  gap: '0px',
+} as const
 
 type Section = {
   title: string
   tint: string
-  /** Prose paragraphs, rendered above any list. */
   body?: string[]
-  /** Numbered list — the docx's bulleted runs. */
   items?: string[]
-  /** Two-column table rows. */
-  rows?: Row[]
-  /** A verbatim email/message template, newlines preserved. */
+  rows?: { label: string; detail: string }[]
   template?: string[]
   image?: { src: string; alt: string }
 }
 
-/** One spread of the open book — what the pager steps through. */
-type Page = { sections: Section[]; notes?: string[] }
-
-type Chapter = {
-  /** Key into QUIZZES in lib/guidebook/quiz.ts and the stored attempt rows. */
-  id: string
-  title: string
-  /** Two-tone bookmark ribbon: dark stub tucked under the page, lighter tail. */
-  bookmark: { dark: string; light: string }
-  pages: Page[]
+type GuidePage = {
+  sections: Section[]
+  notes?: string[]
 }
 
-// Eight bookmarks, one per titled section of the guidebook doc, in the ribbon
-// colours the Figma frame draws top-to-bottom. A bookmark selects a chapter;
-// the pager under the page then walks that chapter's own pages, so the two
-// controls are independent — a chapter can hold as many pages as its copy needs.
+type Chapter = {
+  id: string
+  title: string
+  bookmark: { light: string; dark: string }
+  pages: GuidePage[]
+}
+
 const chapters: Chapter[] = [
   /* ── 1 ──────────────────────────────────────────────────────────────── */
   {
@@ -956,10 +913,9 @@ const chapters: Chapter[] = [
   },
 ]
 
-/* ── Page ────────────────────────────────────────────────────────────────── */
+/* ── UI Logic ────────────────────────────────────────────────────────── */
 
 export default function GuideBookPage() {
-  // Two independent cursors: which bookmark is open, and where inside it.
   const [chapterIdx, setChapterIdx] = useState(0)
   const [pageIdx, setPageIdx] = useState(0)
 
@@ -967,8 +923,6 @@ export default function GuideBookPage() {
   const totalPages = chapter.pages.length
   const page = chapter.pages[pageIdx]
 
-  // Quiz attempts, keyed by chapter id. Fetched once — the server is the only
-  // authority on who has already used their single try.
   const [attempts, setAttempts] = useState<Record<string, Attempt>>({})
   const [attemptsLoaded, setAttemptsLoaded] = useState(false)
 
@@ -984,9 +938,6 @@ export default function GuideBookPage() {
         setAttemptsLoaded(true)
       })
       .catch(() => {
-        // Leave attemptsLoaded false — the quiz stays hidden rather than
-        // offering a try we cannot record. Better than letting a student
-        // spend their one attempt against a server that will not save it.
         if (!cancelled) setAttemptsLoaded(false)
       })
     return () => {
@@ -1003,11 +954,9 @@ export default function GuideBookPage() {
     0,
   )
 
-  // The quiz lives on the last page of every chapter.
   const isLastPage = pageIdx === totalPages - 1
   const quiz = QUIZZES[chapter.id]
 
-  // Opening a bookmark always lands on that chapter's first page.
   const openChapter = (idx: number) => {
     setChapterIdx(idx)
     setPageIdx(0)
@@ -1016,13 +965,11 @@ export default function GuideBookPage() {
   return (
     <PageWrapper>
       <div className="relative game-column pb-4 pt-8">
-        {/* Title */}
+        {/* Page Title */}
         <h1 className="title-gold text-center font-bytebounce text-[clamp(2.6rem,16vw,4rem)] leading-[0.9]">
           GUIDEBOOK
         </h1>
 
-        {/* Which bookmark is open — the ribbons are colour-only, so without
-            this the chapter has no visible name. */}
         <p
           className="mt-1 text-center font-bytebounce text-[20px] leading-tight"
           style={{ color: '#ffecb3', textShadow: '2px 2px 0 #3e2723' }}
@@ -1030,7 +977,6 @@ export default function GuideBookPage() {
           {chapter.title}
         </p>
 
-        {/* Quiz progress across all eight chapters. */}
         {attemptsLoaded && (
           <p
             className="mt-0.5 text-center font-bytebounce text-[19px] leading-tight"
@@ -1040,17 +986,7 @@ export default function GuideBookPage() {
           </p>
         )}
 
-        {/* ── The book ─────────────────────────────────────────────────────
-            Vertical 3-slice: a fixed top cap, a page tile that repeats (one
-            spiral-ring period per tile, so the rings run the full height), and
-            a fixed bottom cap. */}
-        {/* `-mx-3` cancels .game-column's 0.75rem padding so the book goes
-            full-bleed on a phone — the art is 387px native and was rendering at
-            336px (0.87×) on a 360px screen, which both degrades the 1px ring
-            outlines under `image-rendering: pixelated` and squeezes the text
-            column. The 448px cap stops the other end of that problem: the book
-            used to stretch to 800px (2.07×) on a desktop while the type stayed
-            16px. containerType is what every cqw below resolves against. */}
+        {/* Book Container */}
         <div
           className="relative mt-3 -mx-3 max-w-[448px] sm:mx-auto"
           style={{ containerType: 'inline-size' }}
@@ -1066,7 +1002,7 @@ export default function GuideBookPage() {
               backgroundSize: '100% auto',
             }}
           >
-            {/* Bookmark ribbons — pinned to the right gutter, over the page. */}
+            {/* Navigation Tabs */}
             <div
               className="absolute z-20 flex flex-col"
               style={{ right: PAGE.bookmarkRight, top: cqw(32), gap: BOOKMARK.gap }}
@@ -1090,19 +1026,11 @@ export default function GuideBookPage() {
                     }`}
                     style={
                       {
-                        // Dark stub where the ribbon disappears under the page,
-                        // then the lighter tail — exactly the two overlapping
-                        // rectangles from the design.
                         backgroundImage: `linear-gradient(90deg, ${entry.bookmark.dark} 0 28%, ${entry.bookmark.light} 28% 100%)`,
-                        // The padding is pure touch target: content-box clipping
-                        // keeps the paint at BOOKMARK.h so the ribbon still looks
-                        // trimmed while the tappable box is ~1.7× taller.
                         backgroundClip: 'content-box',
                         height: BOOKMARK.totalH,
                         paddingTop: BOOKMARK.padY,
                         paddingBottom: BOOKMARK.padY,
-                        // Width goes through a variable, not an inline `width`,
-                        // so the hover: class can still win over it.
                         '--ribbon-w': isActive ? BOOKMARK.activeW : BOOKMARK.w,
                         '--ribbon-hover-w': BOOKMARK.hoverW,
                       } as CSSProperties

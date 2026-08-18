@@ -1,4 +1,3 @@
-// components/admin/CommitteeSearchableList.tsx
 'use client'
 
 import { useState } from 'react'

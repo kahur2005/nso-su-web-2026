@@ -1,9 +1,3 @@
-// app/admin/lunch/page.tsx
-// The review queue. Committee opens this, reads each student's payment
-// screenshot against the order total, and approves or rejects.
-//
-// Defaults to the 'awaiting_approval' filter, because that is the only status
-// that needs anyone to do anything — the other three are history.
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'

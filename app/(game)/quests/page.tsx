@@ -1,12 +1,3 @@
-// app/(game)/quests/page.tsx
-// The student's quest board, built to the "Active Quests" Figma frame
-// (VCnH1k8cwo2dWaLjL7YRVS, node 1:2): the jungle backdrop already used by
-// /scan, a scroll-icon section header, and parchment strips with a chevron.
-//
-// Every quest is shown with its instructions whether or not it's been
-// completed — a mission you can't read is a mission you can't go and do.
-// Time-gated quests show "Opens at HH:MM" and drop the scan affordance until
-// the window opens.
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import PageWrapper from '@/components/layout/PageWrapper'

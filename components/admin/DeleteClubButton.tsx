@@ -1,10 +1,6 @@
-// components/admin/DeleteClubButton.tsx
 'use client'
 import { deleteClub } from '@/app/admin/actions'
 
-// Small client wrapper so the destructive `deleteClub` action can be gated by
-// a native confirm() dialog without turning the whole clubs page into a
-// client component just for this one control.
 export default function DeleteClubButton({ id, name }: { id: string; name: string }) {
   return (
     <form

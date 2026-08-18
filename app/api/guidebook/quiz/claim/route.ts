@@ -1,9 +1,3 @@
-// app/api/guidebook/quiz/claim/route.ts
-// Awards the +2 for a chapter the student already answered correctly.
-//
-// Points go through the adjust_points RPC, never a bare .update() — the RPC is
-// what keeps Student.points, Student.xp and Group.totalPoints in step (see
-// CLAUDE.md; updating xp directly silently desyncs the level curve).
 import { supabase } from '@/lib/supabase'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -31,9 +25,7 @@ export async function POST(request: Request) {
 
   if (!student) return NextResponse.json({ error: 'Student not found' }, { status: 404 })
 
-  // Claim the right to award BEFORE awarding. The filters are the guard: the
-  // row only flips while claimedAt is still null, so two clicks racing each
-  // other can only ever match once and the points cannot be granted twice.
+  // Atomic claim guard: only update if not already claimed.
   const { data: claimed, error: claimError } = await supabase
     .from(TABLE)
     .update({ claimedAt: new Date().toISOString(), pointsAwarded: POINTS_PER_CHAPTER })
@@ -49,8 +41,6 @@ export async function POST(request: Request) {
   }
 
   if (!claimed || claimed.length === 0) {
-    // Either never answered, answered wrong, or already claimed. All three are
-    // "nothing to award here" — don't leak which.
     return NextResponse.json(
       { error: 'Nothing to claim for this chapter.', alreadyClaimed: true },
       { status: 409 },
@@ -63,9 +53,6 @@ export async function POST(request: Request) {
   })
 
   if (rpcError) {
-    // Hand the claim back so the student isn't charged an award they never
-    // got. supabase-js has no multi-statement transaction, so this is the
-    // compensating write rather than a rollback.
     console.error('guidebook/claim rpc:', rpcError)
     await supabase
       .from(TABLE)

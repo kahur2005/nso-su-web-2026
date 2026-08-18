@@ -1,4 +1,3 @@
-// app/admin/committee/page.tsx
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
@@ -19,7 +18,7 @@ export default async function AdminCommitteePage() {
 
   const members = membersData ?? []
 
-  // Sort head of division to top within each division
+  // Sort division heads to the top of each division group.
   members.sort((a: any, b: any) => {
     if (a.division === b.division) {
       const aIsHead = /head|ketua/i.test(a.role ?? '')

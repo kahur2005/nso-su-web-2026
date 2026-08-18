@@ -1,8 +1,3 @@
-// components/admin/QuestQrButton.tsx
-// Generates (or regenerates) a quest's QR and previews it, mirroring the
-// committee GenerateQrButton flow. Regenerating immediately retires the old
-// printout — lib/scan/quest.ts rejects any token that is not the stored one —
-// so a confirm is required when a code already exists.
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'

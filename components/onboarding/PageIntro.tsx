@@ -1,4 +1,3 @@
-// components/onboarding/PageIntro.tsx
 'use client'
 import { useEffect, useState } from 'react'
 import IntroOverlay from './IntroOverlay'
@@ -6,8 +5,6 @@ import { TOURS } from '@/lib/tours'
 
 const STORAGE_PREFIX = 'nso-intro-seen:'
 
-/** Shows a one-time guided tour for a page, tracked per-browser via
- *  localStorage (so it survives reloads but not a fresh device/browser). */
 export default function PageIntro({ page }: { page: keyof typeof TOURS }) {
   const [open, setOpen] = useState(false)
   const steps = TOURS[page]
@@ -17,7 +14,6 @@ export default function PageIntro({ page }: { page: keyof typeof TOURS }) {
     try {
       seen = !!localStorage.getItem(STORAGE_PREFIX + page)
     } catch {
-      // Storage unavailable (private mode, etc.) — just don't persist.
     }
     if (!seen) setOpen(true)
   }, [page])

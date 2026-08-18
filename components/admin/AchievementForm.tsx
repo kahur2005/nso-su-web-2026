@@ -1,6 +1,3 @@
-// components/admin/AchievementForm.tsx
-// Create/edit form for an achievement badge. Doubles as both: pass an
-// `achievement` to edit an existing one, omit it to create.
 'use client'
 import { useRef, useState } from 'react'
 import { createAchievement, updateAchievement } from '@/app/admin/achievements/actions'

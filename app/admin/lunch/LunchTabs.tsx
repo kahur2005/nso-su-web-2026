@@ -1,10 +1,3 @@
-// app/admin/lunch/LunchTabs.tsx
-// Sub-navigation for the three lunch admin screens.
-//
-// These are tabs rather than three ADMIN_NAV entries because AdminShell marks
-// the active rail item with `pathname.startsWith(href)` — a '/admin/lunch'
-// entry would light up on '/admin/lunch/menu' too, and reordering to fix that
-// would put the order queue below its own sub-pages.
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -22,7 +15,6 @@ export default function LunchTabs() {
   return (
     <div className="flex flex-wrap gap-1 border-b border-slate-200">
       {TABS.map((tab) => {
-        // Exact match: '/admin/lunch' is a prefix of the other two.
         const isActive = pathname === tab.href
         return (
           <Link

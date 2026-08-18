@@ -1,11 +1,3 @@
-// app/admin/lunch/settings/page.tsx
-// Two things committee has to set before students can order:
-//
-//   1. the static QRIS payload for the merchant account collecting the money
-//   2. which days are open, and each day's cutoff
-//
-// Both are enforced server-side in POST /api/lunch/orders — a closed day or a
-// missing QRIS payload rejects the request there, not just in the UI.
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
@@ -39,8 +31,7 @@ export default async function AdminLunchSettingsPage({
   ])
   const byKey = new Map(days.map((d) => [d.dayKey, d]))
 
-  // Validated on every read, not just on save: this catches a payload edited
-  // directly in the Supabase table editor as well as one pasted here.
+  // Verify payload validity for interface status.
   const storedIsValid = qrisStatic ? isValidQrisPayload(qrisStatic) : true
 
   return (

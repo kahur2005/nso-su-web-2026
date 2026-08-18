@@ -1,7 +1,3 @@
-// components/lunch/MenuItemSheet.tsx
-// The bottom sheet for one dish: quantity, add-ons, and a running line total,
-// so the student sees the price change as they tick boxes rather than being
-// surprised at the cart.
 'use client'
 import { useEffect, useState } from 'react'
 import { formatRupiah, type LunchMenuItem } from '@/lib/lunch'
@@ -18,13 +14,11 @@ export default function MenuItemSheet({
   const [quantity, setQuantity] = useState(1)
   const [addOnIds, setAddOnIds] = useState<string[]>([])
 
-  // Reset whenever a different dish is opened, so last dish's picks don't leak.
   useEffect(() => {
     setQuantity(1)
     setAddOnIds([])
   }, [item?.id])
 
-  // Escape closes, matching what a bottom sheet is expected to do on desktop.
   useEffect(() => {
     if (!item) return
     const onKey = (e: KeyboardEvent) => {

@@ -1,5 +1,3 @@
-// components/admin/QuestRowActions.tsx
-// Activate/deactivate toggle and soft delete for one quest row.
 'use client'
 import { useState } from 'react'
 import { toggleQuestActive, deleteQuest } from '@/app/admin/quests/actions'

@@ -10,8 +10,6 @@ import AuthShell, {
   authLabelShadow,
 } from '@/components/auth/AuthShell'
 
-// useSearchParams() opts the subtree into client-side rendering, so it needs a
-// Suspense boundary above it or the build fails on this route.
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={<AuthShell title="Loading..." >{null}</AuthShell>}>
@@ -24,8 +22,6 @@ function ResetPasswordForm() {
   const router = useRouter()
   const token = useSearchParams().get('token') || ''
 
-  // Validity is checked up front so an expired link says so immediately,
-  // instead of after the user has typed a password twice.
   const [checking, setChecking] = useState(true)
   const [linkError, setLinkError] = useState('')
   const [password, setPassword] = useState('')
@@ -84,7 +80,6 @@ function ResetPasswordForm() {
         return
       }
       setDone(true)
-      // Give the confirmation a beat to land before bouncing to login.
       setTimeout(() => router.push('/login'), 2500)
     } catch {
       setError('Could not reach the server. Check your connection.')

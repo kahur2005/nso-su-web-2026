@@ -1,12 +1,6 @@
-// app/page.tsx
-// Public landing page — shown before login.
-// Shows a live countdown to the NSO event start date (NEXT_PUBLIC_NSO_EVENT_DATE).
-// Once the event has started the countdown is replaced with "NSO IS LIVE!".
 import Link from 'next/link'
 import CountdownTimer from '@/components/ui/CountdownTimer'
 
-// Set NEXT_PUBLIC_NSO_EVENT_DATE in .env.local to override. Default matches
-// Day 1 in lib/timeline.ts (18 Aug 2026, 08:00 WIB).
 const EVENT_DATE_ISO =
   process.env.NEXT_PUBLIC_NSO_EVENT_DATE ?? '2026-08-18T08:00:00+07:00'
 

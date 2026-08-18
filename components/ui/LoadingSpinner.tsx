@@ -1,9 +1,7 @@
-// components/ui/LoadingSpinner.tsx
 export default function LoadingSpinner({ text = "LOADING..." }: { text?: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-12">
       <div className="relative w-16 h-16">
-        {/* Pixel spinner made of divs */}
         {[...Array(8)].map((_, i) => (
           <div
             key={i}

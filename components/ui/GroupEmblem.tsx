@@ -1,13 +1,10 @@
 interface GroupEmblemProps {
   emblem?: string | null
   emblemUrl?: string | null
-  /** Rendered width/height in px (square). */
   size?: number
   className?: string
 }
 
-// Renders a group's emblem: the uploaded logo image when present, otherwise the
-// emoji emblem as a fallback. Inline + square so it drops into existing layouts.
 export default function GroupEmblem({
   emblem,
   emblemUrl,

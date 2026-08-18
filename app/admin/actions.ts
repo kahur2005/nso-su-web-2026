@@ -1,4 +1,3 @@
-// app/admin/actions.ts
 'use server'
 
 import { getServerSession } from 'next-auth'
@@ -16,12 +15,6 @@ async function requireAdmin() {
   }
 }
 
-// --- Quests ---
-// Quest writes moved to app/admin/quests/actions.ts when quests became
-// QR-completed; achievements live in app/admin/achievements/actions.ts.
-
-// --- Groups ---
-
 export async function assignStudentToGroup(formData: FormData) {
   await requireAdmin()
 
@@ -30,9 +23,6 @@ export async function assignStudentToGroup(formData: FormData) {
 
   if (!input || !groupId) return
 
-  // Resolve student by studentId, UUID id, or exact name.
-  // Uses separate .eq() queries instead of .or() with string interpolation
-  // to prevent PostgREST filter injection.
   let student: { id: string; studentId: string } | null = null
 
   const { data: byStudentId } = await supabase
@@ -79,7 +69,6 @@ export async function unassignStudent(formData: FormData) {
   const input = String(formData.get('studentId') || '').trim()
   if (!input) return
 
-  // Resolve student — same safe pattern as assignStudentToGroup.
   let student: { id: string; studentId: string } | null = null
 
   const { data: byStudentId } = await supabase
@@ -120,8 +109,6 @@ export async function unassignStudent(formData: FormData) {
   revalidatePath('/profile')
 }
 
-// --- Points ---
-
 export async function adjustPoints(formData: FormData) {
   await requireAdmin()
 
@@ -138,7 +125,6 @@ export async function adjustPoints(formData: FormData) {
     .maybeSingle()
   if (!student) return
 
-  // Atomic: updates the student's points/xp and keeps the group total in sync.
   await supabase.rpc('adjust_points', {
     p_student_id: student.id,
     p_amount: amount,
@@ -153,8 +139,6 @@ export async function adjustPoints(formData: FormData) {
 
   revalidatePath('/admin/points')
 }
-
-// --- Announcements ---
 
 export async function createAnnouncement(formData: FormData) {
   await requireAdmin()
@@ -187,8 +171,6 @@ export async function toggleAnnouncement(announcementId: string) {
   revalidatePath('/admin/announcements')
 }
 
-// --- NPCs ---
-
 export async function toggleNpcActive(npcId: string) {
   await requireAdmin()
 
@@ -204,27 +186,18 @@ export async function toggleNpcActive(npcId: string) {
     .update({ isActive: !npc.isActive })
     .eq('id', npcId)
 
-  // Reachable from both /admin/qr and /admin/committee (used there to
-  // reactivate a deactivated member), and it always affects student-facing
-  // visibility on /info/committee.
   revalidatePath('/admin/qr')
   revalidatePath('/admin/committee')
   revalidatePath('/info/committee')
 }
 
-// --- Clubs ---
-
 export type ClubFormState = { warning: string | null }
 
-// /info/clubs is the page students reach from the nav. (/map/clubs is now just a
-// redirect to it, so there is nothing there to revalidate.)
 function revalidateClubs() {
   revalidatePath('/admin/clubs')
   revalidatePath('/info/clubs')
 }
 
-// Signature required by React's `useActionState`: previous state first, then
-// FormData (see node_modules/next/dist/docs/01-app/02-guides/forms.md:194).
 export async function createClub(
   _prevState: ClubFormState,
   formData: FormData
@@ -239,10 +212,6 @@ export async function createClub(
 
   if (!name || !category || !description) return { warning: null }
 
-  // Unlimited carousel images; upload in parallel. uploadImage() never throws —
-  // a failed upload just returns null, so we track which ones dropped and
-  // surface that instead of silently inserting a club with fewer images than
-  // the operator selected.
   const files = formData.getAll('images').filter(
     (f): f is File => f instanceof File && f.size > 0
   )
@@ -250,8 +219,6 @@ export async function createClub(
   const images = uploaded.filter((url): url is string => Boolean(url))
   const failedCount = files.length - images.length
 
-  // The club's tile icon on /info/clubs. Optional — a club without one falls
-  // back to the bundled pixel art keyed by name.
   const iconFile = formData.get('icon')
   const iconUrl = iconFile instanceof File
     ? await uploadImage('club-icons', iconFile)
@@ -274,9 +241,6 @@ export async function createClub(
   return { warning: warnings.length > 0 ? warnings.join(' ') : null }
 }
 
-// Replaces just the tile icon on an existing club, so a club created before
-// icon uploads existed (or with the wrong art) can be fixed without re-entering
-// the whole record.
 export async function updateClubIcon(
   _prevState: ClubFormState,
   formData: FormData
@@ -307,12 +271,8 @@ export async function deleteClub(formData: FormData) {
   revalidateClubs()
 }
 
-// --- Committee (stored as NPC rows; see docs plan 2) ---
-
 export type CommitteeFormState = { warning: string | null }
 
-// Signature required by React's `useActionState`: previous state first, then
-// FormData (see node_modules/next/dist/docs/01-app/02-guides/forms.md:194).
 export async function createCommitteeMember(
   _prevState: CommitteeFormState,
   formData: FormData
@@ -346,13 +306,6 @@ export async function createCommitteeMember(
   return { warning: null }
 }
 
-// Soft delete: hard-deleting the NPC (and its ScanLog rows, to satisfy the FK)
-// would destroy the audit trail behind students' points/xp/funFactsCollected
-// and, if the member were ever re-added, would let the ScanLog unique
-// constraint award the same student a second time for the same person.
-// Deactivating instead just hides the member from /info/committee (filtered
-// via app/api/committee/route.ts .eq('isActive', true)) while preserving
-// everything.
 export async function deactivateCommitteeMember(formData: FormData) {
   await requireAdmin()
 
