@@ -17,7 +17,7 @@ interface NpcOption {
   points: number
 }
 
-const ROTATION_INTERVAL_SEC = 30
+const ROTATION_INTERVAL_SEC = 60
 
 export default function AdminPresenterPage() {
   const { data: session, status } = useSession()
@@ -230,7 +230,7 @@ export default function AdminPresenterPage() {
           {/* Rotation Progress Bar */}
           <div className="mt-5 w-full max-w-[280px]">
             <div className="flex justify-between items-center text-xs text-slate-400 mb-1.5 font-medium">
-              <span>🔄 Auto-rotates every 30s</span>
+              <span>🔄 Auto-rotates every 60s</span>
               <span className="text-amber-400 font-bold">{countdown}s</span>
             </div>
             <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden border border-slate-700">
@@ -251,6 +251,11 @@ export default function AdminPresenterPage() {
             <RefreshCw size={16} className={fetchingQr ? 'animate-spin' : ''} />
             {fetchingQr ? 'Refreshing...' : 'Generate New Code Now'}
           </button>
+
+          <p className="mt-4 max-w-[280px] text-center text-xs text-slate-300 leading-relaxed">
+            One code → one student. Regenerate (or wait for auto-rotate) before the next
+            person in line scans.
+          </p>
         </div>
       )}
 
