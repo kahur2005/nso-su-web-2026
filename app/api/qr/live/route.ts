@@ -19,6 +19,17 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const user = session.user as { isAdmin?: boolean; role?: string }
+  const isAuthorized =
+    user.isAdmin === true || user.role === 'gl' || user.role === 'committee'
+
+  if (!isAuthorized) {
+    return NextResponse.json(
+      { error: 'Only Committee Members, GLs, or Admins can generate live QRs.' },
+      { status: 403 }
+    )
+  }
+
   const { searchParams } = new URL(request.url)
   const npcId = searchParams.get('npcId')
 
