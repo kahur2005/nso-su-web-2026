@@ -1,6 +1,3 @@
-// App-wide wall-clock zone. Postgres timestamptz stays UTC; we only pin
-// display and datetime-local parse/format to Asia/Jakarta (WIB, UTC+7, no DST).
-
 export const APP_TIME_ZONE = 'Asia/Jakarta'
 export const APP_TIME_ZONE_LABEL = 'WIB'
 
@@ -28,31 +25,27 @@ function partsInJakarta(value: Instant) {
       .filter((p) => p.type !== 'literal')
       .map((p) => [p.type, p.value])
   ) as Record<string, string>
-  // Some engines emit "24" for midnight; normalize to "00".
   if (bag.hour === '24') bag.hour = '00'
   return bag
 }
 
-/** Calendar day key (YYYY-MM-DD) in Jakarta. */
+/** Get calendar day key (YYYY-MM-DD) in Jakarta time zone. */
 export function jakartaDayKey(value: Instant = new Date()): string {
   const p = partsInJakarta(value)
   return `${p.year}-${p.month}-${p.day}`
 }
 
-/** True when both instants fall on the same Jakarta calendar day. */
+/** Return true if both instants are on the same calendar day in Jakarta. */
 export function isSameJakartaDay(a: Instant, b: Instant = new Date()): boolean {
   return jakartaDayKey(a) === jakartaDayKey(b)
 }
 
-/** Start of the Jakarta calendar day containing `value`, as a Date (UTC instant). */
+/** Get start of Jakarta day (00:00:00 WIB) as a Date object. */
 export function startOfJakartaDay(value: Instant = new Date()): Date {
   return new Date(`${jakartaDayKey(value)}T00:00:00+07:00`)
 }
 
-/**
- * `<input type="datetime-local">` value in Jakarta wall time.
- * Returns '' for null/invalid so the input stays empty.
- */
+/** Format ISO timestamp to datetime-local input string in Jakarta time. */
 export function toJakartaInputValue(iso: string | null | undefined): string {
   if (!iso) return ''
   const d = new Date(iso)
@@ -61,10 +54,7 @@ export function toJakartaInputValue(iso: string | null | undefined): string {
   return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`
 }
 
-/**
- * Parse a datetime-local string as Jakarta wall time → UTC ISO.
- * Accepts `YYYY-MM-DDTHH:mm` or with seconds.
- */
+/** Parse Jakarta datetime-local input string to UTC ISO string. */
 export function jakartaLocalInputToIso(localValue: string): string | null {
   const raw = localValue.trim()
   if (!raw) return null

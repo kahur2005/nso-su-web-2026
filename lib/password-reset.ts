@@ -1,46 +1,26 @@
-// lib/password-reset.ts
-//
-// SERVER-ONLY (uses node:crypto). Token minting/hashing and the reset-email
-// body for the "Forgot password?" flow.
-//
-// Split of responsibilities:
-//   lib/password-reset.ts  — what a token is, and what the email says (pure)
-//   lib/mailer.ts          — how mail leaves the building (transport)
-//   app/api/auth/*         — the flow, the DB, and the guards
 import { createHash, randomBytes, timingSafeEqual } from 'crypto'
 
-/** How long a reset link stays valid. */
-export const RESET_TOKEN_TTL_MS = 60 * 60 * 1000 // 1 hour
+/** Reset link validity period in milliseconds (1 hour). */
+export const RESET_TOKEN_TTL_MS = 60 * 60 * 1000
 
-/**
- * Minimum gap between reset emails for the same account. Gmail SMTP is capped
- * at ~500 sends/day, so an unthrottled endpoint is an availability risk, not
- * just a nuisance.
- */
-export const RESET_REQUEST_COOLDOWN_MS = 60 * 1000 // 60 seconds
+/** Minimum time between password reset requests in milliseconds (60 seconds). */
+export const RESET_REQUEST_COOLDOWN_MS = 60 * 1000
 
-/** Matches the register route's rule so the two can't drift apart. */
+/** Minimum allowed password length. */
 export const MIN_PASSWORD_LENGTH = 6
 
-/**
- * A fresh reset token. The raw value goes in the email and nowhere else; only
- * `hash` is ever persisted, so a leaked DB snapshot yields no usable links.
- */
+/** Generate a random token and its SHA-256 hash. */
 export function createResetToken(): { raw: string; hash: string } {
   const raw = randomBytes(32).toString('base64url')
   return { raw, hash: hashResetToken(raw) }
 }
 
-/**
- * SHA-256, not scrypt. Unlike a password, this token is 32 bytes of CSPRNG
- * output — there is no low-entropy space to brute force, so a slow KDF would
- * buy nothing and cost a lookup on every click.
- */
+/** Compute SHA-256 hash of a reset token. */
 export function hashResetToken(raw: string): string {
   return createHash('sha256').update(raw).digest('hex')
 }
 
-/** Constant-time compare for two hex digests of equal length. */
+/** Compare two hex strings in constant time. */
 export function safeEqualHex(a: string, b: string): boolean {
   const bufA = Buffer.from(a, 'hex')
   const bufB = Buffer.from(b, 'hex')
@@ -61,15 +41,11 @@ function normalizeBase(value: string | null | undefined): string | null {
   if (!value) return null
   const trimmed = value.trim().replace(/\/+$/, '')
   if (!trimmed) return null
-  // VERCEL_URL is host-only; env may already include a scheme.
   if (/^https?:\/\//i.test(trimmed)) return trimmed
   return `https://${trimmed}`
 }
 
-/**
- * Pick a public site origin for emailed links. Never prefer a localhost
- * scaffold value when a real public candidate exists (common Vercel misconfig).
- */
+/** Resolve public site origin URL for reset links. */
 export function resolveResetBase(candidates: Array<string | null | undefined>): string {
   const normalized = candidates.map(normalizeBase).filter((v): v is string => Boolean(v))
   const publicBase = normalized.find((v) => !isLocalhostUrl(v))
@@ -80,24 +56,16 @@ export function resolveResetBase(candidates: Array<string | null | undefined>): 
   return normalized[0] || 'http://localhost:3000'
 }
 
-/**
- * Absolute reset URL. `baseOverride` should be the request's public origin
- * when available; localhost env values are skipped if any public candidate exists.
- */
+/** Build absolute password reset URL. */
 export function resetLink(rawToken: string, baseOverride?: string | null): string {
   const envBase = process.env.NEXT_PUBLIC_BASE_URL || null
   const nextAuthUrl = process.env.NEXTAUTH_URL || null
   const vercelUrl = process.env.VERCEL_URL || null
   const base = resolveResetBase([baseOverride, envBase, nextAuthUrl, vercelUrl])
-  // #region agent log
-  const payload = {sessionId:'06b2cb',runId:'post-fix',hypothesisId:'A-B-E-F',location:'lib/password-reset.ts:resetLink',message:'reset link base resolved',data:{envBase,baseOverride:baseOverride??null,nextAuthUrl,vercelUrl,resolvedBase:base,isLocalhost:isLocalhostUrl(base),nodeEnv:process.env.NODE_ENV??null,onVercel:Boolean(process.env.VERCEL)},timestamp:Date.now()}
-  fetch('http://127.0.0.1:7683/ingest/491e9167-62e2-4f60-bb4c-3c2656e9f6ec',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'06b2cb'},body:JSON.stringify(payload)}).catch(()=>{});
-  console.info('[nso-debug][06b2cb]', JSON.stringify(payload))
-  // #endregion
   return `${base}/reset-password?token=${encodeURIComponent(rawToken)}`
 }
 
-/** Plain-text + HTML bodies for the reset email. */
+/** Build plain-text and HTML email content for password reset. */
 export function buildResetEmail(opts: { name: string; link: string }): {
   subject: string
   text: string
@@ -119,8 +87,6 @@ export function buildResetEmail(opts: { name: string; link: string }): {
     '— NSO 2026',
   ].join('\n')
 
-  // Inline styles only: mail clients strip <style> blocks and never load
-  // external CSS. Keep this simple and table-free; it renders fine everywhere.
   const html = `
 <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#f5efe6;padding:32px 16px;">
   <div style="max-width:480px;margin:0 auto;background:#ffffff;border:2px solid #e0b391;border-radius:14px;padding:28px;">

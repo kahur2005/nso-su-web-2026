@@ -1,4 +1,3 @@
-// lib/quests.ts
 export type QuestType = 'qr' | 'submission' | 'quiz'
 
 export type QuestSubmissionStatus =

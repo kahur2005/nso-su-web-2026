@@ -1,8 +1,3 @@
-// lib/lunch-data.ts
-// SERVER ONLY — imports the service-role Supabase client. Never pull this into
-// a client component; take the resolved data as props or fetch via
-// /api/lunch/*. Same split as lib/timeline-data.ts.
-
 import { supabase } from '@/lib/supabase'
 import {
   LUNCH_DAY_KEYS,
@@ -13,14 +8,7 @@ import {
   type LunchRestaurant,
 } from '@/lib/lunch'
 
-/**
- * Maps a next-auth session onto the internal `Student.id` that every Lunch*
- * foreign key uses.
- *
- * The JWT caches both `id` (the row's uuid) and `studentId` (the human
- * `NSO-XXXXXXXX` code), but older sessions may carry only one, so this checks
- * both — the same defensive lookup /api/guidebook/quiz and /api/quests do.
- */
+/** Resolve next-auth session user to student database identifier. */
 export async function resolveStudentDbId(session: any): Promise<string | null> {
   const user = session?.user
   if (!user) return null
@@ -46,8 +34,7 @@ export async function resolveStudentDbId(session: any): Promise<string | null> {
   return null
 }
 
-/** Every configured day, in LUNCH_DAYS order, defaulting to closed. A missing
- *  row (migration not applied) yields a closed day rather than a crash. */
+/** Get all lunch days with configuration status. */
 export async function getLunchDays(): Promise<LunchDay[]> {
   const { data, error } = await supabase
     .from('LunchDay')
@@ -79,7 +66,7 @@ export async function getLunchDay(dayKey: string): Promise<LunchDay | null> {
   }
 }
 
-/** The QRIS merchant payload, or '' when committee has not set one yet. */
+/** Get static QRIS payload from lunch settings. */
 export async function getQrisStatic(): Promise<string> {
   const { data, error } = await supabase
     .from('LunchSetting')
@@ -91,13 +78,7 @@ export async function getQrisStatic(): Promise<string> {
   return (data?.qrisStatic ?? '').trim()
 }
 
-/**
- * Restaurants for the student-facing list.
- *
- * `includeHidden` is for the admin panel, which needs to see inactive rows to
- * turn them back on. Soft-deleted rows are excluded either way — nothing in
- * the app un-deletes a restaurant.
- */
+/** Get available restaurants. Set includeHidden to true to include inactive rows. */
 export async function getRestaurants(
   includeHidden = false
 ): Promise<LunchRestaurant[]> {
@@ -123,12 +104,7 @@ export async function getRestaurants(
   }))
 }
 
-/**
- * One restaurant with its menu items and each item's add-ons.
- *
- * Two queries rather than a nested select: the add-ons hang off the items, and
- * flattening that in JS is clearer than a two-level PostgREST embed.
- */
+/** Get restaurant details with menu items and add-ons. */
 export async function getRestaurantMenu(
   restaurantId: string,
   includeHidden = false
@@ -208,7 +184,7 @@ export async function getRestaurantMenu(
   }
 }
 
-/** Every restaurant with its full menu — the admin menu editor's one read. */
+/** Get all restaurants with full menus for admin management. */
 export async function getFullMenu(): Promise<LunchRestaurant[]> {
   const restaurants = await getRestaurants(true)
   const withMenus = await Promise.all(
@@ -217,13 +193,10 @@ export async function getFullMenu(): Promise<LunchRestaurant[]> {
   return withMenus.filter((r): r is LunchRestaurant => r !== null)
 }
 
-// -------------------------------------------------------------- orders ----
-
 const ORDER_COLUMNS =
   'id, orderCode, studentId, dayKey, restaurantId, restaurantName, subtotal, status, qrisPayload, paymentProofUrl, rejectionReason, note, createdAt, submittedAt, reviewedAt, reviewedBy'
 
-/** Attaches items + add-ons to a set of order rows in two queries, rather than
- *  one query per order. */
+/** Attach items and add-ons to order records. */
 async function attachItems(
   orders: Omit<LunchOrder, 'items'>[]
 ): Promise<LunchOrder[]> {
@@ -274,7 +247,7 @@ async function attachItems(
   return orders.map((o) => ({ ...o, items: itemsByOrder.get(o.id) ?? [] }))
 }
 
-/** A student's own order history, newest first. */
+/** Get order history for a student sorted by creation date descending. */
 export async function getStudentOrders(studentDbId: string): Promise<LunchOrder[]> {
   const { data, error } = await supabase
     .from('LunchOrder')
@@ -307,14 +280,9 @@ export interface AdminLunchOrder extends LunchOrder {
   student: { name: string; studentId: string; email: string } | null
 }
 
-/**
- * The admin review queue. Filters are optional; without them you get every
- * order newest-first, which is what the page defaults to.
- */
+/** Get orders for admin management with optional filters. */
 export async function getAdminOrders(filters: {
   status?: string
-  /** Several statuses at once — the recap counts approved and still-being-checked
-   *  orders together so the vendor list is not short by whatever is mid-review. */
   statuses?: string[]
   dayKey?: string
 } = {}): Promise<AdminLunchOrder[]> {

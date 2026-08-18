@@ -1,13 +1,7 @@
-// lib/avatar.ts
-// Shared helper for the `avatarConfig` JSONB column on `Student`.
-// All consumer components (PixelAvatar, BottomNav, Navbar, Leaderboard, Profile)
-// import parseAvatarConfig / hairKey from here — never flatten the object manually.
-
 export interface AvatarConfig {
   skin?: string | null
   clothes?: string | null
   hair?: string | null
-  /** Colour suffix appended to hair key, e.g. '' | '.2' | '.3' */
   hairColor?: string | null
   hijab?: string | null
   eyes?: string | null
@@ -15,7 +9,6 @@ export interface AvatarConfig {
   mouth?: string | null
 }
 
-/** Parsed, defaulted avatar config. Every field is guaranteed non-undefined. */
 export interface ParsedAvatar {
   skin: string
   clothes: string | null
@@ -27,10 +20,7 @@ export interface ParsedAvatar {
   mouth: string | null
 }
 
-/**
- * Read an `avatarConfig` value from Supabase (unknown / jsonb) and fill in
- * safe defaults. Returns a fully typed object ready for PixelAvatar props.
- */
+/** Parse avatar configuration from raw data and apply default values. */
 export function parseAvatarConfig(raw: unknown): ParsedAvatar {
   const c = (typeof raw === 'object' && raw !== null ? raw : {}) as AvatarConfig
   return {
@@ -45,11 +35,7 @@ export function parseAvatarConfig(raw: unknown): ParsedAvatar {
   }
 }
 
-/**
- * Returns the combined hair key for `PixelAvatar.hair` prop.
- * e.g. hair='hairb1' + hairColor='.2' → 'hairb1.2'
- *      hair=null → null (bald)
- */
+/** Combine hair style and color suffix into a hair key. */
 export function hairKey(config: Pick<ParsedAvatar, 'hair' | 'hairColor'>): string | null {
   return config.hair ? `${config.hair}${config.hairColor}` : null
 }

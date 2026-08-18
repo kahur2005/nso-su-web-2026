@@ -1,25 +1,11 @@
-// lib/scan/npc.ts
-// The fun-fact half of the QR scan flow: a student scans a committee member's
-// code and collects their fun fact. Extracted from app/api/qr/scan/route.ts
-// when quest QRs were added, so that route stays a thin dispatcher.
 import { supabase } from '@/lib/supabase'
 
 export interface ScanOutcome {
-  /** Response body to return to the client. */
   body: any
-  /** HTTP status; omit for 200. */
   status?: number
 }
 
-/**
- * Award a fun-fact scan.
- *
- * The guards here are the ONLY gate: the `scan_npc` Postgres function checks
- * neither `isActive` nor `qrToken`. Soft-deleting a member (see
- * `deactivateCommitteeMember`) and regenerating their QR both leave the
- * previously issued JWT signed, unexpired and otherwise valid. Any future
- * caller of `scan_npc` must repeat these checks.
- */
+/** Award points for scanning a committee member QR code. */
 export async function completeNpcScan(
   studentInternalId: string,
   npcId: string,
@@ -46,16 +32,16 @@ export async function completeNpcScan(
       status: 410,
     }
   }
-  // Max scans check
+
+  // Validate maximum scan limit.
   if (npc.maxScans !== null && npc.maxScans !== undefined && npc.scanCount >= npc.maxScans) {
     return {
       body: { success: false, error: 'This QR code has reached its maximum scan limit.' },
       status: 410,
     }
   }
-  // For static QRs: verify the token presented matches the current active printed token in DB.
-  // For live 1-time QRs (isLiveToken = true): the JWT signature has already been verified
-  // statelessly by jwt.verify in the scan dispatcher.
+
+  // Verify token matches current active token in database for static codes.
   if (!isLiveToken && (!npc.qrToken || npc.qrToken !== token)) {
     return {
       body: {
@@ -66,8 +52,6 @@ export async function completeNpcScan(
     }
   }
 
-  // Atomic: duplicate guard, ScanLog insert, and all the point/xp/counter
-  // increments happen inside the RPC.
   const { data: result, error } = await supabase.rpc('scan_npc', {
     p_student_id: studentInternalId,
     p_npc_id: npcId,
@@ -79,7 +63,7 @@ export async function completeNpcScan(
     return { body: { success: false, error: 'Server error' }, status: 500 }
   }
 
-  // Auto-deactivate NPC if maxScans limit reached after this scan
+  // Deactivate QR code if scan count reaches maximum limit.
   if (npc.maxScans !== null && npc.maxScans !== undefined && (npc.scanCount + 1) >= npc.maxScans) {
     await supabase.from('NPC').update({ isActive: false }).eq('id', npcId)
   }

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import type { AvatarConfig } from '@/lib/avatar'
 
-// In-memory module cache to share fetched avatar across components (Navbar + BottomNav)
+// In-memory cache for avatar configuration.
 let globalAvatarCache: AvatarConfig | null = null
 let globalCacheStudentId: string | null = null
 

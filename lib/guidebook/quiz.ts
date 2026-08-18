@@ -1,12 +1,4 @@
-// lib/guidebook/quiz.ts
-// Question text for the end-of-chapter guidebook quizzes.
-//
-// This module is imported by the client, so it deliberately holds NO answer
-// key — the correct options live in ./answers.ts, which is server-only.
-// Keeping the prompts here means the two files can never drift apart on
-// wording; only the index of the right option is secret.
-
-/** Points awarded for getting both of a chapter's questions right. */
+/** Points awarded for passing all questions in a chapter. */
 export const POINTS_PER_CHAPTER = 2
 
 export type QuizQuestion = {
@@ -14,10 +6,7 @@ export type QuizQuestion = {
   options: string[]
 }
 
-/**
- * Keyed by the chapter ids used in app/(game)/info/guidebook/page.tsx.
- * Exactly two questions per chapter — the claim is all-or-nothing.
- */
+/** Chapter quiz questions mapped by chapter id. */
 export const QUIZZES: Record<string, [QuizQuestion, QuizQuestion]> = {
   talking: [
     {
@@ -150,10 +139,7 @@ export const QUIZZES: Record<string, [QuizQuestion, QuizQuestion]> = {
   ],
 }
 
-/**
- * Display names for the chapter ids, so the profile activity log can label a
- * claim without importing the whole guidebook page.
- */
+/** Display titles for chapter identifiers. */
 export const CHAPTER_TITLES: Record<string, string> = {
   talking: 'How to Talk to People in SU',
   'dos-donts': "Do's and Don'ts as an SU Student",
@@ -167,5 +153,5 @@ export const CHAPTER_TITLES: Record<string, string> = {
 
 export const QUIZ_CHAPTER_IDS = Object.keys(QUIZZES)
 
-/** 8 chapters × 2 points — the ceiling quoted to students. */
+/** Maximum total points available from guidebook quizzes. */
 export const MAX_GUIDEBOOK_POINTS = QUIZ_CHAPTER_IDS.length * POINTS_PER_CHAPTER

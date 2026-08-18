@@ -1,10 +1,6 @@
-// lib/tours.ts
-// Per-page guided-tour content for PageIntro. Each `target` must match a
-// `data-tour="<target>"` attribute that actually exists on that page — keep
-// this in sync when a page's layout changes, or the step silently falls back
-// to a spotlight-less full-screen tooltip.
 import type { IntroStep } from '@/components/onboarding/IntroOverlay'
 
+/** Guided tour steps mapped by page key. */
 export const TOURS: Record<string, IntroStep[]> = {
   dashboard: [
     {

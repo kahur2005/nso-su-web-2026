@@ -1,11 +1,6 @@
-// lib/supabase.ts
 import { createClient } from '@supabase/supabase-js'
 
-// Server-only Supabase client.
-// All database access in this app happens on the server (server components,
-// route handlers, server actions) and we authenticate users ourselves via
-// next-auth — so we use the SERVICE ROLE key, which bypasses Row Level
-// Security. NEVER import this from a client component or expose the key.
+// Server-only Supabase client using service role key. Do not import in client components.
 const supabaseUrl = process.env.SUPABASE_URL!
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 

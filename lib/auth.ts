@@ -1,11 +1,10 @@
-// lib/auth.ts
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { supabase } from './supabase'
 import { verifyPassword } from './password'
 
 export const authOptions: NextAuthOptions = {
-  // Credentials auth requires JWT sessions (no DB session table).
+  // Use JWT session strategy for credentials authentication.
   session: { strategy: 'jwt' },
   providers: [
     CredentialsProvider({

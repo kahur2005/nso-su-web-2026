@@ -1,6 +1,3 @@
-// lib/quests-data.ts
-// SERVER ONLY — imports the service-role Supabase client. Never pull this into
-// a client component; call from route handlers or server actions instead.
 import { supabase } from '@/lib/supabase'
 import { isQuestType, questWindowState, type QuestType } from '@/lib/quests'
 
@@ -21,11 +18,7 @@ export type QuestOpenResult =
   | { ok: true; quest: StudentQuest }
   | { ok: false; error: string; status: number }
 
-/**
- * Load a quest and verify it is visible to students: not deleted, active, and
- * inside its availability window. Used by submission/quiz routes so window
- * gating is enforced server-side (unlike QR scan, which is still display-only).
- */
+/** Verify quest availability and active status for a student. */
 export async function assertQuestOpenForStudent(
   questId: string,
 ): Promise<QuestOpenResult> {

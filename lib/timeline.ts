@@ -1,20 +1,7 @@
-// lib/timeline.ts
-// The six NSO 2026 event days. Fixed on purpose: the dates and the day names
-// are settled, so they live in code and are NOT editable from the admin panel.
-// Only each day's agenda rows are data — see supabase/migrations/
-// 20260727_timeline_events.sql and app/admin/timeline.
-//
-// No Supabase import here, so this file is safe for client components. The
-// query lives in ./timeline-data.ts, which is server-only.
-
 export type TimelineDayMeta = {
-  /** Stored in TimelineEvent.dayKey — changing one orphans that day's rows. */
   key: string
-  /** Short label on the calendar tab. */
   tabLabel: string
-  /** Banner headline on the red pad header. */
   headerTitle: string
-  /** Fixed event date. */
   date: string
 }
 
@@ -40,5 +27,4 @@ export type AgendaRow = {
   sortOrder: number
 }
 
-/** A day plus whatever agenda rows are stored against it. */
 export type TimelineDay = TimelineDayMeta & { agenda: AgendaRow[] }

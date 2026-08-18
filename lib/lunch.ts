@@ -1,20 +1,7 @@
-// lib/lunch.ts
-// Types, day list and formatting for the /lunch pre-order feature.
-//
-// No Supabase import here, so this file is safe for client components — the
-// queries live in ./lunch-data.ts, which is server-only. Same split as
-// lib/timeline.ts / lib/timeline-data.ts.
-
 import { TIMELINE_DAYS, type TimelineDayMeta } from '@/lib/timeline'
 import { APP_TIME_ZONE } from '@/lib/time'
 
-/**
- * The days you can order lunch for: the five on-campus days.
- *
- * Derived from TIMELINE_DAYS rather than re-declared, so the dates stay in one
- * place. 'tm' is dropped because the Technical Meeting is online — there is no
- * lunch to hand out. The keys here are what LunchDay.dayKey stores.
- */
+/** On-campus days available for lunch pre-orders. */
 export const LUNCH_DAYS: TimelineDayMeta[] = TIMELINE_DAYS.filter(
   (d) => d.key !== 'tm'
 )
@@ -29,18 +16,10 @@ export function lunchDayMeta(key: string): TimelineDayMeta | undefined {
   return LUNCH_DAYS.find((d) => d.key === key)
 }
 
-// --------------------------------------------------------------- money ----
-
-/**
- * Rupiah, always whole. The locale is pinned to 'id-ID' on purpose: leaving it
- * to the runtime makes the server and the browser disagree about the thousands
- * separator and trips React's hydration check.
- */
+/** Format currency amount as Indonesian Rupiah string. */
 export function formatRupiah(amount: number): string {
   return 'Rp ' + Math.round(amount).toLocaleString('id-ID')
 }
-
-// --------------------------------------------------------------- types ----
 
 export interface LunchAddOn {
   id: string
@@ -119,7 +98,6 @@ export interface LunchOrder {
   qrisPayload: string | null
   paymentProofUrl: string | null
   rejectionReason: string | null
-  /** The student's free-text request for the kitchen ("sambal dipisah"). */
   note: string | null
   createdAt: string
   submittedAt: string | null
@@ -128,13 +106,7 @@ export interface LunchOrder {
   items: LunchOrderItem[]
 }
 
-// ---------------------------------------------------------------- cart ----
-
-/** One row in the client-side cart. Prices are cached for display only — the
- *  server re-reads and re-totals everything when the order is placed. */
 export interface CartLine {
-  /** Stable key for this line. Two lines can share a menuItemId with different
-   *  add-on picks, so the menu item id alone cannot identify a row. */
   key: string
   menuItemId: string
   name: string
@@ -143,39 +115,33 @@ export interface CartLine {
   addOns: { id: string; name: string; price: number }[]
 }
 
-/** (item + its add-ons) x quantity. */
+/** Calculate line total price including add-ons and quantity. */
 export function cartLineTotal(line: CartLine): number {
   const perUnit = line.unitPrice + line.addOns.reduce((n, a) => n + a.price, 0)
   return perUnit * line.quantity
 }
 
+/** Calculate subtotal for all cart lines. */
 export function cartSubtotal(lines: CartLine[]): number {
   return lines.reduce((n, l) => n + cartLineTotal(l), 0)
 }
 
-// --------------------------------------------------------------- recap ----
-
-/**
- * Which orders count toward a recap. Shared by the admin page and the .xlsx
- * export route so a downloaded file can never disagree with what was on screen.
- */
+/** Scope definitions for order recap reports. */
 export const LUNCH_RECAP_SCOPES = {
-  // What to actually cook: excludes only orders nobody has paid for.
   paid: {
     label: 'Approved + still checking',
     statuses: ['approved', 'awaiting_approval'],
-    hint: 'Includes orders whose payment is still being checked. Use this for how much food to prepare — approvals usually land before service.',
+    hint: 'Includes approved and pending verification orders.',
   },
-  // Verified money, safe to settle on.
   approved: {
     label: 'Approved only',
     statuses: ['approved'],
-    hint: 'Payments committee has verified. Use this figure to settle with the vendor.',
+    hint: 'Includes verified orders only.',
   },
   all: {
     label: 'Every order',
     statuses: ['approved', 'awaiting_approval', 'pending_payment', 'rejected'],
-    hint: 'Includes unpaid and rejected orders. Useful for gauging demand, not for paying anyone.',
+    hint: 'Includes all orders.',
   },
 } as const
 
@@ -196,10 +162,8 @@ export interface RecapItemLine {
   name: string
   unitPrice: number
   quantity: number
-  /** unitPrice x quantity — the dish alone, excluding add-ons. */
   total: number
   addOns: RecapAddOnLine[]
-  /** total + every add-on's total, i.e. what this dish actually earned. */
   grandTotal: number
 }
 
@@ -217,17 +181,7 @@ export interface LunchRecap {
   grandTotal: number
 }
 
-/**
- * Rolls a list of orders up into a per-restaurant production list: how many of
- * each dish, with which add-ons, and what the vendor is owed.
- *
- * Rows are keyed on the *snapshot* name and price, not the menu-item id. If a
- * price changed partway through the week, the two runs stay on separate lines
- * rather than being averaged into a figure that matches no receipt.
- *
- * Add-ons are stored once per order line, not per unit, so an add-on's quantity
- * is its parent line's quantity.
- */
+/** Aggregate order list into a per-restaurant production recap. */
 export function buildLunchRecap(orders: LunchOrder[]): LunchRecap {
   const byRestaurant = new Map<
     string,
@@ -302,14 +256,7 @@ export function buildLunchRecap(orders: LunchOrder[]): LunchRecap {
   }
 }
 
-/**
- * Flattens a recap into a table: one header row, then a row per dish and per
- * add-on, with a total row per restaurant.
- *
- * The screen table, the clipboard copy and the .xlsx export all render this one
- * result, so the three can never disagree about a number. Prices are plain
- * integers, not formatted strings, so a spreadsheet can sum them.
- */
+/** Convert recap object to spreadsheet rows. */
 export function recapToRows(recap: LunchRecap): (string | number)[][] {
   const rows: (string | number)[][] = [
     ['Restaurant', 'Item', 'Type', 'Unit price', 'Qty', 'Subtotal'],
@@ -353,10 +300,6 @@ export function recapToRows(recap: LunchRecap): (string | number)[][] {
   return rows
 }
 
-// ------------------------------------------------- human-readable recap ----
-
-/** The slice of an order the copy-out needs. Kept minimal and server-agnostic
- *  so this file stays free of any Supabase types. */
 export interface RecapTextOrder {
   id: string
   restaurantName: string
@@ -369,7 +312,6 @@ export interface RecapTextOrder {
   }[]
 }
 
-/** "Selasa, 18 Agustus 2026" from the "18 Aug 2026" stored in LUNCH_DAYS. */
 function indonesianDate(raw: string | undefined): string | null {
   if (!raw) return null
   const parsed = new Date(raw)
@@ -383,18 +325,7 @@ function indonesianDate(raw: string | undefined): string | null {
   })
 }
 
-/**
- * The message you paste into the vendor's WhatsApp.
- *
- * Grouped by the exact dish-plus-add-on combination, because that is what the
- * kitchen plates — "Nasi Geprek" and "Nasi Geprek + Telur Dadar" are two
- * different things to cook, not one dish with a modifier. Under each, every
- * student who ordered it, with their note repeated so nothing is missed by
- * someone reading only their own section.
- *
- * Counts are TOTAL PORTIONS, not number of people: one student ordering two
- * portions is two plates of food.
- */
+/** Generate formatted plain-text order recap for messaging vendors. */
 export function buildRecapText(
   orders: RecapTextOrder[],
   options: { dayKey?: string; mealLabel?: string } = {}
@@ -405,8 +336,6 @@ export function buildRecapText(
   const meta = options.dayKey ? lunchDayMeta(options.dayKey) : undefined
   const dateLabel = indonesianDate(meta?.date)
 
-  // One block per restaurant, so "All restaurants" still yields something you
-  // can send vendor by vendor.
   const byRestaurant = new Map<string, RecapTextOrder[]>()
   for (const order of orders) {
     const list = byRestaurant.get(order.restaurantName) ?? []
@@ -419,7 +348,6 @@ export function buildRecapText(
   for (const [restaurantName, restaurantOrders] of [...byRestaurant.entries()].sort(
     (a, b) => a[0].localeCompare(b[0])
   )) {
-    // dish+add-ons combination -> the people who ordered it
     const groups = new Map<
       string,
       { title: string; portions: number; lines: { name: string; quantity: number; note: string | null }[] }
@@ -451,7 +379,6 @@ export function buildRecapText(
     ].join('\n')
 
     const sections = [...groups.values()]
-      // Biggest batches first: that is the order a kitchen wants to cook in.
       .sort((a, b) => b.portions - a.portions || a.title.localeCompare(b.title))
       .map((group) => {
         const lines = group.lines.map((line, i) => {
@@ -462,26 +389,20 @@ export function buildRecapText(
         return `${group.title} (${group.portions} item)\n${lines.join('\n')}`
       })
 
-    // Blank line between each dish group, as in the pasted-message format.
     blocks.push([header, '', sections.join('\n\n')].join('\n').trimEnd())
   }
 
-  // Blank line between restaurants so each block can be sent on its own.
   return blocks.join('\n\n———\n\n')
 }
 
-/** Tab-separated text, which pastes into Excel and Google Sheets as cells. */
+/** Convert tabular data to tab-separated values (TSV) format. */
 export function rowsToTsv(rows: (string | number)[][]): string {
   return rows
-    // A literal tab or newline inside a cell would break the column alignment.
     .map((row) => row.map((cell) => String(cell).replace(/[\t\r\n]+/g, ' ')).join('\t'))
     .join('\n')
 }
 
-/**
- * Whether ordering is still allowed for a day. Mirrored server-side in
- * POST /api/lunch/orders — this copy only decides what the UI greys out.
- */
+/** Check if orders are currently accepted for the specified day. */
 export function isDayOrderable(
   day: LunchDay | undefined,
   now: Date = new Date()
