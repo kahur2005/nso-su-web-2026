@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     const isDynamicToken = !!decoded.live || !!decoded.jti
     const outcome = decoded.questId
       ? await completeQuestScan(studentInternalId, decoded.questId, token)
-      : await completeNpcScan(studentInternalId, decoded.npcId ?? '', decoded.points ?? 3, token, isDynamicToken)
+      : await completeNpcScan(studentInternalId, decoded.npcId ?? '', token, isDynamicToken)
 
     // Mark single-use token as consumed upon success
     if (outcome.body?.success && decoded.jti) {

@@ -2,6 +2,7 @@
 // The fun-fact half of the QR scan flow: a student scans a committee member's
 // code and collects their fun fact. Extracted from app/api/qr/scan/route.ts
 // when quest QRs were added, so that route stays a thin dispatcher.
+// Points awarded come from the NPC row at scan time, not from the JWT.
 import { supabase } from '@/lib/supabase'
 
 export interface ScanOutcome {
@@ -23,7 +24,6 @@ export interface ScanOutcome {
 export async function completeNpcScan(
   studentInternalId: string,
   npcId: string,
-  points: number,
   token: string,
   isLiveToken?: boolean
 ): Promise<ScanOutcome> {
@@ -67,14 +67,15 @@ export async function completeNpcScan(
   }
 
   // Atomic: duplicate guard, ScanLog insert, and all the point/xp/counter
-  // increments happen inside the RPC. Points come from the NPC row (default 3),
-  // mirroring quest scan behaviour so old printouts award current configured points.
-  const pointsToAward = typeof npc.points === 'number' ? npc.points : (points ?? 3)
+  // increments happen inside the RPC. Points come from the NPC row at scan
+  // time (not the JWT), mirroring quest scan behaviour.
+  const points =
+    typeof npc.points === 'number' && Number.isFinite(npc.points) ? npc.points : 0
 
   const { data: result, error } = await supabase.rpc('scan_npc', {
     p_student_id: studentInternalId,
     p_npc_id: npcId,
-    p_points: pointsToAward,
+    p_points: points,
   })
 
   if (error) {
