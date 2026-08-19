@@ -4,13 +4,14 @@ import { authOptions } from '@/lib/auth'
 import { NextResponse, type NextRequest } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { buildDynamicQris } from '@/lib/qris'
-import { isLunchDayKey } from '@/lib/lunch'
+import { isLunchDayKey, isDayOrderable } from '@/lib/lunch'
 import {
   getLunchDay,
   getQrisStatic,
   getStudentOrders,
   resolveStudentDbId,
 } from '@/lib/lunch-data'
+import { APP_TIME_ZONE_LABEL, formatJakartaDateTime } from '@/lib/time'
 
 function newOrderCode(): string {
   return `LNC-${randomUUID().slice(0, 8).toUpperCase()}`
@@ -74,17 +75,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Your cart is empty' }, { status: 400 })
   }
 
-  // 1. Verify day is open and deadline has not passed.
+  // 1. Verify day is open and deadline has not passed (WIB-authored deadline).
   const day = await getLunchDay(dayKey)
-  if (!day || !day.isOpen) {
+  if (!isDayOrderable(day ?? undefined)) {
+    const closedByDeadline =
+      day?.isOpen && day.orderDeadline && !isDayOrderable(day)
     return NextResponse.json(
-      { error: 'Ordering is not open for that day.' },
-      { status: 403 }
-    )
-  }
-  if (day.orderDeadline && Date.now() >= new Date(day.orderDeadline).getTime()) {
-    return NextResponse.json(
-      { error: 'The ordering deadline for that day has passed.' },
+      {
+        error: closedByDeadline
+          ? `The ordering deadline for that day has passed (${formatJakartaDateTime(day.orderDeadline!, {
+              day: '2-digit',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit',
+            })} ${APP_TIME_ZONE_LABEL}).`
+          : 'Ordering is not open for that day.',
+      },
       { status: 403 }
     )
   }

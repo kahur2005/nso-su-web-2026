@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import LunchShell from '@/components/lunch/LunchShell'
 import Parchment from '@/components/lunch/Parchment'
 import MenuItemSheet from '@/components/lunch/MenuItemSheet'
@@ -9,8 +10,10 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { useLunchCart } from '@/lib/stores/lunchCart'
 import {
   formatRupiah,
+  isDayOrderable,
   isLunchDayKey,
   lunchDayMeta,
+  type LunchDay,
   type LunchMenuItem,
   type LunchRestaurant,
 } from '@/lib/lunch'
@@ -22,6 +25,7 @@ export default function LunchMenuPage() {
   const restaurantId = String(params?.restaurantId ?? '')
 
   const [restaurant, setRestaurant] = useState<LunchRestaurant | null>(null)
+  const [day, setDay] = useState<LunchDay | undefined>()
   const [loading, setLoading] = useState(true)
   const [openItem, setOpenItem] = useState<LunchMenuItem | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -42,10 +46,25 @@ export default function LunchMenuPage() {
     }
     fetch(`/api/lunch/menu?restaurantId=${encodeURIComponent(restaurantId)}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error('not found'))))
-      .then((d) => setRestaurant(d.restaurant ?? null))
-      .catch(() => setRestaurant(null))
+      .then((d) => {
+        setRestaurant(d.restaurant ?? null)
+        setDay((d.days ?? []).find((x: LunchDay) => x.dayKey === dayKey))
+      })
+      .catch(() => {
+        setRestaurant(null)
+        setDay(undefined)
+      })
       .finally(() => setLoading(false))
   }, [dayKey, restaurantId, router])
+
+  const open = isDayOrderable(day)
+
+  useEffect(() => {
+    if (!hasHydrated || loading) return
+    if (!open && cartDayKey === dayKey && lines.length > 0) {
+      reset()
+    }
+  }, [hasHydrated, loading, open, cartDayKey, dayKey, lines.length, reset])
 
   useEffect(() => {
     if (!toast) return
@@ -54,7 +73,7 @@ export default function LunchMenuPage() {
   }, [toast])
 
   const handleAdd = (quantity: number, addOnIds: string[]) => {
-    if (!openItem) return
+    if (!openItem || !open) return
 
     const result = addLine(dayKey, restaurantId, openItem, quantity, addOnIds)
 
@@ -73,7 +92,9 @@ export default function LunchMenuPage() {
 
   const meta = lunchDayMeta(dayKey)
   const cartLines =
-    cartDayKey === dayKey && cartRestaurantId === restaurantId ? lines : []
+    open && cartDayKey === dayKey && cartRestaurantId === restaurantId
+      ? lines
+      : []
 
   return (
     <LunchShell
@@ -84,6 +105,18 @@ export default function LunchMenuPage() {
         <div className="py-12">
           <LoadingSpinner text="LOADING MENU..." />
         </div>
+      ) : !open ? (
+        <Parchment className="mt-3.5 px-5 py-4">
+          <p className="font-bytebounce text-[24px] leading-tight text-[#8c2d1a]">
+            Ordering is closed for this day.
+          </p>
+          <Link
+            href="/lunch"
+            className="mt-2 inline-block font-bytebounce text-[22px] text-[#8a5a37] underline"
+          >
+            Back to lunch
+          </Link>
+        </Parchment>
       ) : !restaurant ? (
         <Parchment className="mt-3.5 px-5 py-4">
           <p className="font-bytebounce text-[24px] leading-tight text-[#8c2d1a]">
@@ -157,9 +190,7 @@ export default function LunchMenuPage() {
         onAdd={handleAdd}
       />
 
-      {/* Rendered only after rehydration, so the server-rendered markup and the
-          first client render agree about an empty cart. */}
-      {hasHydrated && (
+      {hasHydrated && open && (
         <CartBar lines={cartLines} href={`/lunch/${dayKey}/cart`} />
       )}
     </LunchShell>

@@ -7,6 +7,7 @@ import Parchment from '@/components/lunch/Parchment'
 import LunchStatusChip from '@/components/lunch/LunchStatusChip'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { formatRupiah, lunchDayMeta, type LunchOrder } from '@/lib/lunch'
+import { APP_TIME_ZONE_LABEL, formatJakartaDateTime } from '@/lib/time'
 
 export default function LunchOrderPage() {
   const params = useParams<{ orderId: string }>()
@@ -14,6 +15,8 @@ export default function LunchOrderPage() {
 
   const [order, setOrder] = useState<LunchOrder | null>(null)
   const [qrCodeImage, setQrCodeImage] = useState<string | null>(null)
+  const [paymentOpen, setPaymentOpen] = useState(true)
+  const [orderDeadline, setOrderDeadline] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -31,6 +34,8 @@ export default function LunchOrderPage() {
       const data = await response.json()
       setOrder(data.order ?? null)
       setQrCodeImage(data.qrCodeImage ?? null)
+      setPaymentOpen(data.paymentOpen !== false)
+      setOrderDeadline(data.orderDeadline ?? null)
     } catch {
       setNotFound(true)
     } finally {
@@ -104,13 +109,23 @@ export default function LunchOrderPage() {
   }
 
   const meta = lunchDayMeta(order.dayKey)
+  const showPayUi = order.status === 'pending_payment' && paymentOpen
+  const showPaymentClosed =
+    order.status === 'pending_payment' && !paymentOpen
+  const deadlineLabel = orderDeadline
+    ? `${formatJakartaDateTime(orderDeadline, {
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      })} ${APP_TIME_ZONE_LABEL}`
+    : null
 
   return (
     <LunchShell
-      title={order.status === 'pending_payment' ? 'Pay' : 'Receipt'}
+      title={showPayUi ? 'Pay' : 'Receipt'}
       subtitle={`${order.restaurantName} · ${meta?.headerTitle ?? `Day ${order.dayKey}`}`}
     >
-      {/* ---------------------------------------------------- receipt ---- */}
       <Parchment className="mt-3.5 px-5 py-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="font-mono text-[18px] text-[#6d4c41]">
@@ -157,8 +172,26 @@ export default function LunchOrderPage() {
         </div>
       </Parchment>
 
-      {/* ------------------------------------------- pending payment ---- */}
-      {order.status === 'pending_payment' && (
+      {showPaymentClosed && (
+        <Parchment className="mt-4 px-5 py-4">
+          <p className="font-bytebounce text-[26px] uppercase leading-none text-[#8c2d1a]">
+            Payment closed
+          </p>
+          <p className="mt-2 font-bytebounce text-[22px] leading-tight text-[#6d4c41]">
+            {deadlineLabel
+              ? `The ordering deadline for this day was ${deadlineLabel}. You can no longer pay for this order.`
+              : 'Ordering is no longer open for this day. You can no longer pay for this order.'}
+          </p>
+          <Link
+            href="/lunch"
+            className="mt-2 inline-block font-bytebounce text-[22px] text-[#8a5a37] underline"
+          >
+            Back to lunch
+          </Link>
+        </Parchment>
+      )}
+
+      {showPayUi && (
         <>
           <Parchment className="mt-4 px-5 py-4">
             <h2 className="font-bytebounce text-[24px] uppercase leading-none text-[#3e2723]">
@@ -170,11 +203,6 @@ export default function LunchOrderPage() {
             </p>
 
             {qrCodeImage ? (
-              /* The white plate is its own element rather than padding on the
-                 <img>, so the quiet zone around the code scales with the card
-                 instead of staying a fixed 8px. Scanners need that clear
-                 margin — a code that runs to the edge of its background reads
-                 badly in poor light. */
               <div className="mt-3 flex justify-center">
                 <div className="w-full max-w-[300px] border-4 border-[#5d4037] bg-white p-5 sm:p-6">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -240,7 +268,6 @@ export default function LunchOrderPage() {
         </>
       )}
 
-      {/* --------------------------------------------- other statuses ---- */}
       {order.status === 'awaiting_approval' && (
         <Parchment className="mt-4 px-5 py-4">
           <p className="font-bytebounce text-[24px] leading-tight text-[#8a5a37]">
@@ -284,7 +311,6 @@ export default function LunchOrderPage() {
         </Parchment>
       )}
 
-      {/* The student's own uploaded proof, for their records. */}
       {order.paymentProofUrl && order.status !== 'pending_payment' && (
         <Parchment className="mt-4 mb-4 px-5 py-4">
           <h2 className="font-bytebounce text-[24px] uppercase leading-none text-[#3e2723]">
@@ -299,8 +325,8 @@ export default function LunchOrderPage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={order.paymentProofUrl}
-              alt="Your uploaded payment screenshot"
-              className="max-h-[220px] w-full border-2 border-[#5d4037] object-contain"
+              alt="Payment proof"
+              className="max-h-64 w-full rounded border-2 border-[#5d4037] object-contain bg-white"
             />
           </a>
         </Parchment>

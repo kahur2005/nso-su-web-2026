@@ -92,3 +92,17 @@ export function formatJakartaTime(
     ...options,
   })
 }
+
+/**
+ * True if `now` is strictly before a stored deadline.
+ * Deadlines are authored/shown in WIB and stored as UTC ISO; compare instants
+ * (do not use UTC calendar-day math).
+ */
+export function isBeforeDeadline(
+  deadlineIso: string,
+  now: Instant = new Date()
+): boolean {
+  const deadlineMs = asDate(deadlineIso).getTime()
+  if (Number.isNaN(deadlineMs)) return false
+  return asDate(now).getTime() < deadlineMs
+}

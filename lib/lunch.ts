@@ -1,5 +1,5 @@
 import { TIMELINE_DAYS, type TimelineDayMeta } from '@/lib/timeline'
-import { APP_TIME_ZONE } from '@/lib/time'
+import { APP_TIME_ZONE, isBeforeDeadline } from '@/lib/time'
 
 /** On-campus days available for lunch pre-orders. */
 export const LUNCH_DAYS: TimelineDayMeta[] = TIMELINE_DAYS.filter(
@@ -402,12 +402,16 @@ export function rowsToTsv(rows: (string | number)[][]): string {
     .join('\n')
 }
 
-/** Check if orders are currently accepted for the specified day. */
+/**
+ * Whether students may place or pay for orders on this lunch day right now.
+ * Uses the WIB-authored deadline instant (see `isBeforeDeadline`); blank
+ * deadline means open indefinitely while `isOpen`.
+ */
 export function isDayOrderable(
   day: LunchDay | undefined,
   now: Date = new Date()
 ): boolean {
   if (!day || !day.isOpen) return false
   if (!day.orderDeadline) return true
-  return now.getTime() < new Date(day.orderDeadline).getTime()
+  return isBeforeDeadline(day.orderDeadline, now)
 }

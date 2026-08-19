@@ -9,8 +9,10 @@ import {
   cartLineTotal,
   cartSubtotal,
   formatRupiah,
+  isDayOrderable,
   isLunchDayKey,
   lunchDayMeta,
+  type LunchDay,
 } from '@/lib/lunch'
 
 export default function LunchCartPage() {
@@ -28,20 +30,42 @@ export default function LunchCartPage() {
     dayKey: cartDayKey,
   } = useLunchCart()
 
+  const [day, setDay] = useState<LunchDay | undefined>()
+  const [loadingDay, setLoadingDay] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [note, setNote] = useState('')
 
   useEffect(() => {
-    if (!isLunchDayKey(dayKey)) router.replace('/lunch')
+    if (!isLunchDayKey(dayKey)) {
+      router.replace('/lunch')
+      return
+    }
+    fetch('/api/lunch/menu')
+      .then((r) => r.json())
+      .then((d) => {
+        const matched = (d.days ?? []).find((x: LunchDay) => x.dayKey === dayKey)
+        setDay(matched)
+      })
+      .catch(() => setDay(undefined))
+      .finally(() => setLoadingDay(false))
   }, [dayKey, router])
+
+  const open = isDayOrderable(day)
+
+  useEffect(() => {
+    if (!hasHydrated || loadingDay) return
+    if (!open && cartDayKey === dayKey && lines.length > 0) {
+      reset()
+    }
+  }, [hasHydrated, loadingDay, open, cartDayKey, dayKey, lines.length, reset])
 
   const meta = lunchDayMeta(dayKey)
   const subtotal = cartSubtotal(lines)
   const isThisDay = cartDayKey === dayKey
 
   const handlePay = async () => {
-    if (submitting || lines.length === 0 || !restaurantId) return
+    if (submitting || lines.length === 0 || !restaurantId || !open) return
     setSubmitting(true)
     setError(null)
 
@@ -81,7 +105,19 @@ export default function LunchCartPage() {
       title="Your cart"
       subtitle={meta ? `${meta.headerTitle} · ${meta.date}` : undefined}
     >
-      {!hasHydrated ? null : lines.length === 0 || !isThisDay ? (
+      {loadingDay || !hasHydrated ? null : !open ? (
+        <Parchment className="mt-3.5 px-5 py-4">
+          <p className="font-bytebounce text-[24px] leading-tight text-[#8c2d1a]">
+            Ordering is closed for this day.
+          </p>
+          <Link
+            href="/lunch"
+            className="mt-2 inline-block font-bytebounce text-[22px] text-[#8a5a37] underline"
+          >
+            Back to lunch
+          </Link>
+        </Parchment>
+      ) : lines.length === 0 || !isThisDay ? (
         <Parchment className="mt-3.5 px-5 py-4">
           <p className="font-bytebounce text-[24px] leading-tight text-[#6d4c41]">
             Your cart is empty.
@@ -150,9 +186,6 @@ export default function LunchCartPage() {
             ))}
           </div>
 
-          {/* Note for the kitchen. One box for the whole order — that is how
-              students actually write them ("semuanya extra timun yaa"), and it
-              is reproduced under every dish on the committee's vendor recap. */}
           <Parchment className="mt-4 px-5 py-4">
             <label
               htmlFor="lunch-note"
@@ -178,7 +211,6 @@ export default function LunchCartPage() {
             </p>
           </Parchment>
 
-          {/* Total + pay */}
           <Parchment className="mt-4 px-5 py-4">
             <div className="flex items-baseline justify-between gap-3">
               <span className="font-bytebounce text-[26px] uppercase leading-none text-[#3e2723]">

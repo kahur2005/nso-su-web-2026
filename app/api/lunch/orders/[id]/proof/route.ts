@@ -3,7 +3,9 @@ import { authOptions } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { uploadImage } from '@/lib/storage'
-import { resolveStudentDbId } from '@/lib/lunch-data'
+import { getLunchDay, resolveStudentDbId } from '@/lib/lunch-data'
+import { isDayOrderable } from '@/lib/lunch'
+import { APP_TIME_ZONE_LABEL, formatJakartaDateTime } from '@/lib/time'
 
 const MAX_PROOF_BYTES = 8 * 1024 * 1024
 
@@ -25,7 +27,7 @@ export async function POST(
 
   const { data: order, error: orderError } = await supabase
     .from('LunchOrder')
-    .select('id, studentId, status')
+    .select('id, studentId, status, dayKey')
     .eq('id', id)
     .maybeSingle()
 
@@ -44,6 +46,26 @@ export async function POST(
     return NextResponse.json(
       { error: 'This order has already been submitted.' },
       { status: 409 }
+    )
+  }
+
+  const day = await getLunchDay(order.dayKey)
+  if (!isDayOrderable(day ?? undefined)) {
+    const deadlineLabel = day?.orderDeadline
+      ? `${formatJakartaDateTime(day.orderDeadline, {
+          day: '2-digit',
+          month: 'short',
+          hour: '2-digit',
+          minute: '2-digit',
+        })} ${APP_TIME_ZONE_LABEL}`
+      : null
+    return NextResponse.json(
+      {
+        error: deadlineLabel
+          ? `Payment for this day closed at ${deadlineLabel}.`
+          : 'Payment is no longer open for this day.',
+      },
+      { status: 403 }
     )
   }
 

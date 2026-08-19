@@ -45,7 +45,11 @@ export default function LunchPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const unpaid = orders.filter((o) => o.status === 'pending_payment')
+  const unpaidPayable = orders.filter(
+    (o) =>
+      o.status === 'pending_payment' &&
+      isDayOrderable(days.find((d) => d.dayKey === o.dayKey))
+  )
 
   return (
     <LunchShell
@@ -59,11 +63,11 @@ export default function LunchPage() {
       ) : (
         <>
           {/* Nudge for anything left mid-payment */}
-          {unpaid.length > 0 && (
+          {unpaidPayable.length > 0 && (
             <Parchment className="mt-3.5 px-5 py-3">
               <p className="font-bytebounce text-[22px] leading-tight text-[#8c2d1a]">
-                You have {unpaid.length} order{unpaid.length === 1 ? '' : 's'}{' '}
-                waiting to be paid.
+                You have {unpaidPayable.length} order
+                {unpaidPayable.length === 1 ? '' : 's'} waiting to be paid.
               </p>
             </Parchment>
           )}
@@ -105,6 +109,14 @@ export default function LunchPage() {
                             {order.orderCode}
                           </span>
                         </p>
+                        {order.status === 'pending_payment' &&
+                          !isDayOrderable(
+                            days.find((d) => d.dayKey === order.dayKey)
+                          ) && (
+                            <p className="mt-1 font-bytebounce text-[20px] leading-tight text-[#8c2d1a]">
+                              Payment closed for this day
+                            </p>
+                          )}
                         <p className="mt-1 font-bytebounce text-[24px] leading-none text-[#8a5a37]">
                           {formatRupiah(order.subtotal)}
                         </p>
