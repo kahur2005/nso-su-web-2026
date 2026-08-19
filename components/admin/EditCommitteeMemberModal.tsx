@@ -15,7 +15,7 @@ export default function EditCommitteeMemberModal({ member }: EditCommitteeMember
   const [role, setRole] = useState(member.role)
   const [division, setDivision] = useState(member.division || DIVISIONS[0].id)
   const [funFact, setFunFact] = useState(member.funFact)
-  const [points, setPoints] = useState(member.points ?? 10)
+  const [points, setPoints] = useState(member.points ?? 3)
   const [photoUrl, setPhotoUrl] = useState(member.avatarUrl || '')
   const [isPending, startTransition] = useTransition()
 

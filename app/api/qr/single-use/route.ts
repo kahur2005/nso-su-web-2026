@@ -12,8 +12,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const user = session.user as any
-  const isAuthorized = user.role === 'gl' || user.role === 'committee' || user.isAdmin
+  const user = session.user as { isAdmin?: boolean; role?: string }
+  const isAuthorized =
+    user.isAdmin === true || user.role === 'gl' || user.role === 'committee'
 
   if (!isAuthorized) {
     return NextResponse.json(
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'NPC ID or Quest ID is required.' }, { status: 400 })
   }
 
-  let points = 10
+  let points = 3
   let label = 'Committee Fun Fact'
 
   if (npcId) {

@@ -270,6 +270,11 @@ export default function AdminPresenterPage() {
             <RefreshCw size={16} className={fetchingQr ? "animate-spin" : ""} />
             {fetchingQr ? "Refreshing..." : "Generate New Code Now"}
           </button>
+
+          <p className="mt-4 max-w-[280px] text-center text-xs text-slate-300 leading-relaxed">
+            One code → one student. Regenerate (or wait for auto-rotate) before the next
+            person in line scans.
+          </p>
         </div>
       )}
 

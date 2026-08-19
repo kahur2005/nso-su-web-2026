@@ -80,7 +80,7 @@ export async function POST(request: Request) {
     const isDynamicToken = !!decoded.live || !!decoded.jti
     const outcome = decoded.questId
       ? await completeQuestScan(studentInternalId, decoded.questId, token)
-      : await completeNpcScan(studentInternalId, decoded.npcId ?? '', decoded.points ?? 10, token, isDynamicToken)
+      : await completeNpcScan(studentInternalId, decoded.npcId ?? '', token, isDynamicToken)
 
     if (outcome.body?.success && decoded.jti) {
       try {

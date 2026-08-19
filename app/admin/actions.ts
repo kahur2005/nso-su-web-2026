@@ -295,8 +295,13 @@ export async function createCommitteeMember(
       ? await uploadImage('committee-photos', image)
       : null
 
+  const pointsRaw = formData.get('points')
+  const points = pointsRaw !== null && pointsRaw !== undefined && pointsRaw !== ''
+    ? (parseInt(String(pointsRaw), 10) || 3)
+    : 3
+
   await supabase.from('NPC').insert({
-    committeeName, role, division, funFact, instagram, avatarUrl,
+    committeeName, role, division, funFact, instagram, avatarUrl, points,
   })
 
   revalidatePath('/admin/committee')

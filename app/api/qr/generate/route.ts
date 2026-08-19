@@ -48,7 +48,7 @@ export async function POST(request: Request) {
         division,
         instagram: normalizeInstagram(instagram),
         funFact,
-        points,
+        points: typeof points === 'number' ? points : 3,
       })
       .select()
       .single()
