@@ -1,5 +1,9 @@
 import { supabase } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { getLeaderboardSuspense } from '@/lib/app-settings'
+import { redactLeaderboardPayload } from '@/lib/leaderboard-redact'
 
 interface RawMember {
   id: string
@@ -65,7 +69,16 @@ export async function GET() {
 
     const topStudents = (studentsRes.data as unknown as RawStudent[]) ?? []
 
-    return NextResponse.json({ groups, topStudents })
+    const suspense = await getLeaderboardSuspense()
+    const session = await getServerSession(authOptions)
+    const isAdmin = Boolean(session?.user?.isAdmin)
+
+    if (suspense && !isAdmin) {
+      const redacted = redactLeaderboardPayload({ groups, topStudents })
+      return NextResponse.json({ ...redacted, suspense: true })
+    }
+
+    return NextResponse.json({ groups, topStudents, suspense })
   } catch (error) {
     console.error(error)
     return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 })

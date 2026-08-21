@@ -161,6 +161,7 @@ export default function LeaderboardPage() {
   const [openGroupId, setOpenGroupId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [suspense, setSuspense] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -178,6 +179,10 @@ export default function LeaderboardPage() {
       setStudents(lb.topStudents || []);
       setFeed(fd.feed || []);
       setLastUpdate(new Date());
+      setSuspense(Boolean(lb.suspense));
+      if (lb.suspense) {
+        setActiveTab((t) => (t === "record" ? "groups" : t));
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -191,11 +196,16 @@ export default function LeaderboardPage() {
     quiz: "📖",
   };
 
-  const tabs: { key: Tab; label: string }[] = [
-    { key: "groups", label: "GUILDS" },
-    { key: "individual", label: "PLAYERS" },
-    { key: "record", label: "RECORD" },
-  ];
+  const tabs: { key: Tab; label: string }[] = suspense
+    ? [
+        { key: "groups", label: "GUILDS" },
+        { key: "individual", label: "PLAYERS" },
+      ]
+    : [
+        { key: "groups", label: "GUILDS" },
+        { key: "individual", label: "PLAYERS" },
+        { key: "record", label: "RECORD" },
+      ];
 
   if (loading)
     return (
@@ -279,15 +289,21 @@ export default function LeaderboardPage() {
                     Current Leader
                   </p>
                   <p className="absolute inset-x-0 top-[15.5%] text-center font-bytebounce text-[clamp(18px,6vw,26px)] leading-none text-[#e0b391]">
-                    {(activeTab === "groups"
-                      ? leaderGroup.totalPoints
-                      : leaderStudent.points
-                    ).toLocaleString()}{" "}
-                    Points
+                    {suspense
+                      ? "? Points"
+                      : `${(
+                          activeTab === "groups"
+                            ? leaderGroup.totalPoints
+                            : leaderStudent.points
+                        ).toLocaleString()} Points`}
                   </p>
 
                   <div className="absolute inset-x-0 top-[25%] flex h-[46%] items-center justify-center pt-2">
-                    {activeTab === "groups" ? (
+                    {suspense ? (
+                      <span className="font-bytebounce text-[clamp(72px,22vw,104px)] leading-none text-[#e0b391]">
+                        ?
+                      </span>
+                    ) : activeTab === "groups" ? (
                       <GroupIcon
                         name={leaderGroup.name}
                         emblem={leaderGroup.emblem}
@@ -328,9 +344,11 @@ export default function LeaderboardPage() {
                     name is centred at 67% — not on the sprite's midpoint, which
                     would float it above the ribbon in the tail area. */}
                     <p className="title-gold absolute inset-x-0 top-[67%] -translate-y-1/2 truncate px-[16%] text-center font-bytebounce text-[clamp(21px,7.2vw,31px)] uppercase leading-none">
-                      {activeTab === "groups"
-                        ? leaderGroup.name
-                        : leaderStudent.name}
+                      {suspense
+                        ? "?"
+                        : activeTab === "groups"
+                          ? leaderGroup.name
+                          : leaderStudent.name}
                     </p>
                   </div>
                 </div>
@@ -452,12 +470,18 @@ export default function LeaderboardPage() {
                                 </span>
                               )}
                             </div>
-                            <GroupIcon
-                              name={group.name}
-                              emblem={group.emblem}
-                              emblemUrl={group.emblemUrl}
-                              className="aspect-square w-[24%] flex-shrink-0"
-                            />
+                            {suspense ? (
+                              <span className="flex aspect-square w-[24%] flex-shrink-0 items-center justify-center font-bytebounce text-[clamp(32px,10vw,44px)] leading-none text-[#88684e]">
+                                ?
+                              </span>
+                            ) : (
+                              <GroupIcon
+                                name={group.name}
+                                emblem={group.emblem}
+                                emblemUrl={group.emblemUrl}
+                                className="aspect-square w-[24%] flex-shrink-0"
+                              />
+                            )}
                             <div className="min-w-0 flex-1">
                               <p
                                 className="truncate font-bytebounce text-[clamp(20px,6.8vw,29px)] uppercase leading-none"
@@ -466,17 +490,21 @@ export default function LeaderboardPage() {
                                   textShadow: style.shadow,
                                 }}
                               >
-                                {group.name}
+                                {suspense ? "?" : group.name}
                               </p>
-                              <p className="mt-[3px] font-bytebounce text-[clamp(13px,4.2vw,18px)] leading-none text-[#5d4330]">
-                                LV {groupLevel(group.totalPoints)}
-                              </p>
-                              <div className="mt-[4px]">
-                                <PixelBar
-                                  value={group.totalPoints}
-                                  max={maxGroupPoints}
-                                />
-                              </div>
+                              {!suspense && (
+                                <p className="mt-[3px] font-bytebounce text-[clamp(13px,4.2vw,18px)] leading-none text-[#5d4330]">
+                                  LV {groupLevel(group.totalPoints)}
+                                </p>
+                              )}
+                              {!suspense && (
+                                <div className="mt-[4px]">
+                                  <PixelBar
+                                    value={group.totalPoints}
+                                    max={maxGroupPoints}
+                                  />
+                                </div>
+                              )}
                             </div>
                             <div className="flex-shrink-0 text-right leading-none">
                               <span
@@ -488,7 +516,9 @@ export default function LeaderboardPage() {
                                       : "#ffc20e",
                                 }}
                               >
-                                {group.totalPoints.toLocaleString()}
+                                {suspense
+                                  ? "?"
+                                  : group.totalPoints.toLocaleString()}
                               </span>
                               <span
                                 className="ml-[2px] font-bytebounce text-[11px]"
@@ -531,6 +561,26 @@ export default function LeaderboardPage() {
                                   </p>
                                 ) : (
                                   group.members.map((m) => {
+                                    if (suspense) {
+                                      return (
+                                        <div
+                                          key={m.id}
+                                          className="flex items-center gap-3 border-b border-[#c9a97b] py-3 last:border-0"
+                                        >
+                                          <span className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center font-bytebounce text-[32px] leading-none text-[#88684e]">
+                                            ?
+                                          </span>
+                                          <div className="min-w-0 flex-1">
+                                            <p className="truncate whitespace-nowrap font-bytebounce text-[24px] leading-[1.05] text-[#5d4330]">
+                                              ?
+                                            </p>
+                                          </div>
+                                          <p className="ml-1 flex-shrink-0 font-bytebounce text-[24px] leading-none text-[#88684e]">
+                                            ? pts
+                                          </p>
+                                        </div>
+                                      );
+                                    }
                                     const href = instagramHref(m.instagram);
                                     const ma = parseAvatarConfig(
                                       m.avatarConfig,
@@ -588,9 +638,11 @@ export default function LeaderboardPage() {
                                     );
                                   })
                                 )}
-                                <p className="mt-2 text-center font-bytebounce text-[16px] leading-none text-[#a58962]">
-                                  tap an avatar to open their instagram
-                                </p>
+                                {!suspense && (
+                                  <p className="mt-2 text-center font-bytebounce text-[16px] leading-none text-[#a58962]">
+                                    tap an avatar to open their instagram
+                                  </p>
+                                )}
                               </div>
                             </motion.div>
                           )}
@@ -631,21 +683,27 @@ export default function LeaderboardPage() {
                             </span>
                           )}
                         </div>
-                        <PixelAvatar
-                          {...(() => {
-                            const a = parseAvatarConfig(student.avatarConfig);
-                            return {
-                              skin: a.skin,
-                              clothes: a.clothes ?? undefined,
-                              hair: hairKey(a) ?? undefined,
-                              hijab: a.hijab ?? undefined,
-                              eyes: a.eyes ?? undefined,
-                              brow: a.brows ?? undefined,
-                              mouth: a.mouth ?? undefined,
-                            };
-                          })()}
-                          size={56}
-                        />
+                        {suspense ? (
+                          <span className="flex h-[56px] w-[56px] flex-shrink-0 items-center justify-center font-bytebounce text-[36px] leading-none text-[#88684e]">
+                            ?
+                          </span>
+                        ) : (
+                          <PixelAvatar
+                            {...(() => {
+                              const a = parseAvatarConfig(student.avatarConfig);
+                              return {
+                                skin: a.skin,
+                                clothes: a.clothes ?? undefined,
+                                hair: hairKey(a) ?? undefined,
+                                hijab: a.hijab ?? undefined,
+                                eyes: a.eyes ?? undefined,
+                                brow: a.brows ?? undefined,
+                                mouth: a.mouth ?? undefined,
+                              };
+                            })()}
+                            size={56}
+                          />
+                        )}
                         <div className="min-w-0 flex-1">
                           <p
                             className="truncate font-bytebounce text-[clamp(22px,6.5vw,28px)] leading-none"
@@ -654,18 +712,22 @@ export default function LeaderboardPage() {
                               textShadow: style.shadow,
                             }}
                           >
-                            {student.name}
+                            {suspense ? "?" : student.name}
                           </p>
-                          <p className="mt-[3px] truncate font-bytebounce text-[14px] leading-none text-[#88684e]">
-                            {student.group?.name ?? "—"} · 📖{" "}
-                            {student.funFactsCollected}
-                          </p>
-                          <div className="mt-[4px]">
-                            <PixelBar
-                              value={student.points}
-                              max={maxStudentPoints}
-                            />
-                          </div>
+                          {!suspense && (
+                            <p className="mt-[3px] truncate font-bytebounce text-[14px] leading-none text-[#88684e]">
+                              {student.group?.name ?? "—"} · 📖{" "}
+                              {student.funFactsCollected}
+                            </p>
+                          )}
+                          {!suspense && (
+                            <div className="mt-[4px]">
+                              <PixelBar
+                                value={student.points}
+                                max={maxStudentPoints}
+                              />
+                            </div>
+                          )}
                         </div>
                         <div className="flex-shrink-0 text-right leading-none">
                           <span
@@ -677,7 +739,7 @@ export default function LeaderboardPage() {
                                   : "#ffc20e",
                             }}
                           >
-                            {student.points.toLocaleString()}
+                            {suspense ? "?" : student.points.toLocaleString()}
                           </span>
                           <span
                             className="ml-[2px] font-bytebounce text-[13px]"
@@ -703,7 +765,7 @@ export default function LeaderboardPage() {
               )}
 
               {/* ── Record Tab ── */}
-              {activeTab === "record" && (
+              {activeTab === "record" && !suspense && (
                 <div className="mx-auto w-[78%] space-y-[6px]">
                   <p className="text-center font-bytebounce text-[13px] text-[#5d4330]">
                     Latest points events

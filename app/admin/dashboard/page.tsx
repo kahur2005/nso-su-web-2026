@@ -3,8 +3,10 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { startOfJakartaDay } from '@/lib/time'
+import { getLeaderboardSuspense } from '@/lib/app-settings'
 import Link from 'next/link'
 import GroupEmblem from '@/components/ui/GroupEmblem'
+import SuspenseToggle from './SuspenseToggle'
 import {
   Users, ScanLine as ScanIcon, Sunrise, IdCard, Swords, Star, Megaphone,
   Building2, QrCode as QrIcon, Calendar, Smartphone,
@@ -74,7 +76,10 @@ export default async function AdminDashboard() {
     redirect('/dashboard')
   }
 
-  const stats = await getAdminStats()
+  const [stats, leaderboardSuspense] = await Promise.all([
+    getAdminStats(),
+    getLeaderboardSuspense(),
+  ])
 
   const adminMenus = [
     { href: '/admin/present', icon: Smartphone, label: 'Live Presenter', desc: '1-Time rolling QR for lines', color: '#6366F1' },
@@ -142,6 +147,7 @@ export default async function AdminDashboard() {
       {/* Leaderboard Preview */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
+          <SuspenseToggle enabled={leaderboardSuspense} />
           <h2 className="text-sm font-semibold text-slate-800 mb-3">Current rankings</h2>
           <div className="space-y-2">
             {stats.groups.map((group, i) => (
