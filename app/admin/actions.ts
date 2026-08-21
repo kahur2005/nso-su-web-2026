@@ -7,12 +7,22 @@ import { revalidatePath } from 'next/cache'
 import { uploadImage } from '@/lib/storage'
 import { isDivisionId } from '@/lib/divisions'
 import { normalizeInstagram } from '@/lib/instagram'
+import { setLeaderboardSuspense } from '@/lib/app-settings'
 
 async function requireAdmin() {
   const session = await getServerSession(authOptions)
   if (!session || !session.user?.isAdmin) {
     throw new Error('Unauthorized')
   }
+}
+
+export async function setLeaderboardSuspenseAction(formData: FormData) {
+  await requireAdmin()
+  const next = String(formData.get('value') || '') === 'true'
+  await setLeaderboardSuspense(next)
+  revalidatePath('/admin/dashboard')
+  revalidatePath('/leaderboard')
+  revalidatePath('/gl')
 }
 
 export async function assignStudentToGroup(formData: FormData) {

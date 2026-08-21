@@ -1,5 +1,9 @@
 import { supabase } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { getLeaderboardSuspense } from '@/lib/app-settings'
+import { redactFeedPayload } from '@/lib/leaderboard-redact'
 
 const FEED_LIMIT = 10
 
@@ -42,6 +46,14 @@ interface RawQuizItem {
 
 export async function GET() {
   try {
+    const suspense = await getLeaderboardSuspense()
+    const session = await getServerSession(authOptions)
+    const isAdmin = Boolean(session?.user?.isAdmin)
+
+    if (suspense && !isAdmin) {
+      return NextResponse.json({ ...redactFeedPayload(), suspense: true })
+    }
+
     const [questsRes, scansRes, quizRes] = await Promise.all([
       supabase
         .from('QuestProgress')
@@ -134,7 +146,7 @@ export async function GET() {
       .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
       .slice(0, FEED_LIMIT)
 
-    return NextResponse.json({ feed })
+    return NextResponse.json({ feed, suspense })
   } catch (error) {
     console.error(error)
     return NextResponse.json({ error: 'Failed to fetch feed' }, { status: 500 })

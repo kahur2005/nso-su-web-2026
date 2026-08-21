@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { NextResponse } from 'next/server'
+import { getLeaderboardSuspense } from '@/lib/app-settings'
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions)
@@ -15,6 +16,13 @@ export async function POST(request: Request) {
   if (!isGL) {
     return NextResponse.json(
       { error: 'Only Group Leaders or Committee members can access this.' },
+      { status: 403 }
+    )
+  }
+
+  if (await getLeaderboardSuspense()) {
+    return NextResponse.json(
+      { error: 'Point assignment is paused until leaderboard reveal.' },
       { status: 403 }
     )
   }

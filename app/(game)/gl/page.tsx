@@ -26,6 +26,7 @@ export default function GlPanelPage() {
   const [searching, setSearching] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [suspense, setSuspense] = useState<boolean | null>(null)
 
   const isAuthorized =
     session?.user &&
@@ -38,6 +39,14 @@ export default function GlPanelPage() {
       router.push('/login')
     }
   }, [status, router])
+
+  useEffect(() => {
+    if (!isAuthorized) return
+    fetch('/api/app-settings')
+      .then((r) => r.json())
+      .then((d) => setSuspense(Boolean(d.leaderboardSuspense)))
+      .catch(() => setSuspense(false))
+  }, [isAuthorized])
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault()
@@ -104,6 +113,25 @@ export default function GlPanelPage() {
           </h1>
           <p className="mt-2 font-bytebounce text-fluid-base text-white">
             Only Group Leaders (GL) and Committee Members have access to point assignment.
+          </p>
+        </div>
+      </PageWrapper>
+    )
+  }
+
+  if (suspense === null) {
+    return <PageWrapper><LoadingSpinner text="LOADING GL PANEL..." /></PageWrapper>
+  }
+
+  if (suspense) {
+    return (
+      <PageWrapper>
+        <div className="game-column py-12 text-center">
+          <h1 className="title-gold font-bytebounce text-fluid-2xl">
+            GL POINT PANEL
+          </h1>
+          <p className="mt-2 font-bytebounce text-fluid-base text-white">
+            Point assignment is paused until the leaderboard is revealed.
           </p>
         </div>
       </PageWrapper>
